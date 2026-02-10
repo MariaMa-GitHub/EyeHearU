@@ -11,11 +11,11 @@ Eye Hear U is a system that translates isolated American Sign Language (ASL) sig
 ```
 ┌──────────────────────┐        ┌──────────────────────┐
 │   Mobile App         │  HTTP  │   Backend API        │
-│   (React Native /    │───────▶│   (FastAPI / Python)  │
+│   (React Native /    │───────▶│   (FastAPI / Python) │
 │    Expo)             │        │                      │
 │                      │        │  POST /api/v1/predict│
 │  - Camera capture    │◀───────│  → sign label +      │
-│  - Display results   │  JSON  │    confidence score   │
+│  - Display results   │  JSON  │    confidence score  │
 │  - Text-to-speech    │        │                      │
 │  - Translation       │        │  /health, /ready     │
 │    history           │        └──────────┬───────────┘
@@ -25,7 +25,7 @@ Eye Hear U is a system that translates isolated American Sign Language (ASL) sig
                                 │   ML Model           │
                                 │   (PyTorch)          │
                                 │                      │
-                                │  CNN backbone         │
+                                │  CNN backbone        │
                                 │  (ResNet18)          │
                                 │       ↓              │
                                 │  Patch projection    │

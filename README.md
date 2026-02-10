@@ -1,8 +1,8 @@
-# Eye Hear U
+## Eye Hear U
 
 **Real-time ASL-to-English translation on iOS** — one sign at a time.
 
-Eye Hear U is a mobile application that translates isolated American Sign Language (ASL) signs into English text and speech. Built for everyday communication scenarios like restaurant ordering and medical emergencies.
+Eye Hear U is a system that translates isolated American Sign Language (ASL) signs into English text and speech using a mobile app, a backend inference API, and a custom-trained ASL classifier.
 
 ---
 
@@ -109,10 +109,10 @@ Eye Hear U is a mobile application that translates isolated American Sign Langua
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- iOS device or simulator (for Expo)
-- Docker (optional, for containerized backend)
+- **Python** 3.11+
+- **Node.js** 18+ (Node 20.x recommended for React Native 0.81)
+- **iOS device or simulator** (for Expo)
+- **Docker** (optional, for containerized backend)
 
 ### Backend
 
@@ -167,59 +167,31 @@ docker-compose up --build
 
 ---
 
-## Target Vocabulary
+## Target Vocabulary (MVP)
 
-We focus on **specific real-world scenarios** rather than trying to cover all of ASL:
+The classifier focuses on a **scenario-driven vocabulary** instead of all of ASL:
 
 | Scenario           | Signs                                                    |
 |--------------------|----------------------------------------------------------|
 | **Greetings**      | hello, goodbye, please, thank you, sorry, yes, no       |
-| **Basic needs**    | help, stop, wait, water, food, bathroom                  |
-| **Restaurant**     | eat, drink, hot, cold, more, enough, check               |
-| **Medical**        | hurt, emergency, doctor, medicine, pain, sick, allergic   |
-| **Fingerspelling** | A–Z (fallback for any word not in vocabulary)            |
-| **Numbers**        | 1–10                                                     |
+| **Basic needs**    | help, stop, wait, water, food, bathroom                 |
+| **Restaurant**     | eat, drink, hot, cold, more, enough, check              |
+| **Medical**        | hurt, emergency, doctor, medicine, pain, sick, allergic |
+| **Fingerspelling** | A–Z (fallback for any word not in vocabulary)           |
+| **Numbers**        | 1–10                                                    |
 
-**Total: ~62 classes** (26 letters + ~36 words)
-
----
-
-## Datasets
-
-| Dataset      | Size    | Use Case                                    |
-|--------------|---------|---------------------------------------------|
-| **WLASL**    | 2K glosses, 21K videos | Primary training data            |
-| **ASL Citizen** | 2.7K glosses, 84K videos | Robustness testing (varied backgrounds) |
-| **MS-ASL**   | 1K glosses, 25K videos | Supplementary training data       |
-| **Custom**   | TBD     | Fill gaps in target vocabulary               |
-
-See `docs/data_schema.md` for the full aspirational vs. actual dataset comparison.
+**Total: ~62 classes** (26 letters + ~36 words).
 
 ---
 
-## Team
+## Datasets (High-Level)
 
-| Name         | Role                              |
-|--------------|-----------------------------------|
-| Maria Ma     | Project Manager & iOS Frontend    |
-| Zhixiao Fu   | Backend & Database Engineer       |
-| Siyi Zhu     | Modeling Engineer (CV/ML)         |
-| Chloe Yang   | Modeling Engineer (CV/ML)         |
+| Dataset        | Size                      | Use case                                      |
+|----------------|---------------------------|-----------------------------------------------|
+| **WLASL**      | 2K glosses, ~21K videos   | Primary training data                         |
+| **ASL Citizen**| 2.7K glosses, ~84K videos | Robustness testing (varied, real-world video) |
+| **MS-ASL**     | 1K glosses, ~25K videos   | Supplementary training data                   |
+| **Custom**     | TBD                       | Fill gaps in target vocabulary                |
 
----
+For exact data layout and schema details, see `docs/data_schema.md`.
 
-## Revised Milestones (addressing professor feedback)
-
-| Week  | Focus                          | Key Deliverables                                           |
-|-------|--------------------------------|------------------------------------------------------------|
-| 1–2   | **User research + data setup** | Interview 3-5 ASL users, download WLASL, set up infra     |
-| 3–4   | **Baseline model + backend**   | Train ResNet18 baseline, deploy FastAPI, Firebase setup    |
-| 5–6   | **Integration + UX testing**   | Connect mobile → backend → model, test with 3+ users      |
-| 7     | **Audio + polish**             | Add TTS output, improve latency, handle edge cases        |
-| 8     | **Evaluation in scenarios**    | Test in restaurant/medical scenarios, final report + demo  |
-
-### Key changes from A1 (per professor feedback)
-- **User testing moved to Week 1** — talk to ASL users early, not just at the end
-- **Scenario-specific evaluation** — test in restaurant and medical contexts (aligns with press release)
-- **Image vs video**: Starting with image-based for simplicity; will prototype video if time allows
-- **Inference location**: Model runs on the backend server (not on-device) for the MVP; explore on-device (Core ML) as a stretch goal

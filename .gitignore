@@ -20,6 +20,7 @@ ml/checkpoints/*.pt
 ml/checkpoints/*.onnx
 data/raw/
 data/processed/images/
+data/logs/
 
 # OS
 .DS_Store

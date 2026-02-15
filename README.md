@@ -92,10 +92,14 @@ Eye Hear U is a system that translates isolated American Sign Language (ASL) sig
 │
 ├── data/                     # Data pipeline
 │   ├── scripts/
-│   │   ├── download_wlasl.py # WLASL dataset downloader
-│   │   └── preprocess.py     # Preprocessing & splitting
+│   │   ├── download_asl_citizen.py  # ASL Citizen dataset downloader
+│   │   ├── download_wlasl.py        # WLASL dataset downloader
+│   │   ├── preprocess.py            # Preprocessing & splitting
+│   │   └── pipeline.py              # Main pipeline orchestrator
 │   ├── raw/                  # Raw downloaded data (gitignored)
-│   └── processed/            # Processed images + label map (gitignored)
+│   ├── processed/            # Processed images + label map (gitignored)
+│   ├── metadata/             # Pipeline metadata + provenance
+│   └── logs/                 # Pipeline execution logs
 │
 ├── docs/
 │   ├── architecture.md       # Detailed system architecture & roles

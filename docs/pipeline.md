@@ -74,7 +74,7 @@ Final training ready images.
 | split | train / val / test |
 | file_path | stored output |
 | width, height | always 224 × 224 |
-| normalized | true |
+| normalized | optional (depends on training pipeline) |
 
 ---
 
@@ -137,7 +137,7 @@ It is triggered manually when we need to prepare data for training.
 2. Match metadata entries to locally available video files  
 3. Extract a few frames per video  
 4. Remove unusable frames  
-5. Resize and normalize images  
+5. Resize images (normalization is applied at training time)
 6. Split into train/val/test  
 7. Train classifier model  
 
@@ -148,7 +148,7 @@ It is triggered manually when we need to prepare data for training.
 WLASL introduces some extra challenges:
 
 - The original dataset contains broken YouTube links, so we rely on a Kaggle-hosted version with local videos  
-- Signer identity is not consistently available  
+- Signer metadata exists, but is not reliable enough for strict signer-stratified splitting
 - Some gloss classes have very few usable samples  
 
 These are handled by filtering, validation, and leaving missing fields as null.

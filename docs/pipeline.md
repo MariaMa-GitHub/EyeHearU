@@ -3,7 +3,7 @@
 This section describes the initial data processing pipeline we built for the WLASL dataset.  
 The goal is to take raw sign videos and turn them into clean training data for our ASL classifier.
 
-In our implementation, we use a Kaggle-hosted version of WLASL2000 where the video files are already downloaded and stored locally, which avoids the missing or unavailable URL issue in the original release, because the videos are already stored locally in the Kaggle version.
+In our implementation, we use a Kaggle-hosted version of WLASL2000 where the video files are already stored locally, which helps avoid missing or unavailable URLs in the original release.
 
 Some fields in our shared schema are not available in WLASL (for example signer consent info), so those values are stored as `null` for now.
 
@@ -170,18 +170,16 @@ videos/                 # Kaggle-provided local video files
 
 Example command:
 ```bash
-python pipeline.py --stage all
+python find_missing.py
 ```
+This script checks whether video IDs listed in `WLASL_v0.3.json` exist in the local `videos/` folder.
 
-Stages include:
-
+Planned stages (not fully implemented as a single runner script yet):
 - ingest  
 - clean  
 - transform  
 - load  
 - report  
-
-This matches the structure described in the pipeline writeup.
 
 ---
 

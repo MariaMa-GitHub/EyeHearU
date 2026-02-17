@@ -3,7 +3,7 @@
 This section describes the initial data processing pipeline we built for the WLASL dataset.  
 The goal is to take raw sign videos and turn them into clean training data for our ASL classifier.
 
-In our implementation, we use a Kaggle-hosted version of WLASL2000 where the video files are already downloaded and stored locally, which avoids the missing YouTube link issue in the original release.
+In our implementation, we use a Kaggle-hosted version of WLASL2000 where the video files are already downloaded and stored locally, which avoids the missing or unavailable URL issue in the original release, because the videos are already stored locally in the Kaggle version.
 
 Some fields in our shared schema are not available in WLASL (for example signer consent info), so those values are stored as `null` for now.
 
@@ -46,7 +46,7 @@ To avoid this issue, we use a Kaggle version where videos are already included l
 | local_path | where the video is stored locally |
 | duration_sec | extracted from video |
 | fps / resolution | extracted if available (may differ since videos are resized) |
-| signer_id | null (WLASL does not reliably provide signer info) |
+| signer_id | available in metadata, but we do not fully rely on it (may be incomplete for our use cases) |
 
 ---
 
@@ -101,6 +101,8 @@ Train/Val/Test Split + Label Map
       ↓
 Model Training (PyTorch)
 ```
+We currently use the split field provided in the official WLASL metadata JSON.  
+If we re-split the dataset later, we will regenerate split labels and document the ratios.
 
 ### Tools Used
 
@@ -158,12 +160,12 @@ These are handled by filtering, validation, and leaving missing fields as null.
 ## Code for Initial Pipeline Version
 
 Our initial pipeline implementation is organized like this:
-
 ```text
-data/scripts/
-download_wlasl.py # metadata parsing + local file matching
-pipeline.py # main stage runner
-preprocess.py # hand crop + resize utilities
+wlasl-complete/
+find_missing.py        # checks whether all video IDs exist locally
+WLASL_v0.3.json         # official metadata (gloss + instances + split)
+wlasl_class_list.txt    # list of gloss classes
+videos/                 # Kaggle-provided local video files
 ```
 
 Example command:

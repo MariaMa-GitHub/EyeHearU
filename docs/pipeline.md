@@ -3,6 +3,8 @@
 This section describes the initial data processing pipeline we built for the WLASL dataset.  
 The goal is to take raw sign videos and turn them into clean training data for our ASL classifier.
 
+In our implementation, we use a Kaggle-hosted version of WLASL2000 where the video files are already downloaded and stored locally, which avoids the missing YouTube link issue in the original release.
+
 Some fields in our shared schema are not available in WLASL (for example signer consent info), so those values are stored as `null` for now.
 
 ---
@@ -33,16 +35,17 @@ Example fields:
 **sign_videos**  
 Stores raw video metadata.
 
-WLASL videos are mostly sourced from YouTube, so some links may be broken.
+In the official WLASL dataset, videos are sourced from YouTube and many links may be unavailable.  
+To avoid this issue, we use a Kaggle version where videos are already included locally in a `videos/` folder.
 
 | Field | Description |
 |------|------------|
 | video_id | unique video identifier |
 | gloss_id | label for this video |
 | dataset_source | "wlasl" |
-| s3_path / local_path | where the video is stored |
+| local_path | where the video is stored locally |
 | duration_sec | extracted from video |
-| fps / resolution | extracted if available |
+| fps / resolution | extracted if available (may differ since videos are resized) |
 | signer_id | null (WLASL does not reliably provide signer info) |
 
 ---
@@ -77,15 +80,16 @@ Final training ready images.
 
 **Note:**  
 The full schema is shared with the other dataset, but for WLASL many optional fields are just stored as `null`.  
-(You can reference the schema doc in our repo.)
+Some original metadata fields (such as YouTube URLs) are not used in the Kaggle version.
 
 ---
 
 ## Pipeline Diagrams (Technologies Used)
 
 ### Offline Training Pipeline (WLASL)
+
 ```text
-WLASL Raw Videos
+WLASL Raw Videos (local Kaggle dataset)
       ↓
 Frame Extraction (OpenCV)
       ↓
@@ -100,10 +104,10 @@ Model Training (PyTorch)
 
 ### Tools Used
 
-- Python scripts for preprocessing
-- OpenCV for video + frame extraction
-- MediaPipe for hand region detection
-- PyTorch dataset loader for training
+- Python scripts for preprocessing  
+- OpenCV for video + frame extraction  
+- MediaPipe for hand region detection  
+- PyTorch dataset loader for training  
 
 AWS services are listed in the full pipeline design, but our current implementation is local-first.
 
@@ -118,22 +122,22 @@ It is triggered manually when we need to prepare data for training.
 
 | Pipeline Stage | Trigger |
 |--------------|---------|
-| Ingestion | When downloading WLASL release |
+| Ingestion | When setting up the Kaggle WLASL dataset locally |
 | Cleaning + Transform | After raw videos are available |
 | Splitting + Label Map | Before training |
-| Retraining | When we add new samples or fix broken links |
+| Retraining | When we add new samples or update the dataset |
 
 ---
 
 ### Main Use Case: Initial Training on WLASL
 
 1. Parse WLASL metadata JSON  
-2. Download available videos  
+2. Match metadata entries to locally available video files  
 3. Extract a few frames per video  
 4. Remove unusable frames  
 5. Resize and normalize images  
 6. Split into train/val/test  
-7. Train classifier model
+7. Train classifier model  
 
 ---
 
@@ -141,22 +145,23 @@ It is triggered manually when we need to prepare data for training.
 
 WLASL introduces some extra challenges:
 
-- Many videos come from YouTube and may be missing
-- Signer identity is not consistently available
-- Some gloss classes have very few usable samples
+- The original dataset contains broken YouTube links, so we rely on a Kaggle-hosted version with local videos  
+- Signer identity is not consistently available  
+- Some gloss classes have very few usable samples  
 
-These are handled by filtering and leaving missing fields as null.
+These are handled by filtering, validation, and leaving missing fields as null.
 
-(You should double check how many broken links you actually see in your local download.)
+(We plan to verify completeness by checking how many video IDs from the JSON are present in the local dataset.)
 
 ---
 
 ## Code for Initial Pipeline Version
 
 Our initial pipeline implementation is organized like this:
+
 ```text
 data/scripts/
-download_wlasl.py # download + metadata parsing
+download_wlasl.py # metadata parsing + local file matching
 pipeline.py # main stage runner
 preprocess.py # hand crop + resize utilities
 ```
@@ -182,8 +187,8 @@ This matches the structure described in the pipeline writeup.
 
 Some features are planned but not finished yet:
 
-- Automatically handling missing/broken WLASL video links  
-  (I need to verify the percentage of unavailable videos)
+- Verifying dataset completeness between the Kaggle video files and the official WLASL metadata JSON  
+  (e.g., checking for any missing video IDs)
 
 - Signer-stratified splitting  
   (WLASL signer metadata is incomplete, so we may need another approach)

@@ -174,4 +174,4 @@ npx expo start
 
 ---
 
-For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, and `docs/data_pipeline.md`.
+For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, `docs/data_pipeline.md`, and `docs/terraform_guide.md`.

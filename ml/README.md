@@ -37,7 +37,7 @@ The classifier takes as input a tensor of shape `(B, 3, 16, 224, 224)` — a bat
 
 ### How to Train
 
-1. **Run the data pipeline first** (see `docs/a2_data_pipeline.md`):
+1. **Run the data pipeline first** (see `docs/data_pipeline.md`):
 
    ```bash
    cd data/scripts

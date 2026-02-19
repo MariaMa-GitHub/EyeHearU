@@ -112,8 +112,8 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 ├── docs/
 │   ├── architecture.md
 │   ├── data_schema.md
-│   ├── a2_datasets.md        # A2 Parts 1 & 2
-│   └── a2_data_pipeline.md   # A2 Part 3
+│   ├── a2_writeup.md         # A2 Parts 1 & 2
+│   └── data_pipeline.md      # A2 Part 3
 │
 ├── Dockerfile
 ├── docker-compose.yml
@@ -174,4 +174,4 @@ npx expo start
 
 ---
 
-For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, and `docs/a2_data_pipeline.md`.
+For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, and `docs/data_pipeline.md`.

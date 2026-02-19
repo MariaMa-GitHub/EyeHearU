@@ -1,120 +1,78 @@
-## ML Pipeline (`ml/`) – ASL Classifier Training & Evaluation
+## ML Pipeline (`ml/`) — ASL Video Classifier
 
-This folder contains the **machine learning code** for Eye Hear U.  
-It defines the ASL classifier model architecture, training loop, and evaluation scripts.
+This folder contains the **machine learning code** for Eye Hear U.
+It defines the ASL video classifier, training loop, and evaluation scripts.
 
 ---
 
-### High-Level Responsibilities
+### Approach
 
-- Define the **CNN + Transformer** ASL sign classifier (`ASLClassifier`).
-- Load preprocessed ASL sign images and labels.
-- Train the model to recognize ~62 classes (scenario vocabulary + A–Z + 1–10).
-- Evaluate accuracy and common confusions.
-- Export the best checkpoint to be loaded by the backend.
+We use **Approach B: Video Classifier** — a 3D CNN backbone (e.g., R3D-18, MC3-18, or R(2+1)D-18, pretrained on Kinetics-400) fine-tuned on short ASL sign video clips.
+
+The classifier takes as input a tensor of shape `(B, 3, 16, 224, 224)` — a batch of 16-frame video clips resized to 224×224 — and outputs logits over the full gloss vocabulary (~2,000+ classes from ASL Citizen, supplemented by WLASL and MS-ASL).
 
 ---
 
 ### Key Files & Folders
 
-- `config.py`  
-  - Central configuration for:
-    - Data paths & target vocabulary (greetings, restaurant, medical, etc.).
-    - Model settings (backbone, Transformer depth, number of classes).
-    - Training hyperparameters (LR, batch size, epochs, device, etc.).
+- **`config.py`**
+  Central configuration (dataclasses) for data paths, model backbone, training hyperparameters, and device selection.
 
-- `models/classifier.py`  
-  - `ASLClassifier`:
-    - CNN backbone (e.g., ResNet18) → 7×7 feature map.
-    - Patch projection → sequence of patch embeddings.
-    - Positional encoding + 2-layer Transformer encoder.
-    - CLS token + linear classification head → logits over classes.
+- **`models/classifier.py`**
+  `ASLVideoClassifier`: wraps a torchvision 3D CNN backbone (R3D-18, MC3-18, R(2+1)D-18) with a custom dropout + linear classification head.
 
-- `training/dataset.py`  
-  - `ASLImageDataset`:
-    - Loads images from `data/processed/images/{train,val,test}/<class>/*.jpg`.
-    - Applies augmentations for training (color jitter, random crop, small rotations).
-    - Uses `label_map.json` to map sign names → indices.
+- **`training/dataset.py`**
+  `ASLVideoDataset`: reads preprocessed `.mp4` clips from `data/processed/clips/{split}/{gloss}/`, samples 16 frames, applies ImageNet normalisation and optional augmentations, and returns `(C, T, H, W)` tensors.
 
-- `training/train.py`  
-  - End-to-end training script:
-    - Builds train/val DataLoaders.
-    - Instantiates `ASLClassifier` using `Config`.
-    - Trains with AdamW + cosine LR schedule.
-    - Freezes backbone for first N epochs, then fine-tunes.
-    - Early stopping on validation accuracy.
-    - Saves `checkpoints/best_model.pt`.
+- **`training/train.py`**
+  End-to-end training script: builds DataLoaders, instantiates the classifier, trains with AdamW + cosine LR schedule, freezes the backbone for the first N epochs, applies early stopping, and saves checkpoints.
 
-- `evaluation/evaluate.py`  
-  - Evaluation script:
-    - Loads a checkpoint & test set.
-    - Computes overall accuracy, top-5 accuracy.
-    - Computes per-class accuracy.
-    - Lists most confused sign pairs.
-    - Saves `evaluation_results.json`.
+- **`evaluation/evaluate.py`**
+  Loads a checkpoint + test set, computes overall accuracy, top-5 accuracy, per-class accuracy, and lists the most confused sign pairs. Saves results to `evaluation_results.json`.
 
-- `checkpoints/`  
-  - Contains model weights and metadata files:
-    - `best_model.pt` (to be loaded by the backend).
-    - `label_map.json` (copy of the label map used during training).
-    - Optional `config.json` snapshot.
-
-> Note: `ml/inference/` is currently a **placeholder** for future deployment helpers  
-> (e.g., ONNX Runtime, Core ML adapters). The FastAPI backend directly loads the PyTorch model for now.
+- **`checkpoints/`**
+  Model weights: `best_model.pt` (loaded by the backend for inference).
 
 ---
 
-### How to Train the Model
+### How to Train
 
-1. **Prepare data via the `data/` pipeline** (see `docs/data_schema.md`):  
-   - Run `data/scripts/download_wlasl.py` to get WLASL metadata + `label_map.json`.  
-   - Download WLASL videos and place them under `data/raw/wlasl/videos/`.  
-   - Run the script again to extract frames into `data/processed/images/`.  
-   - Optionally run `data/scripts/preprocess.py` for hand cropping and splitting.
+1. **Run the data pipeline first** (see `docs/a2_data_pipeline.md`):
 
-2. **Set up a Python environment and install ML deps:**
+   ```bash
+   cd data/scripts
+   python ingest_asl_citizen.py
+   python ingest_wlasl.py
+   python ingest_msasl.py
+   python preprocess_clips.py
+   python build_unified_dataset.py
+   python validate.py
+   ```
+
+2. **Install ML dependencies:**
 
    ```bash
    cd ml
    python -m venv venv
-   source venv/bin/activate   # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **Run training:**
+3. **Train:**
 
    ```bash
    python -m training.train
    ```
 
-   - Monitors epoch-by-epoch train/val loss and accuracy.
-   - Writes checkpoints to `ml/checkpoints/`.
-
-4. **Evaluate the model:**
+4. **Evaluate:**
 
    ```bash
    python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
    ```
 
-   - Prints overall + per-class accuracy and top confusions.
-   - Saves results to `evaluation_results.json`.
-
-5. **Hand model off to backend:**
-   - Ensure `best_model.pt` and `label_map.json` are accessible to `backend` (via `MODEL_PATH` in `.env` and shared path).
-   - Coordinate with backend to implement `load_model` and wire `app.state.model`.
-
 ---
 
-### Who Should Work Here & Typical Tasks
+### Who Works Here
 
-- **Siyi & Chloe (ML):**
-  - Define and iterate on the model architecture.
-  - Tune hyperparameters to hit usable accuracy.
-  - Diagnose failure modes via confusion matrices.
-  - Maintain training configs in `config.py`.
-
-- **Zhixiao (Backend):**
-  - Uses this folder mainly to:
-    - Know where `best_model.pt` comes from.
-    - Understand the `label_map.json` structure for inference.
-
+- **Siyi & Chloe (ML):** Model architecture, hyperparameter tuning, confusion matrix analysis.
+- **Zhixiao (Backend):** Uses `best_model.pt` and `label_map.json` for inference integration.

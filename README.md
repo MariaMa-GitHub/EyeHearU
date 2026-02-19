@@ -2,51 +2,53 @@
 
 **Real-time ASL-to-English translation on iOS** — one sign at a time.
 
-Eye Hear U is a system that translates isolated American Sign Language (ASL) signs into English text and speech using a mobile app, a backend inference API, and a custom-trained ASL classifier.
+Eye Hear U translates isolated American Sign Language (ASL) signs into English text and speech using a mobile app, a backend inference API, and a video classifier trained on public ASL datasets. Infrastructure is provisioned on AWS via Terraform.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌──────────────────────┐        ┌──────────────────────┐
-│   Mobile App         │  HTTP  │   Backend API        │
-│   (React Native /    │───────▶│   (FastAPI / Python) │
-│    Expo)             │        │                      │
-│                      │        │  POST /api/v1/predict│
-│  - Camera capture    │◀───────│  → sign label +      │
-│  - Display results   │  JSON  │    confidence score  │
-│  - Text-to-speech    │        │                      │
-│  - Translation       │        │  /health, /ready     │
-│    history           │        └──────────┬───────────┘
-└──────────────────────┘                   │
-                                           │ loads
-                                ┌──────────▼───────────┐
-                                │   ML Model           │
-                                │   (PyTorch)          │
-                                │                      │
-                                │  CNN backbone        │
-                                │  (ResNet18)          │
-                                │       ↓              │
-                                │  Patch projection    │
-                                │       ↓              │
-                                │  Transformer encoder │
-                                │  (2 layers, 4 heads) │
-                                │       ↓              │
-                                │  Classification head │
-                                │  → 62 classes        │
-                                └──────────────────────┘
+┌──────────────────────┐        ┌──────────────────────────────────────┐
+│   Mobile App         │  HTTP  │   Inference API                      │
+│   (React Native /    │───────▶│   (FastAPI on ECS Fargate behind ALB)│
+│    Expo)             │        │                                      │
+│                      │        │   POST /api/v1/predict               │
+│  - Camera capture    │◀───────│   → sign label + confidence          │
+│  - Display results   │  JSON  │                                      │
+│  - Text-to-speech    │        │   Loads model from S3 at startup     │
+│  - Translation       │        └─────────────────┬────────────────────┘
+│    history           │                          │
+└──────────────────────┘                          │
+                                       ┌──────────▼──────────┐
+                                       │   ML Model          │
+                                       │   (PyTorch)         │
+                                       │                     │
+                                       │   3D CNN backbone   │
+                                       │   (R3D-18 /         │
+                                       │    Kinetics-400)    │
+                                       │        ↓            │
+                                       │   Classification    │
+                                       │   → ~2000+ classes  │
+                                       └─────────────────────┘
 
-                                ┌──────────────────────┐
-                                │   Firebase           │
-                                │   (Firestore)        │
-                                │                      │
-                                │  - Translation       │
-                                │    history           │
-                                │  - Session tracking  │
-                                │  - Usage analytics   │
-                                └──────────────────────┘
+  ┌─────────────────────┐   ┌────────────────────┐   ┌──────────────────┐
+  │   Amazon S3         │   │   Firebase         │   │   CloudWatch     │
+  │   (Data Lake)       │   │   (Firestore)      │   │   (Logs/Alerts)  │
+  │                     │   │                    │   │                  │
+  │   raw/ → processed/ │   │   - Translation    │   │   - Pipeline     │
+  │   → models/         │   │     history        │   │     metrics      │
+  │                     │   │   - User feedback  │   │   - API latency  │
+  └─────────────────────┘   └────────────────────┘   └──────────────────┘
 ```
+
+## Datasets
+
+| Dataset | Role | Size |
+|---|---|---|
+| **ASL Citizen** | Primary (train / val / test) | 2,731 glosses, ~83K videos, 52 signers |
+| **WLASL** | Supplementary training | 2,000 glosses, ~21K videos |
+| **MS-ASL** | Supplementary training | 1,000 glosses, ~25K videos |
 
 ## Project Structure
 
@@ -54,82 +56,113 @@ Eye Hear U is a system that translates isolated American Sign Language (ASL) sig
 .
 ├── backend/                  # FastAPI backend server
 │   ├── app/
-│   │   ├── main.py           # App entrypoint
-│   │   ├── config.py         # Settings from env vars
-│   │   ├── routers/
-│   │   │   ├── health.py     # /health, /ready endpoints
-│   │   │   └── predict.py    # POST /api/v1/predict
-│   │   ├── schemas/
-│   │   │   └── prediction.py # Pydantic request/response models
-│   │   └── services/
-│   │       ├── model_service.py    # Model loading & inference
-│   │       ├── preprocessing.py    # Image preprocessing pipeline
-│   │       └── firebase_service.py # Firestore integration
-│   ├── tests/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── routers/          # health.py, predict.py
+│   │   ├── schemas/          # Pydantic models
+│   │   └── services/         # model_service, preprocessing, firebase
 │   └── requirements.txt
 │
 ├── mobile/                   # React Native (Expo) mobile app
-│   ├── app/
-│   │   ├── _layout.tsx       # Root navigation layout
-│   │   ├── index.tsx         # Home screen
-│   │   ├── camera.tsx        # Camera + prediction screen
-│   │   └── history.tsx       # Translation history
-│   ├── services/
-│   │   └── api.ts            # Backend API client
-│   ├── package.json
-│   └── app.json
+│   ├── app/                  # _layout, index, camera, history
+│   ├── services/api.ts
+│   └── package.json
 │
 ├── ml/                       # Machine learning pipeline
-│   ├── config.py             # Training/model configuration
-│   ├── models/
-│   │   └── classifier.py     # CNN-Transformer ASL classifier
+│   ├── config.py             # Video classifier config
+│   ├── models/classifier.py  # ASLVideoClassifier (3D CNN)
 │   ├── training/
-│   │   ├── train.py          # Training loop
-│   │   └── dataset.py        # PyTorch dataset
+│   │   ├── train.py
+│   │   └── dataset.py        # ASLVideoDataset (PyTorch)
 │   ├── evaluation/
-│   │   └── evaluate.py       # Evaluation & error analysis
+│   │   └── evaluate.py
 │   └── requirements.txt
 │
 ├── data/                     # Data pipeline
+│   ├── Dockerfile            # Pipeline container image
 │   ├── scripts/
-│   │   ├── download_wlasl.py # WLASL dataset downloader
-│   │   └── preprocess.py     # Preprocessing & splitting
-│   ├── raw/                  # Raw downloaded data (gitignored)
-│   └── processed/            # Processed images + label map (gitignored)
+│   │   ├── pipeline_config.py          # Shared config (local + S3)
+│   │   ├── ingest_asl_citizen.py
+│   │   ├── ingest_wlasl.py
+│   │   ├── ingest_msasl.py
+│   │   ├── preprocess_clips.py
+│   │   ├── build_unified_dataset.py
+│   │   ├── validate.py
+│   │   └── requirements.txt
+│   ├── raw/                  # Raw video files (gitignored)
+│   └── processed/            # Processed clips + metadata (gitignored)
+│
+├── infrastructure/           # Terraform IaC
+│   ├── main.tf               # Root module, provider config
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── environments/
+│   │   ├── dev.tfvars
+│   │   ├── staging.tfvars
+│   │   └── prod.tfvars
+│   └── modules/
+│       ├── s3/               # Data lake bucket
+│       ├── ecr/              # Container registries
+│       ├── batch/            # Pipeline job compute
+│       ├── ecs/              # API cluster + ALB
+│       ├── iam/              # Roles and policies
+│       ├── networking/       # VPC, subnets, NAT
+│       └── monitoring/       # CloudWatch, SNS alerts
 │
 ├── docs/
-│   ├── architecture.md       # Detailed system architecture & roles
-│   └── data_schema.md        # Database & data schemas
+│   ├── architecture.md
+│   ├── data_schema.md
+│   ├── a2_datasets.md        # A2 Parts 1 & 2
+│   └── a2_data_pipeline.md   # A2 Part 3
 │
-├── Dockerfile                # Backend container
-├── docker-compose.yml        # Local dev orchestration
+├── Dockerfile
+├── docker-compose.yml
 └── .gitignore
 ```
 
 ## Quick Start
 
-### Prerequisites
-- **Python** 3.11+
-- **Node.js** 18+ (Node 20.x recommended for React Native 0.81)
-- **iOS device or simulator** (for Expo)
-- **Docker** (optional, for containerized backend)
+### Infrastructure (Terraform)
+
+```bash
+cd infrastructure
+terraform init
+terraform apply -var-file=environments/dev.tfvars
+```
+
+### Data Pipeline
+
+```bash
+cd data/scripts
+pip install -r requirements.txt
+
+# Local run
+export PIPELINE_ENV=local
+python ingest_asl_citizen.py
+python ingest_wlasl.py
+python ingest_msasl.py
+python preprocess_clips.py
+python build_unified_dataset.py
+python validate.py
+```
+
+### ML Training
+
+```bash
+cd ml
+pip install -r requirements.txt
+python -m training.train
+python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
+```
 
 ### Backend
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
-
-# Copy and fill in environment variables
 cp .env.example .env
-
-# Run the server
 uvicorn app.main:app --reload --port 8000
 ```
-
-The API will be available at `http://localhost:8000`. Visit `http://localhost:8000/docs` for the interactive Swagger UI.
 
 ### Mobile App
 
@@ -139,59 +172,6 @@ npm install
 npx expo start
 ```
 
-Scan the QR code with Expo Go on your phone, or press `i` to open in the iOS simulator.
-
-### ML Pipeline
-
-```bash
-cd ml
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Download and preprocess data
-python -m data.scripts.download_wlasl
-
-# Train the model
-python -m training.train
-
-# Evaluate
-python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
-```
-
-### Docker (Backend only)
-
-```bash
-docker-compose up --build
-```
-
 ---
 
-## Target Vocabulary (MVP)
-
-The classifier focuses on a **scenario-driven vocabulary** instead of all of ASL:
-
-| Scenario           | Signs                                                    |
-|--------------------|----------------------------------------------------------|
-| **Greetings**      | hello, goodbye, please, thank you, sorry, yes, no       |
-| **Basic needs**    | help, stop, wait, water, food, bathroom                 |
-| **Restaurant**     | eat, drink, hot, cold, more, enough, check              |
-| **Medical**        | hurt, emergency, doctor, medicine, pain, sick, allergic |
-| **Fingerspelling** | A–Z (fallback for any word not in vocabulary)           |
-| **Numbers**        | 1–10                                                    |
-
-**Total: ~62 classes** (26 letters + ~36 words).
-
----
-
-## Datasets (High-Level)
-
-| Dataset        | Size                      | Use case                                      |
-|----------------|---------------------------|-----------------------------------------------|
-| **WLASL**      | 2K glosses, ~21K videos   | Primary training data                         |
-| **ASL Citizen**| 2.7K glosses, ~84K videos | Robustness testing (varied, real-world video) |
-| **MS-ASL**     | 1K glosses, ~25K videos   | Supplementary training data                   |
-| **Custom**     | TBD                       | Fill gaps in target vocabulary                |
-
-For exact data layout and schema details, see `docs/data_schema.md`.
-
+For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, and `docs/a2_data_pipeline.md`.

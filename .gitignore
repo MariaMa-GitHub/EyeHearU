@@ -39,6 +39,9 @@ mobile/ios/Pods/
 mobile/android/.gradle/
 mobile/android/app/build/
 
+# Terraform
+infrastructure/.terraform/
+
 # Misc
 *.log
 *.tmp

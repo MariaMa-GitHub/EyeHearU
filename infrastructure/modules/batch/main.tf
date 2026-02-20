@@ -7,7 +7,7 @@ resource "aws_batch_compute_environment" "pipeline" {
     type      = "FARGATE"
     max_vcpus = var.max_vcpus
 
-    subnets          = var.subnet_ids
+    subnets            = var.subnet_ids
     security_group_ids = [var.security_group_id]
   }
 }

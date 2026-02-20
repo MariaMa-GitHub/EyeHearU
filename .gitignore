@@ -23,6 +23,11 @@ data/processed/
 
 # Pipeline run logs and reports (generated locally and on server)
 data/metadata/
+data/processed/
+data/metadata/
+
+# Video clips
+*.mp4
 
 # OS
 .DS_Store

@@ -1,119 +1,156 @@
 """
-PyTorch Dataset for ASL sign images.
+PyTorch Dataset for ASL sign video clips.
 
-Supports loading from:
-  - WLASL preprocessed frames
-  - ASL Citizen preprocessed frames
-  - Custom collected images
+Each sample is a (video_tensor, label_index) tuple where
+video_tensor has shape (C, T, H, W) — the standard input
+format for 3D CNNs like I3D and SlowFast.
 
-Each sample is a (image_tensor, label_index) tuple.
+Expected data layout (produced by the data pipeline):
+    data/processed/
+      clips/{split}/{gloss}/*.mp4
+      label_map.json
 """
 
 import json
 from pathlib import Path
-from typing import Optional
 
+import cv2
+import numpy as np
 import torch
 from torch.utils.data import Dataset
-from PIL import Image
-from torchvision import transforms
 
 
-class ASLImageDataset(Dataset):
+# ImageNet normalisation (standard for Kinetics-pretrained backbones)
+MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
+
+class ASLVideoDataset(Dataset):
     """
-    Dataset of ASL sign images.
+    Dataset of preprocessed ASL sign video clips.
 
-    Expected directory structure:
-        processed_dir/
-        ├── images/
-        │   ├── hello/
-        │   │   ├── 0001.jpg
-        │   │   ├── 0002.jpg
-        │   │   └── ...
-        │   ├── goodbye/
-        │   │   └── ...
-        │   └── ...
-        └── label_map.json   # {"hello": 0, "goodbye": 1, ...}
+    Each clip is a short .mp4 with a fixed number of frames
+    at a fixed resolution, produced by preprocess_clips.py.
     """
 
     def __init__(
         self,
         data_dir: str | Path,
         split: str = "train",
-        image_size: int = 224,
+        num_frames: int = 16,
         augment: bool = False,
     ):
         self.data_dir = Path(data_dir)
         self.split = split
-        self.image_size = image_size
+        self.num_frames = num_frames
+        self.augment = augment
 
         # Load label map
         label_map_path = self.data_dir / "label_map.json"
-        if label_map_path.exists():
-            with open(label_map_path) as f:
-                self.label_map = json.load(f)
-        else:
-            self.label_map = {}
+        with open(label_map_path) as f:
+            self.label_map: dict[str, int] = json.load(f)
 
-        # Collect all image paths and their labels
         self.samples = self._collect_samples()
 
-        # Build transforms
-        self.transform = self._build_transforms(augment)
-
     def _collect_samples(self) -> list[tuple[Path, int]]:
-        """Walk the images directory and collect (path, label_idx) pairs."""
-        images_dir = self.data_dir / "images" / self.split
+        clips_dir = self.data_dir / "clips" / self.split
         samples = []
 
-        if not images_dir.exists():
-            print(f"[WARNING] Image directory not found: {images_dir}")
+        if not clips_dir.exists():
+            print(f"[WARNING] Clip directory not found: {clips_dir}")
             return samples
 
-        for class_dir in sorted(images_dir.iterdir()):
+        for class_dir in sorted(clips_dir.iterdir()):
             if not class_dir.is_dir():
                 continue
-            label_name = class_dir.name
-            if label_name not in self.label_map:
+            gloss = class_dir.name
+            if gloss not in self.label_map:
                 continue
-            label_idx = self.label_map[label_name]
-            for img_path in sorted(class_dir.glob("*.jpg")):
-                samples.append((img_path, label_idx))
-            for img_path in sorted(class_dir.glob("*.png")):
-                samples.append((img_path, label_idx))
+            label_idx = self.label_map[gloss]
+            for clip_path in sorted(class_dir.glob("*.mp4")):
+                samples.append((clip_path, label_idx))
 
-        print(f"[{self.split}] Loaded {len(samples)} samples across {len(self.label_map)} classes")
+        print(f"[{self.split}] {len(samples)} clips, "
+              f"{len(self.label_map)} classes")
         return samples
 
-    def _build_transforms(self, augment: bool):
-        """Build image transforms for training or evaluation."""
-        normalize = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225],
-        )
+    def _read_clip(self, path: Path) -> np.ndarray:
+        """Read all frames from a preprocessed clip and return (T, H, W, C)."""
+        cap = cv2.VideoCapture(str(path))
+        frames = []
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(frame)
+        cap.release()
 
-        if augment:
-            return transforms.Compose([
-                transforms.Resize((self.image_size + 32, self.image_size + 32)),
-                transforms.RandomCrop(self.image_size),
-                transforms.RandomHorizontalFlip(p=0.0),  # ASL signs are NOT symmetric — don't flip!
-                transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2),
-                transforms.RandomRotation(degrees=10),
-                transforms.ToTensor(),
-                normalize,
+        if len(frames) == 0:
+            h, w = 224, 224
+            return np.zeros((self.num_frames, h, w, 3), dtype=np.uint8)
+
+        arr = np.stack(frames)  # (T, H, W, 3)
+
+        # Pad or truncate to exactly self.num_frames
+        t = arr.shape[0]
+        if t < self.num_frames:
+            pad = np.repeat(arr[-1:], self.num_frames - t, axis=0)
+            arr = np.concatenate([arr, pad], axis=0)
+        elif t > self.num_frames:
+            indices = np.linspace(0, t - 1, self.num_frames, dtype=int)
+            arr = arr[indices]
+
+        return arr
+
+    def _apply_augmentations(self, clip: np.ndarray) -> np.ndarray:
+        """Simple temporal and spatial augmentations for training."""
+        # Random temporal shift: offset the start by ±1 frame
+        if clip.shape[0] > 2 and np.random.rand() < 0.5:
+            shift = np.random.randint(-1, 2)
+            clip = np.roll(clip, shift, axis=0)
+
+        # Random brightness/contrast jitter
+        if np.random.rand() < 0.5:
+            alpha = np.random.uniform(0.8, 1.2)   # contrast
+            beta = np.random.uniform(-20, 20)      # brightness
+            clip = np.clip(clip.astype(np.float32) * alpha + beta, 0, 255).astype(np.uint8)
+
+        # Random spatial crop (instead of center crop)
+        if np.random.rand() < 0.5:
+            t, h, w, c = clip.shape
+            crop_h, crop_w = int(h * 0.9), int(w * 0.9)
+            top = np.random.randint(0, h - crop_h + 1)
+            left = np.random.randint(0, w - crop_w + 1)
+            clip = clip[:, top:top+crop_h, left:left+crop_w, :]
+            clip = np.stack([
+                cv2.resize(f, (w, h), interpolation=cv2.INTER_LINEAR)
+                for f in clip
             ])
-        else:
-            return transforms.Compose([
-                transforms.Resize((self.image_size, self.image_size)),
-                transforms.ToTensor(),
-                normalize,
-            ])
+
+        return clip
+
+    def _normalize(self, clip: np.ndarray) -> torch.Tensor:
+        """
+        Normalise pixel values and convert to tensor.
+
+        Input:  (T, H, W, C) uint8
+        Output: (C, T, H, W) float32, ImageNet-normalised
+        """
+        arr = clip.astype(np.float32) / 255.0
+        arr = (arr - MEAN) / STD                # broadcast over T, H, W
+        arr = arr.transpose(3, 0, 1, 2)         # (T,H,W,C) → (C,T,H,W)
+        return torch.from_numpy(arr)
 
     def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
-        img_path, label_idx = self.samples[idx]
-        image = Image.open(img_path).convert("RGB")
-        image = self.transform(image)
-        return image, label_idx
+        clip_path, label_idx = self.samples[idx]
+        clip = self._read_clip(clip_path)        # (T, H, W, C) uint8
+
+        if self.augment:
+            clip = self._apply_augmentations(clip)
+
+        tensor = self._normalize(clip)           # (C, T, H, W) float32
+        return tensor, label_idx

@@ -1,137 +1,145 @@
-# Data Schema — Eye Hear U
+# Data Schemas — Eye Hear U
 
-This document describes the data models used across the system.
-Start with the MVP schema and evolve as features are added.
-
----
-
-## 1. Firestore Collections (Database)
-
-### `translations` collection
-Stores each prediction made by the app (for analytics and history).
-
-| Field            | Type      | Description                                    |
-|------------------|-----------|------------------------------------------------|
-| `session_id`     | string    | Anonymous session identifier                   |
-| `predicted_sign` | string    | The top-1 predicted ASL sign label             |
-| `confidence`     | number    | Model confidence score (0.0 - 1.0)             |
-| `top_k`          | array     | Top-k predictions [{sign, confidence}]         |
-| `timestamp`      | timestamp | When the prediction was made                   |
-| `image_hash`     | string    | Hash of the input image (for dedup, no raw img)|
-| `feedback`       | string    | Optional user feedback ("correct" / "wrong")   |
-
-### `sessions` collection (future)
-If user accounts are added later.
-
-| Field          | Type      | Description                          |
-|----------------|-----------|--------------------------------------|
-| `session_id`   | string    | Unique session identifier            |
-| `device_info`  | map       | {model, os_version, screen_size}     |
-| `created_at`   | timestamp | Session start time                   |
-| `last_active`  | timestamp | Last activity time                   |
-
-### `vocabulary` collection (future — learning mode)
-| Field        | Type      | Description                               |
-|--------------|-----------|-------------------------------------------|
-| `gloss`      | string    | The sign label (e.g., "hello")            |
-| `category`   | string    | Grouping (greeting, medical, restaurant)  |
-| `difficulty` | number    | 1=easy, 2=medium, 3=hard                 |
-| `video_url`  | string    | Reference video showing the sign          |
+This document defines the data schemas used at every stage of the data pipeline, from raw ingestion through to the final processed dataset consumed by the video classifier.
 
 ---
 
-## 2. ML Data Schema
+## 1. Raw Ingested Records
 
-### Training Data Layout
+After the ingestion scripts run, each dataset source produces a normalised CSV with the following columns. (Extra columns vary by source.)
+
+### 1.1 ASL Citizen — `ingested_asl_citizen.csv`
+
+| Field      | Type   | Description                             |
+|------------|--------|-----------------------------------------|
+| clip_id    | string | Unique identifier (original filename)   |
+| gloss      | string | English label for the ASL sign (lower)  |
+| signer_id  | string | Anonymous signer identifier             |
+| split      | string | Official split: `train`, `val`, `test`  |
+| source     | string | Always `"asl_citizen"`                  |
+| src_path   | string | Absolute path to the raw `.mp4` file    |
+
+### 1.2 WLASL — `ingested_wlasl.csv`
+
+| Field       | Type   | Description                                 |
+|-------------|--------|---------------------------------------------|
+| clip_id     | string | `"wlasl_{video_id}"`                        |
+| gloss       | string | English label for the ASL sign (lower)      |
+| signer_id   | string | Signer identifier (when available)          |
+| split       | string | Annotated split: `train`, `val`, `test`     |
+| source      | string | Always `"wlasl"`                            |
+| frame_start | int    | Start frame of the sign in the source video |
+| frame_end   | int    | End frame (-1 = end of video)               |
+| src_path    | string | Absolute path to the raw `.mp4` file        |
+
+### 1.3 MS-ASL — `ingested_msasl.csv`
+
+| Field      | Type   | Description                               |
+|------------|--------|-------------------------------------------|
+| clip_id    | string | `"msasl_{split}_{idx}"`                   |
+| gloss      | string | English label for the ASL sign (lower)    |
+| signer_id  | string | Signer identifier                         |
+| split      | string | Annotated split: `train`, `val`, `test`   |
+| source     | string | Always `"msasl"`                          |
+| start_time | float  | Start timestamp (seconds) within source   |
+| end_time   | float  | End timestamp (seconds, -1 = end)         |
+| src_path   | string | Absolute path to the raw `.mp4` file      |
+
+---
+
+## 2. Processed Clips — `processed_clips.csv`
+
+After `preprocess_clips.py` trims, resamples, and resizes every video, the master CSV contains:
+
+| Field      | Type   | Description                                         |
+|------------|--------|-----------------------------------------------------|
+| clip_id    | string | Same as ingested id                                 |
+| gloss      | string | English label (lower-cased)                         |
+| signer_id  | string | Signer identifier                                   |
+| split      | string | `train`, `val`, or `test`                           |
+| source     | string | `asl_citizen`, `wlasl`, or `msasl`                  |
+| num_frames | int    | Always `16` (or whatever `NUM_SAMPLE_FRAMES` is)    |
+| height     | int    | Always `224`                                        |
+| width      | int    | Always `224`                                        |
+| clip_path  | string | Path to the processed `.mp4` file on disk           |
+
+### File layout on disk
+
 ```
 data/processed/
-├── images/
+├── clips/
 │   ├── train/
 │   │   ├── hello/
-│   │   │   ├── frame_00001.jpg
+│   │   │   ├── wlasl_12345.mp4
+│   │   │   └── asl_citizen_hello_001.mp4
+│   │   ├── thank_you/
 │   │   │   └── ...
-│   │   ├── goodbye/
 │   │   └── ...
 │   ├── val/
-│   │   └── (same structure)
+│   │   └── ...
 │   └── test/
-│       └── (same structure)
-├── label_map.json          # {"hello": 0, "goodbye": 1, ...}
-└── dataset_stats.json      # {class_counts, total, splits}
-```
-
-### label_map.json
-Maps human-readable sign names to integer class indices used by the model.
-
-```json
-{
-  "A": 0,
-  "B": 1,
-  "hello": 26,
-  "thank you": 27,
-  ...
-}
-```
-
-### Model Checkpoint
-```
-ml/checkpoints/
-├── best_model.pt           # Best validation accuracy weights
-├── label_map.json          # Copy of label map (for inference)
-└── config.json             # Training config snapshot
+│       └── ...
+├── processed_clips.csv
+├── label_map.json
+└── dataset_stats.json
 ```
 
 ---
 
-## 3. API Request/Response Schema
+## 3. Label Map — `label_map.json`
 
-### POST /api/v1/predict
+A flat JSON dictionary mapping every gloss to a contiguous integer index used by the classifier.
 
-**Request:** `multipart/form-data`
-- `file`: JPEG/PNG image file
-
-**Response:**
 ```json
 {
-  "sign": "hello",
-  "confidence": 0.92,
-  "top_k": [
-    {"sign": "hello", "confidence": 0.92},
-    {"sign": "help",  "confidence": 0.05},
-    {"sign": "hi",    "confidence": 0.02}
-  ],
-  "message": null
+  "about": 0,
+  "above": 1,
+  "accept": 2,
+  "...": "...",
+  "zero": 1999
+}
+```
+
+Generated by `build_unified_dataset.py`. The number of entries equals the number of classes (up to ~2,731 from ASL Citizen before filtering).
+
+---
+
+## 4. Dataset Statistics — `dataset_stats.json`
+
+```json
+{
+  "num_classes": 2000,
+  "total_clips": 95000,
+  "splits": {
+    "train": 68000,
+    "val": 12000,
+    "test": 15000
+  },
+  "source_breakdown": {
+    "asl_citizen": 75000,
+    "wlasl": 12000,
+    "msasl": 8000
+  },
+  "per_class": {
+    "hello": {"train": 85, "val": 12, "test": 20},
+    "...": {}
+  }
 }
 ```
 
 ---
 
-## 4. Aspirational Datasets
+## 5. Firestore Schema (Backend)
 
-### Ideal dataset characteristics (what we wish existed)
-| Property               | Ideal Value                              |
-|------------------------|------------------------------------------|
-| Number of glosses      | 100+ common signs                        |
-| Videos per gloss       | 50+ from diverse signers                 |
-| Signer diversity       | 20+ signers, varied skin tones, ages     |
-| Backgrounds            | Real-world (offices, homes, restaurants) |
-| Lighting               | Varied (natural, fluorescent, dim)       |
-| Camera angles          | Front-facing, slightly angled            |
-| Resolution             | 720p+                                    |
-| Frame rate             | 30fps                                    |
-| Annotations            | Gloss label, hand bounding box, timestamps|
+The backend stores prediction logs and (optionally) feedback in Firestore.
 
-### Actual datasets available
-| Dataset      | Glosses | Videos | Signers | Quality Notes                           |
-|--------------|---------|--------|---------|----------------------------------------|
-| WLASL        | 2,000   | ~21K   | 100+    | YouTube sourced, many links broken     |
-| ASL Citizen  | 2,731   | ~84K   | 52      | Crowdsourced, varied quality           |
-| MS-ASL       | 1,000   | ~25K   | 222     | Cleaned YouTube data, good diversity   |
-| ASL-LEX      | 2,723   | ~2.7K  | 1       | Single signer, very clean              |
+### `translations` collection
 
-### Gap analysis
-- **Broken links**: WLASL videos are YouTube-sourced; many are now unavailable
-- **Background diversity**: Most datasets have clean backgrounds, unlike real-world use
-- **Mobile camera quality**: No dataset specifically captures from phone cameras
-- **Our target vocab**: Not all our target signs may be in available datasets
-- **Mitigation**: Supplement with custom-recorded data from team members
+| Field          | Type      | Description                                  |
+|----------------|-----------|----------------------------------------------|
+| session_id     | string    | Unique session identifier                    |
+| predicted_sign | string    | Top-1 predicted gloss                        |
+| confidence     | float     | Confidence score for the top prediction      |
+| top_k          | array     | Top-5 predictions `[{sign, confidence}, …]`  |
+| timestamp      | timestamp | When the prediction was made                 |
+| feedback       | string    | Optional user feedback (`correct`/`wrong`)   |

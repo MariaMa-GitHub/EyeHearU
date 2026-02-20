@@ -1,0 +1,70 @@
+# MVP vocabulary: single isolated signs, scenario-focused
+# All terms below EXIST in MS-ASL (classes + synonyms)
+# MS-ASL has NO single-letter glosses (a–z) — fingerspelling is a different task
+#
+# Greetings
+hello
+hi
+bye
+thanks
+please
+yes
+no
+nice to meet you
+good morning
+good afternoon
+night
+# goodbye → bye (synonym)
+# thank-you → thanks (alias)
+# good-night → night
+#
+# Basic needs
+water
+eat
+drink
+help
+bathroom
+rest
+sleep
+need
+want
+# food → eat (synonym)
+# toilet → bathroom (synonym)
+#
+# Restaurant
+table
+cup
+plate
+spoon
+knife
+coffee
+tea
+milk
+bread
+waiter
+check
+# MS-ASL does NOT have: menu, order, bill, fork
+#
+# Medical
+doctor
+nurse
+hospital
+medicine
+sick
+hurt
+emergency
+# pain → hurt (synonym)
+#
+# Numbers 1–10 (word form; digit 1–10 map to these via synonym)
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+#
+# Letters A–Z: NOT in MS-ASL (use fingerspelling dataset instead)

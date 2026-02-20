@@ -292,7 +292,7 @@ ecr_api_repo_url = "772548857721.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-d
 ecr_pipeline_repo_url = "772548857721.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-data-pipeline"
 s3_bucket_arn = "arn:aws:s3:::eye-hear-u-dev-data"
 s3_bucket_name = "eye-hear-u-dev-data"
-sns_topic_arn = "arn:aws:sns:ca-central-1:772548857721:eye-hear-u-dev-alerts" 
+sns_topic_arn = "arn:aws:sns:ca-central-1:772548857721:eye-hear-u-dev-alerts"
 ```
 
 ### 6.5 Build and Push Docker Images

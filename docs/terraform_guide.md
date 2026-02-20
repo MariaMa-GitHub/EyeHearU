@@ -35,7 +35,7 @@ Terraform keeps a **state file** (`terraform.tfstate`) that records the mapping 
 backend "s3" {
   bucket         = "eye-hear-u-terraform-state"
   key            = "infrastructure/terraform.tfstate"
-  region         = "us-east-1"
+  region         = "ca-central-1"
   dynamodb_table = "eye-hear-u-terraform-locks"
   encrypt        = true
 }
@@ -219,7 +219,7 @@ aws configure
 # Enter:
 #   AWS Access Key ID:     <your key>
 #   AWS Secret Access Key: <your secret>
-#   Default region name:   us-east-1
+#   Default region name:   ca-central-1
 #   Default output format: json
 ```
 
@@ -229,7 +229,7 @@ Before Terraform can manage anything, it needs an S3 bucket and DynamoDB table t
 
 ```bash
 # Create the state bucket
-aws s3 mb s3://eye-hear-u-terraform-state --region us-east-1
+aws s3 mb s3://eye-hear-u-terraform-state --region ca-central-1
 
 # Enable versioning on it
 aws s3api put-bucket-versioning \
@@ -242,7 +242,7 @@ aws dynamodb create-table \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
-  --region us-east-1
+  --region ca-central-1
 ```
 
 ### 6.3 Initialize Terraform
@@ -274,10 +274,10 @@ After apply completes, Terraform prints the outputs:
 ```
 Outputs:
 
-api_load_balancer_dns = "eye-hear-u-dev-api-alb-123456.us-east-1.elb.amazonaws.com"
+api_load_balancer_dns = "eye-hear-u-dev-api-alb-123456.ca-central-1.elb.amazonaws.com"
 s3_bucket_name        = "eye-hear-u-dev-data"
-ecr_pipeline_repo_url = "123456789.dkr.ecr.us-east-1.amazonaws.com/eye-hear-u-dev-data-pipeline"
-ecr_api_repo_url      = "123456789.dkr.ecr.us-east-1.amazonaws.com/eye-hear-u-dev-backend-api"
+ecr_pipeline_repo_url = "123456789.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-data-pipeline"
+ecr_api_repo_url      = "123456789.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-backend-api"
 ```
 
 Save these — you'll need them for the next steps.
@@ -287,7 +287,7 @@ Save these — you'll need them for the next steps.
 ```bash
 # Get your AWS account ID
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION=us-east-1
+REGION=ca-central-1
 
 # Log in to ECR
 aws ecr get-login-password --region $REGION | \

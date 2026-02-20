@@ -19,7 +19,10 @@ backend/firebase-credentials.json
 ml/checkpoints/*.pt
 ml/checkpoints/*.onnx
 data/raw/
-data/processed/images/
+data/processed/
+
+# Pipeline run logs and reports (generated locally and on server)
+data/metadata/
 
 # OS
 .DS_Store

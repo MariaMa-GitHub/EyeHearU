@@ -7,9 +7,10 @@ Pre-downloaded videos should be placed in:
 
 This script:
   1. Downloads the WLASL v0.3 JSON annotation file (if not cached).
-  2. Parses it into normalised records with temporal boundaries.
+  2. Parses it into normalised records with temporal boundaries (converted to
+     start_time / end_time in seconds, same output format as ingest_msasl).
   3. Validates video availability.
-  4. Writes  ingested_wlasl.csv  for downstream processing.
+  4. Writes  ingested_wlasl.csv  for downstream preprocess_clips (trim by time).
 """
 
 import csv
@@ -20,6 +21,9 @@ from pathlib import Path
 import requests
 
 from pipeline_config import WLASL_RAW, WLASL_JSON_URL, PROCESSED_DIR
+
+# WLASL annotations use frame indices at 25 fps (per official README).
+WLASL_FPS = 25.0
 
 
 def download_metadata() -> list:
@@ -44,6 +48,10 @@ def parse_records(raw_meta: list) -> list[dict]:
           "instances": [ { "video_id": "69241", "split": "train",
                            "frame_start": 0, "frame_end": -1, ... }, ... ]
         }, ... ]
+
+    We output the same schema as ingest_msasl: start_time, end_time (seconds)
+    so preprocess_clips can trim by time like MS-ASL. Frames are converted
+    using WLASL_FPS (25).
     """
     records = []
     video_dir = WLASL_RAW / "videos"
@@ -53,13 +61,19 @@ def parse_records(raw_meta: list) -> list[dict]:
         for inst in entry.get("instances", []):
             vid = inst.get("video_id", "")
             src = video_dir / f"{vid}.mp4"
+            frame_start = int(inst.get("frame_start", 0) or 0)
+            frame_end = int(inst.get("frame_end", -1) or -1)
+
+            start_time = frame_start / WLASL_FPS
+            end_time = (frame_end / WLASL_FPS) if frame_end >= 0 else -1.0
+
             records.append({
                 "clip_id": f"wlasl_{vid}",
                 "gloss": gloss,
                 "signer_id": str(inst.get("signer_id", "")),
                 "split": inst.get("split", "train").strip().lower(),
-                "frame_start": inst.get("frame_start", 0),
-                "frame_end": inst.get("frame_end", -1),
+                "start_time": start_time,
+                "end_time": end_time,
                 "src_path": str(src),
             })
     return records
@@ -72,12 +86,13 @@ def validate_videos(records: list[dict]) -> list[dict]:
 
 
 def write_ingested_csv(records: list[dict]):
+    """Write CSV with same columns as ingested_msasl (start_time, end_time, src_path)."""
     out_path = PROCESSED_DIR / "ingested_wlasl.csv"
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     fieldnames = [
         "clip_id", "gloss", "signer_id", "split", "source",
-        "frame_start", "frame_end", "src_path",
+        "start_time", "end_time", "src_path",
     ]
     with open(out_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY scripts/ ./scripts/
 
 ENV PIPELINE_ENV=local
-ENV AWS_REGION=us-east-1
+ENV AWS_REGION=ca-central-1
 
 ENTRYPOINT ["python"]

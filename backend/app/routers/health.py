@@ -31,7 +31,7 @@ async def readiness_check(request: Request):
     this will correctly report `model_loaded = False`.
     """
     app = request.app
-    model_loaded = hasattr(app.state, "model")
+    model_loaded = getattr(app.state, "model", None) is not None
     return {
         "status": "ready" if model_loaded else "initializing",
         "model_loaded": model_loaded,

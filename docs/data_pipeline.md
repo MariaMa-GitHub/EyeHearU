@@ -1,10 +1,24 @@
 # Part Three: Data-Processing Pipeline
 
+This document addresses the Part Three requirements: **data ingestion, cleaning, transformation, and data lake design**.
+
+**3.1 Key requirements — where to find them in this document:**
+
+| Requirement | Section |
+|-------------|---------|
+| **Data schemas** | §2 (summary) and [`data_schema.md`](./data_schema.md) (full definitions) |
+| **Pipeline diagrams with the technologies used** | §1 (overview diagram), §1.1 (technologies per stage), §3 (detailed technology list) |
+| **When the pipelines will run and for which use cases** | §4 |
+| **Code for an initial version of this pipeline** | §9 (repository paths and file list; code in `data/scripts/`, `ml/`, `backend/`) |
+| **Next steps for features not implemented** | §10 |
+
+---
+
 ## 1. Pipeline Overview
 
-Our data pipeline transforms three public ASL video datasets (ASL Citizen, WLASL, MS-ASL) into a single unified, preprocessed dataset that our video classifier (3D CNN pretrained on Kinetics-400) consumes during training and evaluation. The pipeline runs locally during development and on **AWS** in staging/production, orchestrated by **Apache Airflow** and deployed via **Terraform**.
+Our data pipeline transforms three public ASL video datasets (ASL Citizen, WLASL, MS-ASL) into a single unified, preprocessed dataset that our video classifier (3D CNN pretrained on Kinetics-400) consumes during training and evaluation. The pipeline runs locally during development and on **AWS** (S3, Batch/sbatch, EC2) in staging/production, with infrastructure deployed via **Terraform**.
 
-The pipeline has four stages:
+The pipeline has **four stages**: ingestion → preprocessing → dataset building → validation. An **MVP path** restricts to a scenario-focused vocabulary (greetings, basic needs, restaurant, medical, letters A–Z, numbers 1–10) and writes all outputs under `processed/mvp/` in the data lake.
 
 ```
                           ┌─────────────────────────────┐
@@ -101,11 +115,23 @@ The pipeline has four stages:
  └───────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 1.1 Pipeline diagram — technologies per stage
+
+| Stage | Technologies | Inputs | Outputs |
+|-------|--------------|--------|---------|
+| **1. Ingestion** | Python, Requests, boto3, zipfile (S3 range requests) | Raw archives / metadata URLs, S3 `raw/` | `ingested_*.csv` in S3 `processed/` or `processed/mvp/` |
+| **2. Preprocessing** | Python, OpenCV (cv2), NumPy, boto3 | Ingested CSV, raw videos (local or S3) | `processed_clips.csv`, `clips/{train,val,test}/{gloss}/*.mp4` |
+| **3. Dataset building** | Python, JSON, boto3 | `processed_clips.csv` | `label_map.json`, `dataset_stats.json` |
+| **4. Validation** | Python, OpenCV (optional), boto3, CloudWatch | `processed_clips.csv`, `label_map.json`, clip files | Pass/fail report; optional CloudWatch metric |
+| **Data lake** | Amazon S3 | — | `raw/`, `processed/`, `processed/mvp/`, `models/` |
+| **Training** | PyTorch, torchvision (3D CNN), Python | Processed clips + label map | `best_model.pt`, `label_map.json` in `ml/checkpoints/` or S3 |
+| **Inference** | FastAPI, PyTorch, OpenCV, boto3 | Video upload, model + label map | `POST /api/v1/predict` → sign label + confidence |
+
 ---
 
 ## 2. Data Schemas
 
-Full schemas are documented in [`docs/data_schema.md`](./data_schema.md). A summary:
+Data schemas define the structure of the data at each pipeline stage. Full definitions are in **[`docs/data_schema.md`](./data_schema.md)**. Summary:
 
 ### 2.1 Raw Ingested Records (per source)
 
@@ -184,6 +210,16 @@ Flat JSON: `{ "gloss": int_index, … }` — up to ~2,731 classes (ASL Citizen v
 
 ## 4. When the Pipelines Run and for Which Use Cases
 
+The pipelines run in the following situations and serve these use cases:
+
+| When | Use case |
+|------|----------|
+| **One-time (dataset preparation)** | Produce the full or MVP processed dataset for model development. |
+| **After adding a source** | Re-ingest and preprocess when new raw videos (e.g. WLASL, MS-ASL) are uploaded. |
+| **MVP-only (recommended first)** | Ingest and preprocess only the MVP vocabulary; outputs go to `processed/mvp/` (smaller, faster). |
+| **Post–data change** | Re-run build and validate after preprocessing to refresh label map and stats and confirm integrity. |
+| **Scheduled / on-demand** | Validation can run on a schedule (e.g. weekly) or after training; jobs can be submitted via sbatch/Batch. |
+
 ### 4.1 One-Time Full Run (Dataset Preparation)
 
 Run once at the start of model development, after the raw video files have been uploaded to S3.
@@ -220,6 +256,77 @@ python preprocess_clips.py --source wlasl
 python build_unified_dataset.py
 python validate.py
 ```
+
+### 4.2a Run MVP pipeline (ingest + process, MVP-filtered)
+
+All MVP outputs go under **`processed/mvp/`** (S3: `s3://{bucket}/processed/mvp/`, local: `data/processed/mvp/`).
+
+**1. Ingest ASL Citizen (MVP only) to S3**
+
+From project root, with `PIPELINE_ENV=dev` (or your env) and AWS credentials set:
+
+**PowerShell (Windows):**
+```powershell
+cd data/scripts
+$env:PIPELINE_ENV = "dev"
+python ingest_asl_citizen.py --mvp
+```
+
+**Bash / CMD:**
+```bash
+cd data/scripts
+# CMD: set PIPELINE_ENV=dev
+# Bash: export PIPELINE_ENV=dev
+python ingest_asl_citizen.py --mvp
+```
+
+- Streams the archive to S3 if not already there; extracts metadata; keeps only glosses in `mvp_glosses.txt`; writes **`processed/mvp/ingested_asl_citizen.csv`** to S3.
+
+**On AWS Batch** (override to use MVP):
+
+```powershell
+aws batch submit-job ... --container-overrides file://infrastructure/batch-overrides-asl-citizen-mvp.json
+```
+
+**1b. Extract MVP videos from archive (S3 only)**
+
+After ingest, extract only the MVP clip files from the zip in S3 into `raw/asl_citizen/videos/` so preprocess (or Batch) can use them. No full 40 GB download; uses range requests.
+
+```powershell
+$env:PIPELINE_ENV = "dev"
+python extract_mvp_videos_from_zip.py
+```
+
+- `--skip-existing` skips clips already in S3. `--dry-run` lists what would be extracted. `--limit N` extracts only the first N (for testing).
+
+**2. Preprocess (MVP) — local or S3**
+
+With **PIPELINE_ENV=dev** and **--mvp**, preprocess reads the MVP CSV and videos from S3 and writes processed clips and **processed_clips.csv** to **s3://.../processed/mvp/** (no local copy needed).
+
+```powershell
+$env:PIPELINE_ENV = "dev"
+python preprocess_clips.py --source asl_citizen --mvp
+```
+
+- Downloads each video from `raw/asl_citizen/videos/` in S3 to a temp file, processes it, uploads the clip to `processed/mvp/clips/{split}/{gloss}/{clip_id}.mp4`, then uploads **processed/mvp/processed_clips.csv**.
+
+To run **locally** (with MVP CSV and videos on disk): omit setting `PIPELINE_ENV`, and ensure `data/processed/mvp/ingested_asl_citizen.csv` and `data/raw/asl_citizen/videos/*.mp4` exist; then run the same command.
+
+**3. Build label map and stats (MVP)**
+
+```bash
+python build_unified_dataset.py --mvp
+```
+
+Writes **`processed/mvp/label_map.json`** and **`processed/mvp/dataset_stats.json`**.
+
+**S3 layout after MVP run**
+
+- `processed/mvp/ingested_asl_citizen.csv`
+- `processed/mvp/clips/{train,val,test}/{gloss}/*.mp4` (when preprocess runs with access to videos)
+- `processed/mvp/processed_clips.csv`
+- `processed/mvp/label_map.json`
+- `processed/mvp/dataset_stats.json`
 
 ### 4.3 Training Time
 
@@ -269,6 +376,9 @@ All source code lives in `data/scripts/`:
 | `preprocess_clips.py`       | Preprocessing | Trim → sample 16 frames → resize 224×224 → write .mp4           |
 | `build_unified_dataset.py`  | Building      | Filter rare glosses, create label_map.json, dataset_stats.json   |
 | `validate.py`               | Validation    | File existence, frame/resolution checks, signer-leak detection   |
+| `filter_to_mvp.py`          | Ingestion     | Filter ingested ASL Citizen CSV to MVP vocabulary only          |
+| `extract_mvp_videos_from_zip.py` | Ingestion | Extract only MVP clips from archive.zip in S3 to raw/asl_citizen/videos/ |
+| `mvp_glosses.txt`           | Config        | One gloss per line for MVP (greetings, needs, restaurant, medical, A–Z, 1–10) |
 | `requirements.txt`          | Dependencies  | opencv-python, numpy, requests, boto3                            |
 
 Supporting files:
@@ -306,6 +416,26 @@ Augmentations are applied at training time (not during preprocessing) so that ea
 | Random spatial crop        | 50%         | Crop to 90% then resize back to 224×224        |
 
 **No horizontal flip** — flipping would change a right-handed sign into a left-handed one, altering its meaning.
+
+### 5.3 MVP vocabulary and reducing ASL Citizen size
+
+The full ASL Citizen archive is **~40 GB (unzipped)**. Processing the entire set is feasible but expensive and slow. The MVP recognizes **single, isolated signs** from a **scenario-focused vocabulary**: greetings, basic needs, restaurant, medical, letters A–Z, numbers 1–10.
+
+**Strategy: filter to MVP glosses first, then process only that subset.**
+
+1. **MVP gloss list** — `data/scripts/mvp_glosses.txt` lists one gloss per line (greetings, basic needs, restaurant, medical, A–Z, 1–10). Comments start with `#`. Edit this file to add/remove signs; glosses are matched case-insensitively.
+2. **Filter at ingest** — Run ingestion with MVP-only output so the written CSV is small:
+   ```bash
+   python ingest_asl_citizen.py --mvp
+   ```
+   Or ingest fully, then filter the existing CSV:
+   ```bash
+   python filter_to_mvp.py                # overwrite ingested CSV with MVP subset
+   python filter_to_mvp.py --backup       # keep full CSV as ingested_asl_citizen_full.csv
+   ```
+3. **Downstream** — Preprocess and build steps read `ingested_asl_citizen.csv`; with the filter applied, only MVP rows are used, so you train on a much smaller label set and (if you extract only MVP videos from the zip) a fraction of the 40 GB.
+
+**Extracting only MVP videos from the zip:** Use `extract_mvp_videos_from_zip.py`. It reads `processed/mvp/ingested_asl_citizen.csv` from S3, opens `raw/asl_citizen/archive.zip` in S3 via range requests, and streams each MVP clip to `raw/asl_citizen/videos/{clip_id}`. No full zip download; run with `PIPELINE_ENV=dev` (see §4.2a).
 
 ---
 
@@ -537,9 +667,16 @@ Each Airflow task submits a job to **AWS Batch** (in cloud environments) or runs
 
 ---
 
-## 9. Pipeline Code
+## 9. Code for the Initial Version of This Pipeline
 
-All source code lives in `data/scripts/`:
+The initial pipeline is implemented in this repository. Key locations:
+
+- **Pipeline scripts (ingestion, cleaning, transformation):** `data/scripts/`
+- **Shared config and S3 helpers:** `data/scripts/pipeline_config.py`
+- **ML training (consumes processed data):** `ml/training/`, `ml/config.py`, `ml/models/`
+- **Inference API (serves predictions):** `backend/app/`
+
+All pipeline source code lives in **`data/scripts/`**:
 
 | File                        | Stage         | Description                                                      |
 |-----------------------------|---------------|------------------------------------------------------------------|
@@ -550,11 +687,16 @@ All source code lives in `data/scripts/`:
 | `preprocess_clips.py`       | Preprocessing | Trim → sample 16 frames → resize 224×224 → write .mp4           |
 | `build_unified_dataset.py`  | Building      | Filter rare glosses, create label_map.json, dataset_stats.json   |
 | `validate.py`               | Validation    | File existence, frame/resolution checks, signer-leak detection   |
+| `filter_to_mvp.py`          | Ingestion     | Filter ingested ASL Citizen CSV to MVP vocabulary only          |
+| `extract_mvp_videos_from_zip.py` | Ingestion | Extract MVP clips from archive.zip in S3 to raw/.../videos/      |
+| `mvp_glosses.txt`           | Config        | MVP gloss list (one per line)                                    |
 | `requirements.txt`          | Dependencies  | opencv-python, numpy, requests, boto3                            |
 
 ---
 
-## 10. Next Steps (Features Not Yet Implemented)
+## 10. Next Steps for Features Not Implemented (Writeup)
+
+The following are planned or optional enhancements that were not part of the initial implementation. They can be included in the writeup as next steps.
 
 ### 10.1 Automated WLASL & MS-ASL Video Downloading
 

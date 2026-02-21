@@ -1,3 +1,8 @@
+resource "aws_cloudwatch_log_group" "ecs_api" {
+  name              = "/ecs/${var.name_prefix}-api"
+  retention_in_days = 30
+}
+
 resource "aws_ecs_cluster" "api" {
   name = "${var.name_prefix}-api-cluster"
 

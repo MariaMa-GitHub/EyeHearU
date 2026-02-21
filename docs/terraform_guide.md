@@ -74,27 +74,32 @@ infrastructure/
 
 Each module is a self-contained unit that manages one logical piece of infrastructure. Every module has three files:
 
-| File           | Purpose                                                       |
-|----------------|---------------------------------------------------------------|
+
+| File           | Purpose                                                             |
+| -------------- | ------------------------------------------------------------------- |
 | `main.tf`      | The actual AWS resources (e.g., `aws_s3_bucket`, `aws_ecs_cluster`) |
-| `variables.tf` | Inputs the module accepts (e.g., `name_prefix`, `environment`)     |
-| `outputs.tf`   | Values the module exposes to other modules (e.g., `bucket_arn`)    |
+| `variables.tf` | Inputs the module accepts (e.g., `name_prefix`, `environment`)      |
+| `outputs.tf`   | Values the module exposes to other modules (e.g., `bucket_arn`)     |
+
 
 ### 4.1 What Each Module Creates
 
-**`s3/`** — Data Lake Bucket
+`**s3/**` — Data Lake Bucket
+
 - One S3 bucket per environment (`eye-hear-u-{env}-data`)
 - Versioning enabled (critical for disaster recovery — deleted objects can be restored)
 - Server-side encryption (AES-256)
 - Public access fully blocked
 - Lifecycle rule: move `raw/` objects to Infrequent Access after 30 days (cost saving)
 
-**`ecr/`** — Container Registries
+`**ecr/**` — Container Registries
+
 - Two ECR repositories: `data-pipeline` (for pipeline scripts) and `backend-api` (for FastAPI)
 - Image scanning on push (security)
 - Lifecycle policy: keep only the last 10 images (cost saving)
 
-**`networking/`** — VPC and Networking
+`**networking/**` — VPC and Networking
+
 - One VPC (`10.0.0.0/16`)
 - 2 public subnets (for the ALB — internet-facing)
 - 2 private subnets (for ECS tasks and Batch jobs — no direct internet access)
@@ -102,27 +107,31 @@ Each module is a self-contained unit that manages one logical piece of infrastru
 - NAT gateway (so private subnets can reach the internet to pull Docker images and access S3)
 - Security group for Batch jobs (egress-only)
 
-**`iam/`** — Roles and Permissions
+`**iam/**` — Roles and Permissions
+
 - **Batch execution role**: can read/write S3, pull images from ECR, write CloudWatch logs
 - **ECS execution role**: can pull images from ECR (standard AWS managed policy)
 - **ECS task role**: can read S3 (to load the model) and write CloudWatch metrics
 
 Each role follows the principle of least privilege — only the permissions it needs.
 
-**`batch/`** — Pipeline Compute
+`**batch/`** — Pipeline Compute
+
 - One Fargate compute environment with configurable max vCPUs
 - One job queue
 - Four job definitions (one per pipeline stage: ingest, preprocess, build, validate)
 - Each job runs the `data-pipeline` Docker image with the appropriate Python script as the command
 
-**`ecs/`** — Inference API
+`**ecs/`** — Inference API
+
 - One ECS Fargate cluster
 - Task definition for the FastAPI container (port 8000)
 - ECS service with desired count = 1
 - Application Load Balancer (ALB) with health check on `/health`
 - Two security groups: ALB (accepts port 80 from the internet) and ECS tasks (accepts port 8000 from ALB only)
 
-**`monitoring/`** — Logs and Alerts
+`**monitoring/`** — Logs and Alerts
+
 - CloudWatch log group (`/eye-hear-u/{env}`) with configurable retention
 - SNS topic for alerts with email subscription
 - Pipeline failure alarm (fires when validation reports errors)
@@ -175,14 +184,16 @@ terraform apply -var-file=environments/prod.tfvars      # deploy prod
 
 ### 5.1 What Differs Per Environment
 
-| Property           | dev                      | staging                   | prod                      |
-|--------------------|--------------------------|---------------------------|---------------------------|
-| S3 bucket          | `eye-hear-u-dev-data`    | `eye-hear-u-staging-data` | `eye-hear-u-prod-data`    |
-| Batch max vCPUs    | 2                        | 4                         | 8                         |
-| ECS task CPU       | 256 (0.25 vCPU)         | 512 (0.5 vCPU)           | 1024 (1 vCPU)            |
-| ECS task memory    | 512 MB                   | 1024 MB                   | 2048 MB                   |
-| Log retention      | 7 days                   | 30 days                   | 90 days                   |
-| S3 force_destroy   | true (easy teardown)     | true                      | **false** (safety net)    |
+
+| Property         | dev                   | staging                   | prod                   |
+| ---------------- | --------------------- | ------------------------- | ---------------------- |
+| S3 bucket        | `eye-hear-u-dev-data` | `eye-hear-u-staging-data` | `eye-hear-u-prod-data` |
+| Batch max vCPUs  | 2                     | 4                         | 8                      |
+| ECS task CPU     | 256 (0.25 vCPU)       | 512 (0.5 vCPU)            | 1024 (1 vCPU)          |
+| ECS task memory  | 512 MB                | 1024 MB                   | 2048 MB                |
+| Log retention    | 7 days                | 30 days                   | 90 days                |
+| S3 force_destroy | true (easy teardown)  | true                      | **false** (safety net) |
+
 
 ### 5.2 Why Separate Environments
 
@@ -236,7 +247,7 @@ aws s3api put-bucket-versioning \
   --bucket eye-hear-u-terraform-state \
   --versioning-configuration Status=Enabled
 
-# Create the lock table
+# Create the lock table(not used since We replaced dynamodb_table with use_lockfile = true in your main.tf, so Terraform now handles locking natively via S3 — no DynamoDB table needed. It's one fewer resource to manage and pay for.)
 aws dynamodb create-table \
   --table-name eye-hear-u-terraform-locks \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
@@ -258,13 +269,13 @@ This downloads the AWS provider plugin and connects to the remote state backend.
 
 ```bash
 # Always plan first
-terraform plan -var-file=environments/dev.tfvars
+terraform plan -var-file environments/dev.tfvars
 
 # Review the output. It will show something like:
 #   Plan: 25 to add, 0 to change, 0 to destroy.
 
 # If it looks correct, apply
-terraform apply -var-file=environments/dev.tfvars
+terraform apply -var-file environments/dev.tfvars
 
 # Type "yes" when prompted.
 ```
@@ -274,13 +285,15 @@ After apply completes, Terraform prints the outputs:
 ```
 Outputs:
 
-api_load_balancer_dns = "eye-hear-u-dev-api-alb-123456.ca-central-1.elb.amazonaws.com"
-s3_bucket_name        = "eye-hear-u-dev-data"
-ecr_pipeline_repo_url = "123456789.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-data-pipeline"
-ecr_api_repo_url      = "123456789.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-backend-api"
+api_load_balancer_dns = "eye-hear-u-dev-api-alb-1638616272.ca-central-1.elb.amazonaws.com"
+batch_job_queue_arn = "arn:aws:batch:ca-central-1:772548857721:job-queue/eye-hear-u-dev-pipeline-queue"
+cloudwatch_log_group = "/eye-hear-u/dev"
+ecr_api_repo_url = "772548857721.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-backend-api"
+ecr_pipeline_repo_url = "772548857721.dkr.ecr.ca-central-1.amazonaws.com/eye-hear-u-dev-data-pipeline"
+s3_bucket_arn = "arn:aws:s3:::eye-hear-u-dev-data"
+s3_bucket_name = "eye-hear-u-dev-data"
+sns_topic_arn = "arn:aws:sns:ca-central-1:772548857721:eye-hear-u-dev-alerts"
 ```
-
-Save these — you'll need them for the next steps.
 
 ### 6.5 Build and Push Docker Images
 
@@ -436,19 +449,21 @@ curl http://$(terraform output -raw api_load_balancer_dns)/health
 
 ### 7.3 What Gets Restored
 
-| Component                  | How It's Restored                                        |
-|----------------------------|----------------------------------------------------------|
-| S3 bucket + config         | `terraform apply` recreates with versioning + encryption |
-| S3 data (raw videos)       | Re-upload from local or from versioned objects           |
-| S3 data (processed clips)  | Re-run the pipeline from raw data                        |
-| ECR repositories           | `terraform apply` recreates; re-push Docker images       |
-| VPC + subnets + NAT        | `terraform apply` recreates networking                   |
-| IAM roles + policies       | `terraform apply` recreates with correct permissions     |
-| AWS Batch compute + jobs   | `terraform apply` recreates compute env + job defs       |
-| ECS cluster + API service  | `terraform apply` recreates; force new deployment        |
-| ALB + health checks        | `terraform apply` recreates; DNS resolves automatically  |
-| CloudWatch logs            | `terraform apply` recreates log group (old logs are lost)|
-| SNS alerts                 | `terraform apply` recreates topic (re-confirm email sub) |
+
+| Component                 | How It's Restored                                         |
+| ------------------------- | --------------------------------------------------------- |
+| S3 bucket + config        | `terraform apply` recreates with versioning + encryption  |
+| S3 data (raw videos)      | Re-upload from local or from versioned objects            |
+| S3 data (processed clips) | Re-run the pipeline from raw data                         |
+| ECR repositories          | `terraform apply` recreates; re-push Docker images        |
+| VPC + subnets + NAT       | `terraform apply` recreates networking                    |
+| IAM roles + policies      | `terraform apply` recreates with correct permissions      |
+| AWS Batch compute + jobs  | `terraform apply` recreates compute env + job defs        |
+| ECS cluster + API service | `terraform apply` recreates; force new deployment         |
+| ALB + health checks       | `terraform apply` recreates; DNS resolves automatically   |
+| CloudWatch logs           | `terraform apply` recreates log group (old logs are lost) |
+| SNS alerts                | `terraform apply` recreates topic (re-confirm email sub)  |
+
 
 ---
 
@@ -485,14 +500,16 @@ aws logs tail /ecs/eye-hear-u-dev-api --follow
 
 Dev is intentionally minimal. Approximate monthly costs:
 
+
 | Resource          | dev         | prod        |
-|-------------------|-------------|-------------|
+| ----------------- | ----------- | ----------- |
 | S3 storage        | ~$2         | ~$20        |
 | NAT gateway       | ~$32        | ~$32        |
 | ALB               | ~$16        | ~$16        |
 | ECS Fargate       | ~$5         | ~$15        |
 | Batch (on-demand) | ~$0 idle    | ~$0 idle    |
 | **Total**         | **~$55/mo** | **~$83/mo** |
+
 
 The NAT gateway is the biggest fixed cost. For dev, you can destroy the infrastructure when not in use and recreate it before demos to save money.
 
@@ -505,3 +522,4 @@ The NAT gateway is the biggest fixed cost. For dev, you can destroy the infrastr
 3. **Work in dev first.** Never test changes directly in prod.
 4. **Don't commit `.tfvars` files with real secrets.** Our current `.tfvars` files only contain non-sensitive values (sizing, email). If you add secrets (API keys, passwords), use environment variables or AWS Secrets Manager instead.
 5. **One person applies at a time.** The DynamoDB lock table prevents concurrent applies, but coordinate with the team to avoid confusion.
+

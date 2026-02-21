@@ -12,9 +12,9 @@ terraform {
   backend "s3" {
     bucket         = "eye-hear-u-terraform-state"
     key            = "infrastructure/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "eye-hear-u-terraform-locks"
-    encrypt        = true
+    region       = "ca-central-1"
+    use_lockfile = true
+    encrypt      = true
   }
 }
 

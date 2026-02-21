@@ -33,8 +33,19 @@ app.include_router(predict.router, prefix="/api/v1", tags=["Prediction"])
 
 @app.on_event("startup")
 async def startup_event():
-    """Load ML model into memory on startup."""
-    # TODO: Load the trained model here so it's ready for inference
-    # from app.services.model_service import load_model
-    # app.state.model = load_model(settings.model_path, settings.model_device)
+    """Load ML model and label map into memory on startup."""
+    from app.services.model_service import load_model
+    try:
+        model, index_to_gloss = load_model(settings.model_path, settings.model_device)
+        app.state.model = model
+        app.state.index_to_gloss = index_to_gloss
+        print(f"[startup] Model loaded: {settings.model_path} ({len(index_to_gloss)} classes)")
+    except FileNotFoundError as e:
+        app.state.model = None
+        app.state.index_to_gloss = None
+        print(f"[startup] Model not loaded: {e}. Use /predict with video once best_model.pt is in place.")
+    except Exception as e:
+        app.state.model = None
+        app.state.index_to_gloss = None
+        print(f"[startup] Model load failed: {e}")
     print(f"[startup] {settings.app_name} is ready.")

@@ -45,3 +45,10 @@ variable "cloudwatch_log_retention_days" {
   type        = number
   default     = 30
 }
+
+# ── S3 bucket selection ──────────────────────────────────────────
+variable "existing_data_bucket_name" {
+  description = "Optional existing S3 bucket name to reuse as the data lake (instead of creating a new one)"
+  type        = string
+  default     = null
+}

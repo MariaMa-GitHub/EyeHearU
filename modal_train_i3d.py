@@ -20,7 +20,15 @@ from pathlib import Path
 import modal
 
 
-APP_NAME = "eyehearu-i3d-train"
+def _parse_run_name() -> str:
+    for i, arg in enumerate(sys.argv):
+        if arg == "--run-name" and i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return ""
+
+
+_run_name = _parse_run_name()
+APP_NAME = f"eyehearu-i3d-{_run_name}" if _run_name else "eyehearu-i3d-train"
 
 app = modal.App(APP_NAME)
 
@@ -55,10 +63,11 @@ def train_i3d_modal(
     init_checkpoint_s3_key: str | None = None,
     init_strict: bool = False,
     output_prefix: str = "models/i3d/modal",
+    run_name: str | None = None,
 ) -> dict:
     import boto3
 
-    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    run_id = run_name or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     workdir = Path("/root/ml")
 
     env = os.environ.copy()
@@ -92,6 +101,10 @@ def train_i3d_modal(
         cmd.extend(["--init-checkpoint-s3-key", init_checkpoint_s3_key])
     if init_strict:
         cmd.append("--init-strict")
+
+    effective_plan = plan_id or "default"
+    s3_ckpt_prefix = f"{output_prefix}/{effective_plan}/{run_id}"
+    cmd.extend(["--s3-checkpoint-prefix", s3_ckpt_prefix])
 
     print("[modal] running:", " ".join(cmd))
     subprocess.run(cmd, cwd=str(workdir), check=True, env=env)
@@ -158,6 +171,7 @@ def main(
     clip_limit: int = 0,
     init_checkpoint_s3_key: str = "",
     init_strict: bool = False,
+    run_name: str = "",
 ):
     result = train_i3d_modal.remote(
         bucket=bucket,
@@ -169,6 +183,7 @@ def main(
         clip_limit=(None if clip_limit <= 0 else clip_limit),
         init_checkpoint_s3_key=(None if not init_checkpoint_s3_key else init_checkpoint_s3_key),
         init_strict=init_strict,
+        run_name=(None if not run_name else run_name),
     )
     print(result)
 

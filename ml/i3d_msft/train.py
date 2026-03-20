@@ -131,6 +131,11 @@ def build_arg_parser():
         action="store_true",
         help="Load warm-start checkpoint with strict=True (default is compatible partial load).",
     )
+    parser.add_argument(
+        "--s3-checkpoint-prefix",
+        default=None,
+        help="If set, upload checkpoints to s3://<bucket>/<prefix>/ after each save.",
+    )
     return parser
 
 
@@ -282,6 +287,14 @@ def _load_compatible_checkpoint(model: torch.nn.Module, ckpt_path: Path, strict:
     return {"loaded": len(compatible), "skipped": skipped}
 
 
+def _upload_checkpoint_to_s3(s3, bucket: str, local_path: Path, s3_key: str):
+    try:
+        s3.upload_file(str(local_path), bucket, s3_key)
+        print(f"[i3d] uploaded {local_path.name} -> s3://{bucket}/{s3_key}")
+    except Exception as exc:
+        print(f"[i3d] WARNING: failed to upload {local_path.name}: {exc}")
+
+
 def main():
     args = build_arg_parser().parse_args()
     set_seed(args.seed)
@@ -413,9 +426,20 @@ def main():
             best_path = ckpt_dir / "best_model.pt"
             torch.save(model.state_dict(), best_path)
             print(f"[i3d] new best -> {best_path} (val_acc={best_val:.4f})")
+            if args.s3_checkpoint_prefix:
+                _upload_checkpoint_to_s3(
+                    s3, args.bucket, best_path,
+                    f"{args.s3_checkpoint_prefix}/best_model.pt",
+                )
 
         if epoch % 5 == 0:
-            torch.save(model.state_dict(), ckpt_dir / f"epoch_{epoch}.pt")
+            epoch_path = ckpt_dir / f"epoch_{epoch}.pt"
+            torch.save(model.state_dict(), epoch_path)
+            if args.s3_checkpoint_prefix:
+                _upload_checkpoint_to_s3(
+                    s3, args.bucket, epoch_path,
+                    f"{args.s3_checkpoint_prefix}/epoch_{epoch}.pt",
+                )
 
     print(f"[i3d] done. best_val_acc={best_val:.4f}")
 

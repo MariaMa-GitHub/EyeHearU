@@ -60,6 +60,18 @@ def _read_split_rows(path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def _build_gloss_dict_from_csv(path: Path) -> dict[str, int]:
+    rows = _read_split_rows(path)
+    glosses = sorted(
+        {
+            (r.get("gloss") or "").strip().lower()
+            for r in rows
+            if (r.get("gloss") or "").strip()
+        }
+    )
+    return {g: i for i, g in enumerate(glosses)}
+
+
 def _is_readable_video(path: Path) -> bool:
     if not path.exists() or path.stat().st_size == 0:
         return False
@@ -219,6 +231,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional output JSON path. Default: <local-root>/eval/<plan_id>/<split>_metrics.json",
     )
+    parser.add_argument(
+        "--gloss-dict-csv",
+        default=None,
+        help=(
+            "Optional CSV used to build class mapping (gloss->index). "
+            "Use training split CSV to keep eval label space aligned with a fine-tuned checkpoint."
+        ),
+    )
     return parser
 
 
@@ -274,11 +294,16 @@ def main():
     if kept == 0:
         raise RuntimeError("No evaluable rows after filtering.")
 
+    gloss_dict = None
+    if args.gloss_dict_csv:
+        gloss_dict = _build_gloss_dict_from_csv(Path(args.gloss_dict_csv).resolve())
+        print(f"[eval] gloss_dict source={args.gloss_dict_csv} num_classes={len(gloss_dict)}")
+
     ds = ASLCitizenI3DDataset(
         video_root=clips_root,
         split_csv=filtered_split,
         transforms=transforms.Compose([CenterCrop(224)]),
-        gloss_dict=None,
+        gloss_dict=gloss_dict,
         total_frames=64,
         require_existing=True,
     )
@@ -309,14 +334,26 @@ def main():
     state = torch.load(str(ckpt_path), map_location="cpu")
     model_state = model.state_dict()
     compatible = {}
-    skipped_keys = 0
+    skipped: list[tuple[str, tuple[int, ...] | None, tuple[int, ...] | None]] = []
     for k, v in state.items():
         if k in model_state and model_state[k].shape == v.shape:
             compatible[k] = v
         else:
-            skipped_keys += 1
+            ckpt_shape = tuple(v.shape) if hasattr(v, "shape") else None
+            model_shape = tuple(model_state[k].shape) if k in model_state else None
+            skipped.append((k, ckpt_shape, model_shape))
     model.load_state_dict(compatible, strict=False)
-    print(f"[eval] loaded_keys={len(compatible)} skipped_keys={skipped_keys}")
+    print(f"[eval] loaded_keys={len(compatible)} skipped_keys={len(skipped)}")
+    if skipped:
+        print("[eval] skipped checkpoint keys:")
+        for name, ckpt_shape, model_shape in skipped:
+            if model_shape is None:
+                print(f"[eval]   - {name}: missing in model (ckpt_shape={ckpt_shape})")
+            else:
+                print(
+                    f"[eval]   - {name}: shape mismatch "
+                    f"(ckpt_shape={ckpt_shape}, model_shape={model_shape})"
+                )
 
     metrics = evaluate(model, loader, device, topk=topk)
     metrics["plan_id"] = plan_id

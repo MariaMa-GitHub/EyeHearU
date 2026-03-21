@@ -118,6 +118,24 @@ def build_arg_parser():
     parser.add_argument("--batch-size", type=int, default=6)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument(
+        "--backbone-lr",
+        type=float,
+        default=None,
+        help="Backbone LR after unfreezing. Default: lr * 0.1",
+    )
+    parser.add_argument(
+        "--head-lr",
+        type=float,
+        default=None,
+        help="Classifier head LR. Default: lr",
+    )
+    parser.add_argument(
+        "--head-only-epochs",
+        type=int,
+        default=0,
+        help="Train only logits head for first N epochs, then unfreeze full backbone.",
+    )
     parser.add_argument("--weight-decay", type=float, default=1e-6)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", choices=["auto", "cpu", "cuda", "mps"], default="auto")
@@ -295,6 +313,40 @@ def _upload_checkpoint_to_s3(s3, bucket: str, local_path: Path, s3_key: str):
         print(f"[i3d] WARNING: failed to upload {local_path.name}: {exc}")
 
 
+def _set_backbone_trainable(model: torch.nn.Module, trainable: bool):
+    for name, param in model.named_parameters():
+        if name.startswith("logits."):
+            continue
+        param.requires_grad = trainable
+
+
+def _build_optimizer(
+    model: torch.nn.Module,
+    head_lr: float,
+    backbone_lr: float,
+    weight_decay: float,
+    backbone_trainable: bool,
+):
+    head_params = []
+    backbone_params = []
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+        if name.startswith("logits."):
+            head_params.append(param)
+        else:
+            backbone_params.append(param)
+
+    if backbone_trainable and backbone_params:
+        groups = [
+            {"params": head_params, "lr": head_lr},
+            {"params": backbone_params, "lr": backbone_lr},
+        ]
+    else:
+        groups = [{"params": head_params, "lr": head_lr}]
+    return torch.optim.Adam(groups, weight_decay=weight_decay)
+
+
 def main():
     args = build_arg_parser().parse_args()
     set_seed(args.seed)
@@ -404,11 +456,42 @@ def main():
             f"loaded={stats['loaded']} skipped={stats['skipped']} strict={args.init_strict}"
         )
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    if args.head_only_epochs < 0:
+        raise ValueError("--head-only-epochs must be >= 0")
+    head_lr = args.head_lr if args.head_lr is not None else args.lr
+    backbone_lr = args.backbone_lr if args.backbone_lr is not None else (args.lr * 0.1)
+
+    backbone_trainable = args.head_only_epochs == 0
+    _set_backbone_trainable(model, trainable=backbone_trainable)
+    optimizer = _build_optimizer(
+        model=model,
+        head_lr=head_lr,
+        backbone_lr=backbone_lr,
+        weight_decay=args.weight_decay,
+        backbone_trainable=backbone_trainable,
+    )
+    phase = "full-finetune" if backbone_trainable else "head-only"
+    print(
+        f"[i3d] optimization phase={phase} | head_lr={head_lr:g} "
+        f"backbone_lr={backbone_lr:g} head_only_epochs={args.head_only_epochs}"
+    )
     criterion = nn.CrossEntropyLoss()
 
     best_val = 0.0
     for epoch in range(1, args.epochs + 1):
+        if epoch == args.head_only_epochs + 1 and args.head_only_epochs > 0:
+            _set_backbone_trainable(model, trainable=True)
+            optimizer = _build_optimizer(
+                model=model,
+                head_lr=head_lr,
+                backbone_lr=backbone_lr,
+                weight_decay=args.weight_decay,
+                backbone_trainable=True,
+            )
+            print(
+                f"[i3d] optimization phase=full-finetune (unfrozen at epoch {epoch}) | "
+                f"head_lr={head_lr:g} backbone_lr={backbone_lr:g}"
+            )
         t0 = time.time()
         train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device)
         val_loss, val_acc = evaluate(model, val_loader, criterion, device)

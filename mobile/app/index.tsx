@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Animated,
 } from "react-native";
 import { router } from "expo-router";
+import { checkHealth, HealthResult } from "../services/api";
 
 const BRAND = {
   teal: "#0D9488",
@@ -17,10 +18,31 @@ const BRAND = {
   textPrimary: "#134E4A",
   textSecondary: "#5F7572",
   textMuted: "#94A3B8",
+  warning: "#F59E0B",
+  success: "#10B981",
 };
 
 export default function HomeScreen() {
   const handAnim = useRef(new Animated.Value(0)).current;
+  const [health, setHealth] = useState<HealthResult | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      try {
+        const result = await checkHealth();
+        if (!cancelled) setHealth(result);
+      } catch {
+        if (!cancelled) setHealth({ alive: false, modelLoaded: false, tunnelUnavailable: false });
+      }
+    }
+    poll();
+    const id = setInterval(poll, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
   Animated.loop(
     Animated.sequence([
@@ -33,6 +55,22 @@ export default function HomeScreen() {
     inputRange: [0, 0.5, 1],
     outputRange: ["-8deg", "8deg", "-8deg"],
   });
+
+  function statusLabel(): string {
+    if (health === null) return "Checking…";
+    if (health.tunnelUnavailable) return "Tunnel unavailable";
+    if (!health.alive) return "Backend offline";
+    if (!health.modelLoaded) return "Backend online · model loading…";
+    return "Backend ready";
+  }
+
+  function statusColor(): string {
+    if (health === null) return BRAND.textMuted;
+    if (health.tunnelUnavailable) return BRAND.coral;
+    if (!health.alive) return BRAND.coral;
+    if (!health.modelLoaded) return BRAND.warning;
+    return BRAND.success;
+  }
 
   return (
     <View style={styles.container}>
@@ -47,6 +85,13 @@ export default function HomeScreen() {
         </Text>
         <Text style={styles.subtitle}>
           ASL to English, one sign at a time
+        </Text>
+      </View>
+
+      <View style={styles.statusRow}>
+        <View style={[styles.statusDot, { backgroundColor: statusColor() }]} />
+        <Text style={[styles.statusText, { color: statusColor() }]}>
+          {statusLabel()}
         </Text>
       </View>
 
@@ -97,6 +142,21 @@ const styles = StyleSheet.create({
   titleAccent: { color: BRAND.coral },
   subtitle: { fontSize: 17, color: BRAND.textSecondary, textAlign: "center" },
   actions: { width: "100%", gap: 14, marginBottom: 28 },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 24,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: "500",
+  },
   primaryButton: {
     backgroundColor: BRAND.teal,
     paddingVertical: 17,

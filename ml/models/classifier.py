@@ -8,8 +8,8 @@ and fine-tuned on our processed ASL clip dataset.  Input is a tensor of
 shape (B, C, T, H, W) — batch of video clips with C=3 channels,
 T=16 uniformly sampled frames, H=W=224.
 
-TODO (ML team): Select the final backbone architecture after benchmarking
-      I3D, SlowFast, and R3D on the processed dataset.
+The deployed model uses Inception I3D (ml/i3d_msft/).  This in-repo
+      baseline supports torchvision 3D CNNs for reproducible training.
 """
 
 import torch

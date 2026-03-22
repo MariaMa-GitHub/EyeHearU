@@ -6,20 +6,28 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#4A90D9"
+      "backgroundColor": "#0D9488"
+    },
+    "extra": {
+      "apiBaseUrl": ""
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.eyehearu.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Eye Hear U needs camera access to recognize ASL signs."
+        "NSCameraUsageDescription": "Eye Hear U needs camera access to recognize ASL signs.",
+        "NSMicrophoneUsageDescription": "Eye Hear U needs microphone access to record video clips of ASL signs."
       }
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Eye Hear U to access your camera to recognize ASL signs."
+          "cameraPermission": "Allow Eye Hear U to access your camera to recognize ASL signs.",
+          "microphonePermission": "Allow Eye Hear U to use the microphone for video recording.",
+          "recordAudioAndroid": {
+            "explanation": "Eye Hear U needs microphone access to record video clips."
+          }
         }
       ],
       "expo-asset"

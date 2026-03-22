@@ -263,7 +263,7 @@ All MVP outputs go under **`processed/mvp/`** (S3: `s3://{bucket}/processed/mvp/
 
 **1. Ingest ASL Citizen (MVP only) to S3**
 
-From project root, with `PIPELINE_ENV=dev` (or your env) and AWS credentials set:
+From project root, with `PIPELINE_ENV=dev` (or another configured environment) and AWS credentials set:
 
 **PowerShell (Windows):**
 ```powershell
@@ -433,7 +433,7 @@ The full ASL Citizen archive is **~40 GB (unzipped)**. Processing the entire set
    python filter_to_mvp.py                # overwrite ingested CSV with MVP subset
    python filter_to_mvp.py --backup       # keep full CSV as ingested_asl_citizen_full.csv
    ```
-3. **Downstream** — Preprocess and build steps read `ingested_asl_citizen.csv`; with the filter applied, only MVP rows are used, so you train on a much smaller label set and (if you extract only MVP videos from the zip) a fraction of the 40 GB.
+3. **Downstream** — Preprocess and build steps read `ingested_asl_citizen.csv`; with the filter applied, only MVP rows are used, so training runs on a much smaller label set and (if only MVP videos are extracted from the zip) a fraction of the 40 GB.
 
 **Extracting only MVP videos from the zip:** Use `extract_mvp_videos_from_zip.py`. It reads `processed/mvp/ingested_asl_citizen.csv` from S3, opens `raw/asl_citizen/archive.zip` in S3 via range requests, and streams each MVP clip to `raw/asl_citizen/videos/{clip_id}`. No full zip download; run with `PIPELINE_ENV=dev` (see §4.2a).
 

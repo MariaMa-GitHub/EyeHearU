@@ -25,10 +25,7 @@ async def readiness_check(request: Request):
     Returns:
         - status: "ready" if the ML model has been attached to app.state,
                   otherwise "initializing".
-        - model_loaded: bool flag mirroring that state.
-
-    NOTE: Until the ML team wires `app.state.model` in app.main.startup,
-    this will correctly report `model_loaded = False`.
+        - model_loaded: bool flag.
     """
     app = request.app
     model_loaded = getattr(app.state, "model", None) is not None

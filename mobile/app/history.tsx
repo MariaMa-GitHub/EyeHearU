@@ -1,102 +1,189 @@
-import { View, Text, StyleSheet, FlatList } from "react-native";
+import { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/**
- * History screen — shows recent translation results.
- *
- * TODO: Fetch from Firebase or local storage.
- * For now, this is a placeholder UI.
- */
+const HISTORY_KEY = "eyehearu_history";
 
-// Placeholder data
-const PLACEHOLDER_HISTORY = [
-  { id: "1", sign: "hello", confidence: 0.95, timestamp: "2 min ago" },
-  { id: "2", sign: "thank you", confidence: 0.88, timestamp: "5 min ago" },
-  { id: "3", sign: "water", confidence: 0.72, timestamp: "8 min ago" },
-];
+const BRAND = {
+  teal: "#0D9488",
+  coral: "#F97066",
+  bg: "#F0FDFA",
+  card: "#FFFFFF",
+  textPrimary: "#134E4A",
+  textSecondary: "#5F7572",
+  textMuted: "#94A3B8",
+};
+
+interface HistoryItem {
+  id: string;
+  sign: string;
+  confidence: number;
+  timestamp: string;
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 export default function HistoryScreen() {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadHistory();
+    }, [])
+  );
+
+  const loadHistory = async () => {
+    try {
+      const raw = await AsyncStorage.getItem(HISTORY_KEY);
+      setHistory(raw ? JSON.parse(raw) : []);
+    } catch {
+      setHistory([]);
+    }
+  };
+
+  const clearHistory = () => {
+    Alert.alert("Clear History", "Remove all saved translations?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Clear",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem(HISTORY_KEY);
+          setHistory([]);
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
-      {PLACEHOLDER_HISTORY.length === 0 ? (
+      {history.length === 0 ? (
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>No translations yet.</Text>
+          <Text style={styles.emptyIcon}>{"\u{1F91F}"}</Text>
+          <Text style={styles.emptyText}>No translations yet</Text>
           <Text style={styles.emptySubtext}>
             Go to the camera to start translating ASL signs.
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={PLACEHOLDER_HISTORY}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.sign}>{item.sign}</Text>
-              <View style={styles.meta}>
-                <Text style={styles.confidence}>
-                  {(item.confidence * 100).toFixed(0)}% confidence
-                </Text>
-                <Text style={styles.timestamp}>{item.timestamp}</Text>
+        <>
+          <FlatList
+            data={history}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.list}
+            renderItem={({ item }) => (
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.sign}>{item.sign}</Text>
+                  <Text style={styles.timestamp}>{timeAgo(item.timestamp)}</Text>
+                </View>
+                <View style={styles.cardFooter}>
+                  <View style={styles.confidenceBar}>
+                    <View
+                      style={[
+                        styles.confidenceFill,
+                        { width: `${Math.min(item.confidence * 100, 100)}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.confidence}>
+                    {(item.confidence * 100).toFixed(0)}%
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
-        />
+            )}
+          />
+          <TouchableOpacity style={styles.clearButton} onPress={clearHistory}>
+            <Text style={styles.clearButtonText}>Clear History</Text>
+          </TouchableOpacity>
+        </>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F9FA",
-  },
-  list: {
-    padding: 16,
-    gap: 12,
-  },
+  container: { flex: 1, backgroundColor: BRAND.bg },
+  list: { padding: 16, gap: 10, paddingBottom: 80 },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: BRAND.card,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    borderRadius: 14,
+    shadowColor: "#0D9488",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 2,
   },
-  sign: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#4A90D9",
-    marginBottom: 8,
-  },
-  meta: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "baseline",
+    marginBottom: 8,
   },
-  confidence: {
-    color: "#666",
-    fontSize: 14,
+  sign: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: BRAND.teal,
+    textTransform: "capitalize",
   },
-  timestamp: {
-    color: "#999",
-    fontSize: 14,
+  timestamp: { color: BRAND.textMuted, fontSize: 13 },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
+  confidenceBar: {
+    flex: 1,
+    height: 5,
+    backgroundColor: "#E2E8F0",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  confidenceFill: {
+    height: "100%",
+    backgroundColor: BRAND.teal,
+    borderRadius: 3,
+  },
+  confidence: { color: BRAND.textSecondary, fontSize: 13, fontWeight: "600", minWidth: 36, textAlign: "right" },
   empty: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: 32,
   },
-  emptyText: {
-    fontSize: 18,
-    color: "#666",
-    marginBottom: 8,
+  emptyIcon: { fontSize: 56, marginBottom: 16 },
+  emptyText: { fontSize: 20, fontWeight: "700", color: BRAND.textPrimary, marginBottom: 8 },
+  emptySubtext: { fontSize: 15, color: BRAND.textMuted, textAlign: "center", lineHeight: 21 },
+  clearButton: {
+    position: "absolute",
+    bottom: 28,
+    alignSelf: "center",
+    backgroundColor: BRAND.coral,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+    shadowColor: BRAND.coral,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#999",
-    textAlign: "center",
-  },
+  clearButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

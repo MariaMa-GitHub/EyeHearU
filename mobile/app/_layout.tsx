@@ -1,17 +1,15 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-/**
- * Root layout for the app.
- * Uses expo-router for file-based routing.
- */
+const BRAND_TEAL = "#0D9488";
+
 export default function RootLayout() {
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: "#4A90D9" },
+          headerStyle: { backgroundColor: BRAND_TEAL },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}

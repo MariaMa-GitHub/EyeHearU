@@ -1,113 +1,70 @@
-## Mobile App (`mobile/`) – Eye Hear U (React Native / Expo)
+## Mobile app (`mobile/`) — Eye Hear U (React Native / Expo)
 
-This folder contains the **React Native (Expo)** mobile app for Eye Hear U.  
-The app:
-- Captures ASL signs via the device camera,
-- Sends images to the backend for prediction,
-- Displays the predicted English label + confidence, and
-- Uses text-to-speech (TTS) to read the prediction aloud.
+React Native (Expo) client for Eye Hear U. It:
 
----
-
-### Entry Points & Routing
-
-- `app/_layout.tsx`  
-  - Configures navigation with `expo-router` (`Stack` navigator).  
-  - Screens:
-    - `index`  → `app/index.tsx` (Home),
-    - `camera` → `app/camera.tsx` (Translate),
-    - `history` → `app/history.tsx` (Translation history UI).
-
-- `app/index.tsx`  
-  - Home screen with:
-    - **Start Translating** → navigates to `/camera`.
-    - **View History** → navigates to `/history`.
+- Records short **video** clips of isolated ASL signs via the device camera  
+- Sends them to the FastAPI backend for prediction  
+- Shows the predicted English gloss, confidence, and optional top‑k alternatives  
+- Uses **text-to-speech** for high-confidence results  
+- Persists a local **history** (AsyncStorage)
 
 ---
 
-### Camera & Prediction Flow
+### Entry points & routing
 
-- `app/camera.tsx` – **core screen**.
-
-High-level flow:
-1. Requests **camera permission** via `useCameraPermissions()` from `expo-camera`.
-2. Renders a `CameraView` with a live preview (front-facing camera).
-3. When the user taps **Capture**:
-   - Takes a picture with `takePictureAsync`.
-   - Calls the shared API client `predictSign` from `services/api.ts`.
-4. Updates state with the predicted `sign` and `confidence`.
-5. If `confidence > 0.5`, calls `Speech.speak(sign)` from `expo-speech`.
-6. Renders:
-   - Big predicted sign text,
-   - Confidence percentage,
-   - “Speak Again” button to re-trigger TTS.
-
-**Important:**  
-The screen **does not** hard-code the backend URL. All networking goes through `services/api.ts`.
+- `app/_layout.tsx` — `expo-router` stack: Home, Camera, History.  
+- `app/index.tsx` — Home: backend status, **Start Translating**, **View History**.  
+- `app/camera.tsx` — Records ~3 s video, calls `predictSign`, TTS, errors.  
+- `app/history.tsx` — Reads/writes translation history from AsyncStorage.
 
 ---
 
-### Backend API Client
+### Camera & prediction flow (`app/camera.tsx`)
 
-- `services/api.ts`
+1. Request camera permission (`useCameraPermissions` from `expo-camera`).  
+2. Show `CameraView` (front camera, video mode).  
+3. On **Record Sign**, call `recordAsync` with max duration ~3 s.  
+4. POST the file via `predictSign(uri)` in `services/api.ts`.  
+5. Update UI with `sign`, `confidence`, `top_k`; optionally speak the label.  
+6. Append successful predictions to history.
 
-Exports:
-- `predictSign(imageUri: string)`  
-  - Wraps the image in `FormData` under `file`.  
-  - POSTs to `/api/v1/predict`.  
-  - Returns `{ sign, confidence, top_k, message? }`.
-
-- `checkHealth()`  
-  - GETs `/health` to see if the backend is reachable.
-
-**TODO (Mobile):**  
-Update `API_BASE_URL` in `services/api.ts` for your environment:
-- Simulator on same machine: `http://localhost:8000`.  
-- Physical device on WiFi: `http://<your-laptop-LAN-IP>:8000`.
+The backend base URL is **not** hard-coded in screens; it is resolved in `services/api.ts` from `EXPO_PUBLIC_API_URL` (development) or the production constant.
 
 ---
 
-### History Screen
+### API client (`services/api.ts`)
 
-- `app/history.tsx`  
-  - Currently shows **placeholder** history data.  
-  - Intended to later:
-    - Pull real history from local storage / Firestore,
-    - Show sign, confidence, timestamp,
-    - Allow “correct/wrong” feedback on each entry.
+- `predictSign(videoUri)` — `FormData` field `file`, `POST /api/v1/predict`.  
+- `checkHealth()` / readiness helpers for the home screen.  
+- Tunnel / 503 messaging helpers for clearer errors.
 
----
+Configure development URL in **`mobile/.env`** (see **`mobile/.env.example`**):
 
-### How to Run the App
+- iOS Simulator on the same Mac as the API: `EXPO_PUBLIC_API_URL=http://127.0.0.1:8000`  
+- Physical device on the same LAN: `EXPO_PUBLIC_API_URL=http://<host-LAN-IP>:8000` (uvicorn `--host 0.0.0.0`)
 
-1. Install dependencies (after Node 20.x is installed):
-
-   ```bash
-   cd mobile
-   npm install
-   ```
-
-2. Start the Expo dev server:
-
-   ```bash
-   npx expo start
-   ```
-
-3. Run the app:
-   - Scan the QR code with the **Expo Go** app on your iPhone, or  
-   - Press `i` to open the iOS simulator.
-
-4. Make sure the backend is running (see `backend/README.md`).
+Restart Expo after changing `.env`.
 
 ---
 
-### Who Should Work Here & Typical Tasks
+### How to run
 
-- **Maria (iOS / Frontend):**
-  - Modify screen layouts & styling.
-  - Improve UX (loading states, error messages).
-  - Implement history UI and feedback buttons.
+```bash
+cd mobile
+npm install
+# Same Wi‑Fi as the API host (recommended for Expo Go):
+npm run start:lan
+# Or: npx expo start
+```
 
-- **Everyone:**
-  - Can use this app to test changes to the model/backend end-to-end.
+Open in **Expo Go** (QR) or press `i` for the iOS Simulator. Ensure the backend is running (see repository root **README** or `docs/DEVELOPER_GUIDE.md`).
 
+**iOS:** If the JavaScript bundle fails to load, enable **Local Network** for **Expo Go** under Settings → Privacy & Security → Local Network.
+
+---
+
+### Typical development tasks
+
+- UI / navigation: `app/*.tsx`, shared styles.  
+- Networking and env handling: `services/api.ts`.  
+- Error copy and tunnel hints: `services/api.ts`, `app/index.tsx`.

@@ -55,3 +55,20 @@ infrastructure/*.tfstate.*
 # Misc
 *.log
 *.tmp
+
+# Coverage / pytest
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+backend/.coverage
+backend/coverage.xml
+backend/htmlcov/
+backend/.pytest_cache/
+.hypothesis/
+backend/.hypothesis/
+ml/.pytest_cache/
+ml/.hypothesis/
+
+# Evaluation outputs
+ml/evaluation_results/

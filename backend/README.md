@@ -1,76 +1,54 @@
-## Backend (`backend/`) – FastAPI ASL Inference API
+## Backend (`backend/`) — FastAPI ASL inference API
 
-This folder contains the **FastAPI backend** that powers Eye Hear U.  
-It exposes HTTP endpoints for **health checks** and **ASL sign prediction** and will load the trained PyTorch model for inference.
-
----
-
-### Key Files & Folders
-
-- `app/main.py`  
-  - FastAPI app entrypoint.  
-  - Registers routers and CORS.  
-  - **TODO (Backend + ML):** In the `startup` event, call `load_model` and attach it to `app.state.model`.
-
-- `app/config.py`  
-  - Central config using `pydantic_settings`.  
-  - Reads `.env` for:
-    - `MODEL_PATH` – path to `best_model.pt`.  
-    - `MODEL_DEVICE` – `cpu`, `cuda`, or `mps`.  
-    - Firebase credentials and project ID.
-
-- `app/routers/health.py`  
-  - `GET /health` – liveness probe.  
-  - `GET /ready` – readiness probe, returns `model_loaded: true/false` based on `app.state.model`.
-
-- `app/routers/predict.py`  
-  - `POST /api/v1/predict` – accepts an image upload (`file`) and returns:
-    - `sign` (top-1 label),
-    - `confidence`,
-    - `top_k` predictions.
-  - **TODO:** Replace placeholder response with real inference via `model_service` + `preprocess_image`.
-
-- `app/services/preprocessing.py`  
-  - Image preprocessing (PIL → resized → normalized NumPy array).
-
-- `app/services/model_service.py`  
-  - **Skeleton for model loading & prediction.**  
-  - **TODO (ML):** Implement `load_model` using `ASLClassifier` from `ml/models` and integrate `label_map.json` to map indices → labels.
-
-- `app/services/firebase_service.py`  
-  - Firestore integration for translation history (optional but recommended).
-
-- `tests/test_health.py`  
-  - Basic tests for `/health` and `/ready`.
+FastAPI service for Eye Hear U: **health/readiness**, **video upload**, and **I3D inference**.
 
 ---
 
-### How to Run Locally
+### Key files
+
+| Path | Purpose |
+|------|---------|
+| `app/main.py` | App factory, CORS, router registration, **lifespan** loads the model at startup |
+| `app/config.py` | Pydantic settings from `.env` (`MODEL_PATH`, `LABEL_MAP_PATH`, `MODEL_DEVICE`, AWS S3, optional Firebase) |
+| `app/routers/health.py` | `GET /health`, `GET /ready` |
+| `app/routers/predict.py` | `POST /api/v1/predict` — multipart field `file` (**mp4/mov** video) |
+| `app/services/preprocessing.py` | Video bytes → tensor `(1, 3, 64, 224, 224)` — must match training (see `docs/PREPROCESSING.md`) |
+| `app/services/model_service.py` | Load I3D checkpoint + label map, optional S3 download, `predict()` |
+| `app/services/firebase_service.py` | Optional Firestore helpers |
+| `tests/` | Pytest suite; **100%** line/branch coverage on `app/` (see `docs/TESTING.md`) |
+
+---
+
+### Run locally
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+cp .env.example .env        # set MODEL_PATH, LABEL_MAP_PATH, etc.
 
-cp .env.example .env      # Fill in MODEL_PATH, MODEL_DEVICE, Firebase settings
-
-uvicorn app.main:app --reload --port 8000
+export PYTHONPATH=..        # repo root — required for `ml` imports
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Then:
-- Visit `http://localhost:8000/health` → should return `{"status": "ok"}`.  
-- Visit `http://localhost:8000/docs` → interactive Swagger UI.
+- `http://127.0.0.1:8000/health` → `{"status":"ok"}`  
+- `http://127.0.0.1:8000/docs` → Swagger UI  
+
+Physical devices on the LAN need `--host 0.0.0.0` and the host’s LAN IP in `mobile/.env` as `EXPO_PUBLIC_API_URL`.
 
 ---
 
-### Integration Points with Other Folders
+### Model artifacts
 
-- **ML / Model:**  
-  - Expects a trained checkpoint at the path in `MODEL_PATH` (`ml/checkpoints/best_model.pt` by default).  
-  - Expects a `label_map.json` (class index → sign label).
+- Default label map: `../ml/i3d_label_map_mvp-sft-full-v1.json`
+- Weights: `model_cache/best_model.pt` or path in `.env`; S3 download if configured
 
-- **Mobile App:**  
-  - `mobile` calls `POST /api/v1/predict` with a JPEG image.  
-  - `mobile` may also call `/health` for a quick backend reachability check.
+See **`docs/DEVELOPER_GUIDE.md`** for the full download command and environment variables.
 
+---
+
+### Integration
+
+- **Mobile:** `POST /api/v1/predict` with a **video** file; optional `/health` / `/ready` for status UI.
+- **ML:** Checkpoint and label map must match the **I3D** architecture in `ml/i3d_msft/`.

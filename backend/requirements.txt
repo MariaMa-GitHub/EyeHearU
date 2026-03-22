@@ -4,10 +4,18 @@ uvicorn[standard]>=0.27.0
 python-multipart>=0.0.6
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
-firebase-admin>=6.4.0
 Pillow>=10.2.0
 numpy>=1.26.0
-python-jose[cryptography]>=3.3.0
 httpx>=0.26.0
+boto3>=1.28.0
+firebase-admin>=6.4.0
+
+# ML inference
+torch>=2.1.0
+torchvision>=0.16.0
+opencv-python-headless>=4.9.0
+
+# Testing
 pytest>=7.4.0
 pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0

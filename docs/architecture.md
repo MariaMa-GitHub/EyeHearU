@@ -1,7 +1,6 @@
 ## Eye Hear U – System Architecture & Use Cases
 
-**Version:** 2026-02-10  
-**Owners:** Maria (iOS/frontend), Zhixiao (backend/db), Siyi & Chloe (ML)
+**Version:** 2026-03-21
 
 ---
 
@@ -11,8 +10,8 @@
 
 **Solution:** Eye Hear U is an **iOS-focused mobile app** where a user:
 - Opens the app and points the camera at a signer (themselves or someone else),
-- Taps **Capture**,
-- Sees the **predicted English word/letter and confidence**, and
+- Taps **Record Sign** (~3 s video),
+- Sees the **predicted English gloss and confidence**, and
 - Optionally hears it spoken via **text-to-speech**.
 
 The MVP recognizes **single, isolated signs** from a **scenario-focused vocabulary** (greetings, basic needs, restaurant, medical, letters A–Z, numbers 1–10).
@@ -38,16 +37,16 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
                                 │   ML Model           │
                                 │   (PyTorch)          │
                                 │                      │
-                                │  CNN backbone        │
-                                │  (ResNet18)          │
+                                │  Inception I3D       │
+                                │  (3D CNN, 64-frame)  │
                                 │       ↓              │
-                                │  Patch projection    │
+                                │  Temporal max-pool   │
                                 │       ↓              │
-                                │  Transformer encoder │
-                                │  (2 layers, 4 heads) │
+                                │  Softmax + top-k     │
+                                │                      │
                                 │       ↓              │
-                                │  Classification head │
-                                │  → ~62 classes       │
+                                │  Classification      │
+                                │  (48 MVP glosses)    │
                                 └──────────┬───────────┘
                                            │
                                            │ writes/reads
@@ -79,8 +78,8 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 **Main responsibilities:**
 - Request and manage **camera permission**.
 - Show a **live camera preview**.
-- Capture a **single frame** on demand (when user taps **Capture**).
-- Upload the image to the backend (`/api/v1/predict`).
+- Record a **~3 s video clip** (when user taps **Record Sign**).
+- Upload the video to the backend (`/api/v1/predict`).
 - Display predicted sign + confidence.
 - Use **TTS** (`expo-speech`) to read out the predicted word.
 - (Future) Show per-session **translation history** and collect “correct/wrong” feedback.
@@ -89,23 +88,23 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 - `mobile/app/_layout.tsx` – navigation shell using `expo-router`.
 - `mobile/app/index.tsx` – **Home screen** (start translating / view history).
 - `mobile/app/camera.tsx` – **Camera + prediction screen**.
-- `mobile/app/history.tsx` – **History UI** (currently uses placeholder data).
+- `mobile/app/history.tsx` – **History UI** (reads from AsyncStorage).
 - `mobile/services/api.ts` – typed API client for the backend.
 
 **Camera flow (step-by-step):**
 1. **Permissions** – `useCameraPermissions()` from `expo-camera`:
-   - If status is unknown, app shows a screen explaining why camera is needed with a “Grant Permission” button.
-   - If permission denied, user sees the same screen until they grant it in settings.
+   - If status is unknown, the app shows a screen explaining why camera is needed with a “Grant Permission” button.
+   - If permission denied, the same screen is shown until the user grants in settings.
 
 2. **Live preview** – `CameraView` component:
-   - Props: `facing="front"`, full-screen style.
-   - This shows the live feed from the front-facing camera.
+   - Props: `facing="front"`, `mode="video"`, full-screen style.
+   - Shows the live feed from the front-facing camera.
 
-3. **Capture & upload** (in `captureAndPredict`):
-   - Call `cameraRef.current.takePictureAsync({ quality: 0.8, base64: false })`.
-   - This returns a `photo` object with a local `uri` to the JPEG file.
-   - Wrap that in `FormData` under the `file` key:
-     - `formData.append("file", { uri, name: "sign.jpg", type: "image/jpeg" })`.
+3. **Record & upload** (in `recordAndPredict`):
+   - Call `cameraRef.current.recordAsync({ maxDuration: 3 })`.
+   - Returns a `video` object with a local `uri` to the mp4 file.
+   - Wrap in `FormData` under the `file` key:
+     - `formData.append("file", { uri, name: "clip.mp4", type: "video/mp4" })`.
    - `fetch(API_BASE_URL + "/api/v1/predict", { method: "POST", body: formData })`.
 
 4. **Handle response:**
@@ -136,10 +135,10 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 **Implementation checklist (mobile):**
 - [x] Set up Expo SDK 54 and base app.
 - [x] Implement home screen + navigation (`expo-router`).
-- [x] Implement camera screen with capture & upload logic.
+- [x] Implement camera screen with **video recording** (~3 s clips) and upload logic.
 - [x] Implement TTS via `expo-speech`.
-- [ ] Wire real backend URL (for physical devices, use LAN IP instead of `localhost`).
-- [ ] Persist predictions locally (AsyncStorage) + pull from Firebase history.
+- [x] Configurable backend URL via `EXPO_PUBLIC_API_URL` in `mobile/.env` (LAN IP, tunnel, or production).
+- [x] Persist predictions locally (AsyncStorage). Firebase history is optional.
 
 ---
 
@@ -159,75 +158,58 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 - `backend/app/main.py` – FastAPI app, startup hook, router registration.
 - `backend/app/routers/health.py` – `/health`, `/ready`.
 - `backend/app/routers/predict.py` – `/api/v1/predict`.
-- `backend/app/services/preprocessing.py` – image preprocessing.
-- `backend/app/services/model_service.py` – model loading + inference skeleton.
+- `backend/app/services/preprocessing.py` – video preprocessing (see `docs/PREPROCESSING.md`).
+- `backend/app/services/model_service.py` – I3D model loading + inference.
 - `backend/app/services/firebase_service.py` – Firestore integration.
 - `backend/app/schemas/prediction.py` – response schema.
 
 **Prediction request flow:**
 1. **Client** sends `multipart/form-data` POST:
-   - `file`: JPEG/PNG/WebP image.
+   - `file`: **mp4/mov** video clip (~3 s recording from the mobile camera).
 
 2. **FastAPI** parses it into `UploadFile`:
 
    ```py
    @router.post("/predict", response_model=PredictionResponse)
-   async def predict_sign(file: UploadFile = File(...)):
+   async def predict_sign(request: Request, file: UploadFile = File(...)):
    ```
 
 3. **Validation:**
-   - Check `content_type` is one of `{"image/jpeg", "image/png", "image/webp"}`.
+   - Check `content_type` is `video/mp4`, `video/quicktime`, or the filename ends in `.mp4`/`.mov`.
    - Read file bytes and verify non-empty.
 
-4. **Preprocessing** (`preprocess_image`):
-   - `PIL.Image.open` on bytes → RGB image.
-   - Resize to **224x224**.
-   - Convert to `float32` array in `[0,1]`.
-   - Normalize with **ImageNet** mean/std.
-   - Reorder channels HWC → CHW, add batch dimension: shape `(1, 3, 224, 224)`.
+4. **Preprocessing** (`preprocess_video` — see `docs/PREPROCESSING.md`):
+   - Decode with OpenCV, adaptive temporal sampling (center-biased, frame skip).
+   - Per-frame spatial resize (mobile 4K cap → min-side 226 → max-side 256 → center-crop 224).
+   - Normalize to **`[-1, 1]`** (not ImageNet μ/σ).
+   - Pad or trim to **64 frames**; ensure both sides ≥ 224 before crop.
+   - Output tensor shape: **`(1, 3, 64, 224, 224)`**.
 
 5. **Model inference** (`model_service.predict`):
    - With `torch.no_grad()`:
-     - `logits = model(image_tensor)` → shape `(1, num_classes)`.
+     - `logits = model(video_tensor)` → shape `(1, num_classes, T')` for I3D.
+     - Max-pool over temporal dim → `(1, num_classes)`.
      - `probs = softmax(logits)`.
      - `top_probs, top_indices = topk(probs, k=5)`.
-   - Map indices to labels using `label_map.json` (e.g., index 26 → "hello").
+   - Map indices to glosses using the label map JSON.
 
 6. **Response:**
    - Return `PredictionResponse` with:
      - `sign` – top-1 label.
      - `confidence` – top-1 probability.
      - `top_k` – up to 5 `{sign, confidence}` entries.
-     - `message` – for debug/placeholder text.
+     - `message` – optional status text.
 
-7. **Logging (future):**
-   - Call `firebase_service.save_translation(session_id, data)` to store in `translations` collection.
+7. **Logging (optional):**
+   - `firebase_service.save_translation(session_id, data)` to Firestore (not enabled by default).
 
-**Implementation steps (backend):**
-1. **Install & run locally:**
-   - `cd backend`
-   - `python -m venv venv && source venv/bin/activate`
-   - `pip install -r requirements.txt`
-   - `cp .env.example .env` and fill in `MODEL_PATH`, `FIREBASE_*` later.
-   - `uvicorn app.main:app --reload --port 8000`.
-
-2. **Wire model loading:**
-   - After model is trained and saved to `ml/checkpoints/best_model.pt`:
-     - Implement `load_model` in `model_service.py` using `ASLClassifier`.
-     - In `main.py` startup event:
-
-       ```py
-       from app.services.model_service import load_model
-       app.state.model = load_model(settings.model_path, settings.model_device)
-       ```
-
-   - In `predict_sign`, import `preprocess_image` + `predict` and use `app.state.model`.
-
-3. **Enable Firebase:**
-   - Create Firebase project and Firestore DB.
-   - Add `firebase-credentials.json` to `backend/`.
-   - Set `FIREBASE_CREDENTIALS_PATH` and `FIREBASE_PROJECT_ID` in `.env`.
-   - Call `init_firebase()` on startup and `save_translation` for each prediction.
+**Implementation checklist (backend):**
+- [x] FastAPI app with lifespan model loading.
+- [x] I3D model + label map loading (`model_service.py`), optional S3 download.
+- [x] Video preprocessing aligned with training (`preprocessing.py`).
+- [x] `/health`, `/ready`, `POST /api/v1/predict` endpoints.
+- [x] 100% test coverage on `app/` (see `docs/TESTING.md`).
+- [ ] Firebase integration (optional — wired but not enabled by default).
 
 ---
 
@@ -235,21 +217,32 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 
 **Tech:** PyTorch, Torchvision.
 
-**Goal:** Classify a **single 224x224 RGB image** into one of ~62 classes (scenario-specific vocabulary + letters A–Z + numbers 1–10).
+**Goal:** Classify a **short video clip** of an isolated ASL sign into one of the trained gloss classes (48 MVP glosses for the deployed I3D model; broader vocabulary possible with other backbones).
 
 **Key files:**
-- `ml/models/classifier.py` – **ASLClassifier**.
+- `ml/i3d_msft/pytorch_i3d.py` – **Inception I3D** (deployed MVP model).
+- `ml/i3d_label_map_mvp-sft-full-v1.json` – 48-class MVP label map.
+- `ml/models/classifier.py` – `ASLVideoClassifier` (in-repo torchvision baseline).
 - `ml/config.py` – central configuration (data, model, training).
-- `ml/training/dataset.py` – `ASLImageDataset` class.
+- `ml/training/dataset.py` – `ASLVideoDataset` class.
 - `ml/training/train.py` – training script.
 - `ml/evaluation/evaluate.py` – evaluation and confusion analysis.
 
-**Architecture (ASLClassifier):**
-1. **CNN Backbone** – e.g., `resnet18`:
-   - Input: `(B, 3, 224, 224)`.
-   - Output: `(B, C, 7, 7)` feature maps (`C = 512` for ResNet18).
+**Deployed architecture (Inception I3D):**
+- Input: `(B, 3, 64, 224, 224)` video clips, normalized to `[-1, 1]`.
+- 3D Inception modules with temporal convolutions.
+- Output: logits `(B, num_classes, T')`, max-pooled over time.
+- Trained on ASL Citizen with signer-disjoint splits.
+- See `docs/PREPROCESSING.md` for inference preprocessing.
 
-2. **Patch projection**:
+**In-repo baseline (ASLVideoClassifier) — `ml/models/classifier.py`:**
+- Wraps torchvision 3D backbones (R3D-18, MC3-18, R(2+1)D-18) pretrained on Kinetics-400.
+- Input: `(B, 3, 16, 224, 224)` — 16-frame video clips.
+- Dropout + linear classification head.
+
+**NOTE:** The old steps 2–5 below are from an earlier ResNet18+Transformer design and do not reflect the current model. They are retained for historical reference only.
+
+2. **Classification head (legacy)**:
    - 1×1 conv reduces channels: `(B, C, 7, 7)` → `(B, d_model, 7, 7)` (e.g., `d_model = 256`).
    - Flatten spatial dims: `(B, d_model, 7*7)` → `(B, 49, d_model)`.
 
@@ -268,60 +261,63 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
    - Output logits: `(B, num_classes)`.
 
 **Training strategy:**
-- **Backbone freeze** for first N epochs (e.g., 2): only Transformer + head train.
+- **Backbone freeze** for first N epochs (e.g., 2–3): only the classification head trains.
 - Then **unfreeze** backbone for fine-tuning.
 - Optimizer: `AdamW(lr=1e-3, weight_decay=1e-4)`.
 - Scheduler: `CosineAnnealingLR` over 30 epochs.
 - Early stopping: if validation accuracy doesn’t improve for 5 epochs.
 - Checkpoints: `ml/checkpoints/best_model.pt` + periodic `epoch_X.pt`.
 
-**Dataset (`ASLImageDataset`):**
+**Dataset (`ASLVideoDataset`):**
 - Expected layout (see `docs/data_schema.md`):
 
   ```text
   data/processed/
-    images/
-      train/hello/*.jpg
-      train/goodbye/*.jpg
+    clips/
+      train/hello/*.mp4
+      train/goodbye/*.mp4
       ...
-      val/hello/*.jpg
-      test/hello/*.jpg
+      val/hello/*.mp4
+      test/hello/*.mp4
     label_map.json   # {"hello": 0, "goodbye": 1, ...}
   ```
 
-- Augmentations (train only):
-  - Resize slightly larger then random crop to `image_size`.
-  - Color jitter.
-  - Small rotations.
-  - **No horizontal flip** (ASL hands are not mirror-symmetric).
+- Augmentations (train only): random crop, color jitter, small rotations.
+- **No horizontal flip** (ASL hands are not mirror-symmetric).
 
 **Training steps:**
-1. Prepare processed images + `label_map.json` via the data pipeline (below).
+1. Prepare processed video clips + `label_map.json` via the data pipeline.
 2. `cd ml && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt`.
 3. Run `python -m training.train`.
 4. Evaluate: `python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt`.
-5. Copy `best_model.pt` + `label_map.json` to a location readable by the backend (`MODEL_PATH`).
+5. Point backend `MODEL_PATH` / `LABEL_MAP_PATH` at the artifacts.
 
 ---
 
 #### 3.4 Data Pipeline & Datasets (`data/`)
 
-**Goal:** Turn raw ASL video datasets (e.g., **WLASL**) into many labeled image frames for training.
+**Goal:** Turn raw ASL video datasets into labeled **video clips** for training.
 
 **Key files:**
-- `data/scripts/download_wlasl.py` – downloads metadata + builds label map + extracts frames.
-- `data/scripts/preprocess.py` – optional MediaPipe hand cropping + train/val/test split + stats.
-- `docs/data_schema.md` – describes data layout and aspirational vs actual datasets.
+- `data/scripts/ingest_asl_citizen.py` – ingests ASL Citizen metadata.
+- `data/scripts/ingest_wlasl.py` – ingests WLASL metadata.
+- `data/scripts/ingest_msasl.py` – ingests MS-ASL metadata.
+- `data/scripts/preprocess_clips.py` – produces uniform-length mp4 clips.
+- `data/scripts/build_unified_dataset.py` – merges sources and writes label maps.
+- `data/scripts/validate.py` – sanity checks.
+- `data/scripts/build_mvp_dataset.py` – MVP-filtered subset.
+- `docs/data_pipeline.md` – detailed pipeline documentation.
+- `docs/data_schema.md` – data layout and schemas.
 
-**Datasets considered:**
-- **WLASL** – 2K glosses, ~21K videos (primary training set).
-- **ASL Citizen** – 2.7K glosses, 84K videos (robustness / varied background).
-- **MS-ASL**, **ASL-LEX** – supplementary.
+**Datasets used:**
+- **ASL Citizen** – 2.7K glosses, ~83K videos, 52 signers (primary train/val/test, signer-disjoint).
+- **WLASL** – 2K glosses, ~21K videos (supplementary training).
+- **MS-ASL** – 1K glosses, ~25K videos (supplementary training).
 
 **Pipeline steps (WLASL example):**
 1. `download_wlasl.py`:
    - Downloads metadata JSON from GitHub.
-   - Filters entries to only your `target_vocab` from `ml/config.py` (greetings, restaurant, medical, etc.).
+   - Filters entries to the configured `target_vocab` from `ml/config.py` (greetings, restaurant, medical, etc.).
    - Builds `label_map.json` for those glosses.
 
 2. Video acquisition:
@@ -358,7 +354,7 @@ The MVP recognizes **single, isolated signs** from a **scenario-focused vocabula
 - `vocabulary` (future) – metadata for each sign used in learning mode.
 
 **Why Firestore?**
-- Managed, free at your scale.
+- Managed service with a free tier suitable for early-scale workloads.
 - Easy to integrate via `firebase-admin` SDK in the backend.
 - Good fit for simple document-style data (no heavy relational requirements).
 
@@ -370,34 +366,33 @@ Implementation steps are in **Section 3.2 Backend API** above.
 
 **Online (runtime) path:**
 
-1. User opens the app on iOS and navigates to the **Camera** screen.
-2. App requests camera permission if needed.
-3. User signs a word (e.g., "water") in front of the camera.
-4. User taps **Capture**.
+1. The app opens on iOS (or Android with Expo Go) and navigates to the **Camera** screen.
+2. The app requests camera permission if needed.
+3. The signer performs a word (e.g., "water") in front of the camera.
+4. The user taps **Record Sign** (~3 s video clip).
 5. The app:
-   - Takes a JPEG photo from the camera preview.
+   - Records a short **video** (e.g. MP4) from the camera.
    - Wraps it in `FormData` under `file`.
    - Sends it to the backend: `POST /api/v1/predict`.
 
 6. FastAPI backend:
    - Validates the uploaded file.
-   - Preprocesses the image into a model-ready tensor.
-   - Runs the CNN+Transformer model for inference.
-   - Gets probabilities over all sign classes.
-   - Picks top-1 and top-5 predictions.
+   - Preprocesses video into an I3D-ready tensor `(1, 3, 64, 224, 224)` (see `docs/PREPROCESSING.md`).
+   - Runs **Inception I3D** inference.
+   - Returns logits → top-1 and optional top-k over the label map.
 
 7. Backend returns JSON with `sign`, `confidence`, `top_k`.
-8. App updates UI with the prediction.
-9. If the confidence is high enough, app calls TTS so the phone **speaks** the English word.
-10. (Future) Backend writes a `translations` document to Firestore; app pulls this into the **History** screen.
+8. The app updates the UI with the prediction.
+9. If confidence is high enough, the app uses TTS so the device **speaks** the English gloss.
+10. (Optional) Backend writes a `translations` document to Firestore; the **History** screen can sync from there.
 
 **Offline (training) path:**
-- Completely separate from user-facing flow, run by ML engineers:
-  1. Download + process WLASL and other datasets.
-  2. Train the ASLClassifier on images.
-  3. Evaluate and iterate model.
-  4. Export `best_model.pt` and `label_map.json`.
-  5. Deploy/model file path updated in backend.
+- Separate from the runtime flow:
+  1. Download and process datasets (e.g. ASL Citizen, WLASL, MS-ASL) via `data/scripts/`.
+  2. Train models (see `ml/README.md` and training branch notes in `docs/DEVELOPER_GUIDE.md`).
+  3. Evaluate and iterate.
+  4. Export `best_model.pt` and the versioned label map JSON used by inference.
+  5. Point backend `MODEL_PATH` / `LABEL_MAP_PATH` at the new artifacts (or S3).
 
 ---
 
@@ -406,10 +401,10 @@ Implementation steps are in **Section 3.2 Backend API** above.
 #### 5.1 Restaurant Ordering
 
 **User story:**  
-A Deaf customer signs "water" to a waiter who doesn’t know ASL. The waiter opens Eye Hear U, points the camera at the customer, taps **Capture**, sees "water" on the screen and hears it spoken aloud.
+A Deaf customer signs "water" to a waiter who doesn’t know ASL. The waiter opens Eye Hear U, points the camera at the customer, taps **Record Sign**, sees "water" on the screen and hears it spoken aloud.
 
 **Technical flow:**
-- Mobile camera → `POST /predict` → backend model predicts "water" with high confidence → app displays and speaks "water".
+- Mobile camera (short video) → `POST /predict` → backend model predicts "water" with high confidence → app displays and speaks "water".
 - In future, the waiter can tap a “correct” button; backend stores this as positive feedback.
 
 #### 5.2 Medical Triage
@@ -419,13 +414,13 @@ In an urgent care clinic, a Deaf patient signs "pain" and "medicine". The nurse 
 
 **Technical changes for this use case:**
 - Vocabulary includes **medical-focused signs**: `pain`, `hurt`, `emergency`, `doctor`, `medicine`, `allergic`, `sick`.
-- Same flow: camera capture, `/predict`, TTS.
+- Same flow: video recording, `/predict`, TTS.
 - Evaluation plan: design a **scenario script** (simulate nurse–patient interactions) and measure accuracy on that subset.
 
 #### 5.3 ASL Learner Self-Check
 
 **User story:**  
-An ASL student practicing at home signs "thank you" into the front camera and uses Eye Hear U to verify they’re signing it correctly.
+An ASL student practicing at home signs "thank you" into the front camera and uses Eye Hear U to check whether the model recognizes the sign.
 
 **Technical flow:**
 - Front-facing camera captures the signer themselves.
@@ -445,85 +440,38 @@ Someone fingerspells "J-O-H-N" because the app doesn’t know that full word as 
 
 ---
 
-### 6. Implementation Roadmap by Role
+### 6. Implementation checklist (by area)
 
-#### 6.1 Maria – Mobile / iOS Frontend
+#### 6.1 Mobile (Expo)
 
-1. **Confirm mobile environment:**
-   - Node 20 (>= 20.19.4 ideally).
-   - Xcode + iOS simulator or physical iPhone with Expo Go.
+1. **Environment:** Node 20+, Xcode + Simulator and/or a device with Expo Go.
+2. **Run:** `cd mobile && npm install`; prefer `npm run start:lan` when the API is on the same Wi‑Fi.
+3. **API URL:** set `EXPO_PUBLIC_API_URL` in `mobile/.env` (not hard-coded in screens). Simulator on the same Mac: `http://127.0.0.1:8000`. Physical device: `http://<API-host-LAN-IP>:8000`.
+4. **iOS:** enable **Local Network** for Expo Go if the bundle fails to load (Settings → Privacy & Security → Local Network).
+5. **UX:** loading and error states during inference; optional onboarding for framing.
+6. **History:** AsyncStorage (current default); optional Firestore sync and feedback UI.
 
-2. **Run the app:**
-   - `cd mobile && npm install` (already done once, re-run if deps change).
-   - `npx expo start`.
+#### 6.2 Backend (FastAPI)
 
-3. **Connect to backend:**
-   - In `app/camera.tsx`, set `API_BASE_URL`:
-     - **Simulator (same machine):** `http://localhost:8000`.
-     - **Physical device:** `http://<your-laptop-LAN-IP>:8000`.
+1. **Setup:** `cd backend`, venv, `pip install -r requirements.txt`, `cp .env.example .env`.
+2. **Run:** `export PYTHONPATH=..` (repo root) and `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
+3. **Health:** verify `GET /health` and `GET /ready`.
+4. **Model:** `model_service.py` loads I3D weights and the JSON label map; see `docs/DEVELOPER_GUIDE.md` for paths and S3.
+5. **Optional Firestore:** service account + `FIREBASE_*` env; wire routes if cloud history is required.
 
-4. **Polish UX:**
-   - Nice loading state while model is predicting (`Processing...`).
-   - Clear error states if backend is unreachable.
-   - Simple onboarding screen explaining best framing for signs.
+#### 6.3 ML & data
 
-5. **History & feedback:**
-   - Persist predictions with timestamps to AsyncStorage.
-   - Sync with Firestore once `save_translation` is live.
-   - Add optional **"correct" / "wrong"** buttons per history item.
-
-#### 6.2 Zhixiao – Backend & Database
-
-1. **Backend setup:**
-   - `cd backend && python -m venv venv && source venv/bin/activate`.
-   - `pip install -r requirements.txt`.
-   - `cp .env.example .env` and configure values.
-
-2. **Health endpoints:**
-   - Confirm `GET /health` and `GET /ready` work via browser or curl.
-
-3. **Model integration:**
-   - Once `best_model.pt` and `label_map.json` exist:
-     - Implement `load_model` + `predict` in `model_service.py` using `ASLClassifier` from `ml/models`.
-     - Store `label_map` in memory for index→label mapping.
-
-4. **Logging to Firestore:**
-   - Configure `firebase-credentials.json` and `.env`.
-   - Call `init_firebase` on startup; use `save_translation` for each prediction.
-   - Expose a simple `GET /api/v1/history?session_id=...` endpoint to power the mobile history screen.
-
-#### 6.3 Siyi & Chloe – ML / Data
-
-1. **Data audit:**
-   - Run `download_wlasl.py` to inspect coverage of target vocab.
-   - Identify missing glosses → plan ASL Citizen/custom recordings.
-
-2. **Pipeline execution:**
-   - Extract frames, optionally crop hands, create train/val/test splits.
-   - Ensure balanced-ish class counts (or at least understand imbalance).
-
-3. **Train baseline model:**
-   - Use default config in `ml/config.py`.
-   - Run `python -m training.train` and monitor logs.
-   - Iterate hyperparameters, backbones, and augmentations.
-
-4. **Evaluate & error analyze:**
-   - Use `evaluation/evaluate.py` to get per-class accuracy and confusion pairs.
-   - Focus on classes used in restaurant/medical scenarios first.
-
-5. **Deploy model:**
-   - Export `best_model.pt` and final `label_map.json`.
-   - Work with Zhixiao to update backend `MODEL_PATH` and reload.
+1. **Data:** run or extend `data/scripts/` pipeline; maintain signer-disjoint evaluation where applicable.
+2. **Training:** `ml/training/train.py` (R3D-style stack in-repo) and/or the **I3D** training branch referenced in `docs/DEVELOPER_GUIDE.md` — inference must match the exported checkpoint.
+3. **Evaluate:** `ml/evaluation/evaluate.py` (and any I3D eval scripts on the training branch).
+4. **Deploy artifacts:** versioned `best_model.pt` + label map JSON; update backend env or S3 layout.
 
 ---
 
 ### 7. Summary
 
-- Eye Hear U is a **three-tier system**: React Native mobile app, FastAPI backend, and a CNN+Transformer ASL classifier trained on WLASL-style data.
-- The app’s **core promise** is single-sign, scenario-focused ASL→English translation with optional audio.
-- This document should be the go-to reference for:
-  - How components fit together.
-  - Which files to touch for which feature.
-  - The step-by-step flows for both runtime use and ML training.
+- Eye Hear U is a **three-tier system**: React Native (Expo) mobile app, FastAPI backend, and a **video** classifier (**Inception I3D** at inference for the MVP checkpoint).
+- The app’s **core promise** is isolated-sign ASL→English output with optional speech.
+- This document summarizes how components fit together; for preprocessing details see `docs/PREPROCESSING.md`, and for day-to-day commands see `docs/DEVELOPER_GUIDE.md`.
 
 For low-level data schemas (Firestore fields, dataset layouts), see `docs/data_schema.md`. EOF

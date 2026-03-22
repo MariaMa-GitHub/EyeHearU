@@ -1,70 +1,47 @@
-## ML Pipeline (`ml/`) — ASL Video Classifier
+## ML (`ml/`) — training code and inference artifacts
 
-This folder contains the **machine learning code** for Eye Hear U.
-It defines the ASL video classifier, training loop, and evaluation scripts.
-
----
-
-### Approach
-
-We use **Approach B: Video Classifier** — a 3D CNN backbone (e.g., R3D-18, MC3-18, or R(2+1)D-18, pretrained on Kinetics-400) fine-tuned on short ASL sign video clips.
-
-The classifier takes as input a tensor of shape `(B, 3, 16, 224, 224)` — a batch of 16-frame video clips resized to 224×224 — and outputs logits over the full gloss vocabulary (~2,000+ classes from ASL Citizen, supplemented by WLASL and MS-ASL).
+This directory holds **training scripts**, **shared config**, the **Inception I3D** module used at inference, and **label maps** for the MVP checkpoint.
 
 ---
 
-### Key Files & Folders
+### Inference (used by the FastAPI backend)
 
-- **`config.py`**
-  Central configuration (dataclasses) for data paths, model backbone, training hyperparameters, and device selection.
+- **`i3d_msft/`** — `pytorch_i3d.py`, `videotransforms.py` (must stay aligned with the training branch that produced the checkpoint).
+- **`i3d_label_map_mvp-sft-full-v1.json`** — class index ↔ gloss for the MVP model.
 
-- **`models/classifier.py`**
-  `ASLVideoClassifier`: wraps a torchvision 3D CNN backbone (R3D-18, MC3-18, R(2+1)D-18) with a custom dropout + linear classification head.
-
-- **`training/dataset.py`**
-  `ASLVideoDataset`: reads preprocessed `.mp4` clips from `data/processed/clips/{split}/{gloss}/`, samples 16 frames, applies ImageNet normalisation and optional augmentations, and returns `(C, T, H, W)` tensors.
-
-- **`training/train.py`**
-  End-to-end training script: builds DataLoaders, instantiates the classifier, trains with AdamW + cosine LR schedule, freezes the backbone for the first N epochs, applies early stopping, and saves checkpoints.
-
-- **`evaluation/evaluate.py`**
-  Loads a checkpoint + test set, computes overall accuracy, top-5 accuracy, per-class accuracy, and lists the most confused sign pairs. Saves results to `evaluation_results.json`.
-
-- **`checkpoints/`**
-  Model weights: `best_model.pt` (loaded by the backend for inference).
+The backend decodes uploads with **`backend/app/services/preprocessing.py`**, documented in **`docs/PREPROCESSING.md`**.
 
 ---
 
-### How to Train
+### Training (in-repo baseline)
 
-1. **Run the data pipeline first** (see `docs/data_pipeline.md`):
+- **`config.py`** — dataclass configuration for paths, backbone, hyperparameters.
+- **`models/classifier.py`** — `ASLVideoClassifier` around a torchvision **3D CNN** (e.g. R3D-18), **16-frame** clips, `(B, 3, 16, 224, 224)`.
+- **`training/dataset.py`** / **`training/train.py`** / **`evaluation/evaluate.py`** — standard train/eval loop on processed clips under `data/processed/`.
 
-   ```bash
-   cd data/scripts
-   python ingest_asl_citizen.py
-   python ingest_wlasl.py
-   python ingest_msasl.py
-   python preprocess_clips.py
-   python build_unified_dataset.py
-   python validate.py
-   ```
+The **deployed MVP API** uses the **I3D + 64-frame** pipeline, not this R3D baseline, unless the checkpoint and preprocessing are switched together.
 
-2. **Install ML dependencies:**
+---
+
+### Train (after data pipeline)
+
+1. Run the data pipeline (see `docs/data_pipeline.md` and `data/scripts/`).
+2. Install dependencies:
 
    ```bash
    cd ml
-   python -m venv venv
-   source venv/bin/activate
+   python -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **Train:**
+3. Train:
 
    ```bash
    python -m training.train
    ```
 
-4. **Evaluate:**
+4. Evaluate:
 
    ```bash
    python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
@@ -72,7 +49,12 @@ The classifier takes as input a tensor of shape `(B, 3, 16, 224, 224)` — a bat
 
 ---
 
-### Who Works Here
+### Label maps
 
-- **Siyi & Chloe (ML):** Model architecture, hyperparameter tuning, confusion matrix analysis.
-- **Zhixiao (Backend):** Uses `best_model.pt` and `label_map.json` for inference integration.
+`i3d_msft/export_label_map.py` can help produce JSON maps compatible with the backend. The MVP map file is checked in at the repo root of `ml/`.
+
+---
+
+### Sync with the I3D training branch
+
+Training for the shipped I3D checkpoint may live on a separate branch (see **`docs/DEVELOPER_GUIDE.md`**). After any change to **`i3d_msft/`** or training preprocessing, mirror updates in **`backend/app/services/preprocessing.py`** and run backend tests with **`--cov-fail-under=100`**.

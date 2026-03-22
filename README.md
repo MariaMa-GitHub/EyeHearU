@@ -1,8 +1,24 @@
 ## Eye Hear U
 
+[![CI](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/MariaMa-GitHub/EyeHearU/branch/main/graph/badge.svg)](https://codecov.io/gh/MariaMa-GitHub/EyeHearU)
+
 **Real-time ASL-to-English translation on iOS** — one sign at a time.
 
 Eye Hear U translates isolated American Sign Language (ASL) signs into English text and speech using a mobile app, a backend inference API, and a video classifier trained on public ASL datasets. Infrastructure is provisioned on AWS via Terraform.
+
+### Documentation
+
+| Audience | Document |
+|----------|----------|
+| End users | [User guide](docs/USER_GUIDE.md) |
+| Developers | [Developer guide](docs/DEVELOPER_GUIDE.md) |
+| Testing & coverage | [Testing](docs/TESTING.md) |
+| Production deployment | [Production](docs/PRODUCTION.md) |
+| Inference preprocessing | [Preprocessing (I3D)](docs/PREPROCESSING.md) |
+| Benchmarking & evaluation | [Benchmarking](docs/BENCHMARKING.md) |
+
+**Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI still enforces **100%** backend line/branch coverage without Codecov.
 
 ---
 
@@ -24,12 +40,12 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
                                        │   ML Model          │
                                        │   (PyTorch)         │
                                        │                     │
-                                       │   3D CNN backbone   │
-                                       │   (R3D-18 /         │
-                                       │    Kinetics-400)    │
+                                       │   Inception I3D     │
+                                       │   (spatiotemporal   │
+                                       │    3D CNN)          │
                                        │        ↓            │
                                        │   Classification    │
-                                       │   → ~2000+ classes  │
+                                       │   (MVP gloss set)   │
                                        └─────────────────────┘
 
   ┌─────────────────────┐   ┌────────────────────┐   ┌──────────────────┐
@@ -61,6 +77,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   │   ├── routers/          # health.py, predict.py
 │   │   ├── schemas/          # Pydantic models
 │   │   └── services/         # model_service, preprocessing, firebase
+│   ├── tests/                # 54 tests, 100% coverage
 │   └── requirements.txt
 │
 ├── mobile/                   # React Native (Expo) mobile app
@@ -68,14 +85,19 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   ├── services/api.ts
 │   └── package.json
 │
-├── ml/                       # Machine learning pipeline
+├── ml/                       # Machine learning code
+│   ├── i3d_msft/             # Inception I3D (deployed model)
+│   │   ├── pytorch_i3d.py
+│   │   └── videotransforms.py
+│   ├── i3d_label_map_mvp-sft-full-v1.json  # 48-class MVP label map
+│   ├── models/classifier.py  # ASLVideoClassifier (in-repo baseline)
 │   ├── config.py             # Video classifier config
-│   ├── models/classifier.py  # ASLVideoClassifier (3D CNN)
 │   ├── training/
 │   │   ├── train.py
 │   │   └── dataset.py        # ASLVideoDataset (PyTorch)
 │   ├── evaluation/
-│   │   └── evaluate.py
+│   │   └── evaluate.py       # Accuracy, F1, confusion matrix, latency
+│   ├── tests/                # ML unit tests
 │   └── requirements.txt
 │
 ├── data/                     # Data pipeline
@@ -92,7 +114,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   ├── raw/                  # Raw video files (gitignored)
 │   └── processed/            # Processed clips + metadata (gitignored)
 │
-├── infrastructure/           # Terraform IaC
+├── infrastructure/           # Infrastructure as Code
 │   ├── main.tf               # Root module, provider config
 │   ├── variables.tf
 │   ├── outputs.tf
@@ -100,21 +122,36 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   │   ├── dev.tfvars
 │   │   ├── staging.tfvars
 │   │   └── prod.tfvars
-│   └── modules/
-│       ├── s3/               # Data lake bucket
-│       ├── ecr/              # Container registries
-│       ├── batch/            # Pipeline job compute
-│       ├── ecs/              # API cluster + ALB
-│       ├── iam/              # Roles and policies
-│       ├── networking/       # VPC, subnets, NAT
-│       └── monitoring/       # CloudWatch, SNS alerts
+│   ├── modules/              # Terraform modules
+│   │   ├── s3/               # Data lake bucket
+│   │   ├── ecr/              # Container registries
+│   │   ├── batch/            # Pipeline job compute
+│   │   ├── ecs/              # API cluster + ALB
+│   │   ├── iam/              # Roles and policies
+│   │   ├── networking/       # VPC, subnets, NAT
+│   │   └── monitoring/       # CloudWatch, SNS alerts
+│   └── k8s/                  # Kubernetes manifests
+│       ├── namespace.yaml
+│       ├── deployment.yaml   # API Deployment (2 replicas)
+│       ├── service.yaml      # ClusterIP Service
+│       ├── ingress.yaml      # ALB Ingress
+│       ├── configmap.yaml    # Environment configuration
+│       └── hpa.yaml          # Horizontal Pod Autoscaler
 │
 ├── docs/
-│   ├── architecture.md
-│   ├── data_schema.md
-│   ├── a2_writeup.md         # A2 Parts 1 & 2
-│   └── data_pipeline.md      # A2 Part 3
+│   ├── USER_GUIDE.md         # End-user guide
+│   ├── DEVELOPER_GUIDE.md    # Setup and day-to-day development
+│   ├── TESTING.md            # Tests, coverage, CI
+│   ├── PRODUCTION.md         # Production deployment
+│   ├── PREPROCESSING.md      # I3D inference preprocessing
+│   ├── BENCHMARKING.md       # Evaluation metrics and reproduction
+│   ├── architecture.md       # System design and use cases
+│   ├── data_pipeline.md      # Data processing pipeline
+│   ├── data_schema.md        # Data schemas
+│   ├── terraform_guide.md    # Terraform IaC guide
+│   └── a2_writeup.md         # Datasets writeup
 │
+├── .github/workflows/ci.yml  # GitHub Actions CI
 ├── Dockerfile
 ├── docker-compose.yml
 └── .gitignore
@@ -128,6 +165,12 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 cd infrastructure
 terraform init
 terraform apply -var-file=environments/dev.tfvars
+```
+
+### Kubernetes Deployment (alternative to ECS)
+
+```bash
+kubectl apply -f infrastructure/k8s/
 ```
 
 ### Data Pipeline
@@ -161,7 +204,7 @@ python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
 cd backend
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Mobile App
@@ -174,4 +217,4 @@ npx expo start
 
 ---
 
-For detailed documentation see `docs/architecture.md`, `docs/data_schema.md`, `docs/data_pipeline.md`, and `docs/terraform_guide.md`.
+For additional design notes see `docs/architecture.md`, `docs/data_schema.md`, `docs/data_pipeline.md`, and `docs/terraform_guide.md`.

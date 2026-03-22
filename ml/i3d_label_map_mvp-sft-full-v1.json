@@ -1,5 +1,4 @@
 {
-  "source_csv": "/mnt/c/26winter/csc490/EyeHearU/ml/train.csv",
   "num_classes": 48,
   "gloss_to_index": {
     "bathroom": 0,

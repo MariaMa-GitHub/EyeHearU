@@ -96,9 +96,11 @@ export default function CameraScreen() {
       setConfidence(result.confidence);
       setTopK(result.top_k || []);
 
-      if (result.sign && result.confidence > 0.3) {
-        Speech.speak(result.sign, { language: "en-US", rate: 0.9 });
+      if (result.sign) {
         await saveToHistory(result);
+        if (result.confidence > 0.3) {
+          Speech.speak(result.sign, { language: "en-US", rate: 0.9 });
+        }
       }
     } catch (error) {
       console.error("Prediction failed:", error);

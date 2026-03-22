@@ -41,7 +41,7 @@ class ModelConfig:
     """Model architecture configuration."""
 
     # Video backbone — pretrained on Kinetics-400
-    backbone: str = "i3d_r50"       # "i3d_r50", "slowfast_r50", "r3d_18"
+    backbone: str = "r3d_18"        # "r3d_18", "mc3_18", "r2plus1d_18"
     pretrained: bool = True
     backbone_freeze_epochs: int = 3  # freeze backbone for first N epochs
 

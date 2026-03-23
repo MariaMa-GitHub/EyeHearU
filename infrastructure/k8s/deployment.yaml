@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: "${ECR_REGISTRY}/eyehearu-api:latest"
+          image: eyehearu-api:latest
           ports:
             - containerPort: 8000
               protocol: TCP

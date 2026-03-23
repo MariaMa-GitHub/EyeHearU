@@ -4,10 +4,10 @@ Evaluation script for the ASL video classifier.
 Generates:
   - Per-class and overall accuracy (top-1 and top-5)
   - Precision, recall, F1 (macro and per-class)
-  - Full confusion matrix (saved as JSON and PNG)
+  - Full confusion matrix (saved separately as confusion_matrix.json and confusion_matrix.png)
   - Most confused pairs
   - Inference latency statistics (p50 / p95 / p99)
-  - Saves all results to evaluation_results.json
+  - Saves metrics (accuracy, precision, recall, F1, latency) to evaluation_results.json
 
 Usage:
     cd ml/

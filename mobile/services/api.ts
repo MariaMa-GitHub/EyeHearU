@@ -6,10 +6,13 @@
  * URL resolution order (first non-empty value wins):
  *  1. `extra.apiBaseUrl` in `app.json` — runtime config via expo-constants.
  *     Set this to override the URL without rebuilding (e.g. in `eas.json` profiles).
- *  2. `EXPO_PUBLIC_API_URL` env var — inlined at bundle time; set in `mobile/.env`.
+ *     This is the only override that works in both dev and non-dev (staging/release) builds.
+ *  2. (dev builds only — `__DEV__ === true`) `EXPO_PUBLIC_API_URL` env var, inlined at
+ *     bundle time; set in `mobile/.env`.
  *     - Same LAN: `http://192.168.x.x:8000` (uvicorn with `--host 0.0.0.0`)
  *     - Tunnel: run `npx localtunnel --port 8000`, paste the `https://….loca.lt` URL.
- *  3. `http://127.0.0.1:8000` — simulator default (dev mode only).
+ *  3. (dev builds only) `http://127.0.0.1:8000` — simulator default.
+ *  4. (non-dev builds) `https://api.eyehearu.app` — production default.
  *
  * LocalTunnel can be unreliable; same Wi‑Fi + LAN IP is usually more stable for demos.
  * iOS: if Expo Go cannot load the bundle, enable Local Network access for Expo Go under

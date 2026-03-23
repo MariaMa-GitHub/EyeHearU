@@ -39,6 +39,14 @@ class TestTopKAccuracy:
         assert compute_topk_accuracy(logits, labels, k=1) == pytest.approx(0.0)
         assert compute_topk_accuracy(logits, labels, k=5) == pytest.approx(1.0)
 
+    def test_k_larger_than_num_classes(self):
+        """k > num_classes should not raise; clamps k to num_classes."""
+        logits = torch.tensor([[10.0, 0.0, 0.0], [0.0, 10.0, 0.0]])
+        labels = torch.tensor([0, 1])
+        # k=5 but only 3 classes — must not raise and correct label is always in top-3
+        acc = compute_topk_accuracy(logits, labels, k=5)
+        assert acc == pytest.approx(1.0)
+
 
 class TestPrecisionRecallF1:
     def test_perfect_classification(self):

@@ -44,6 +44,7 @@ def set_seed(seed: int = SEED):
 
 
 def compute_topk_accuracy(logits: torch.Tensor, labels: torch.Tensor, k: int = 5):
+    k = min(k, logits.size(-1))
     _, topk_preds = logits.topk(k, dim=-1)
     correct = topk_preds.eq(labels.unsqueeze(-1)).any(dim=-1)
     return correct.float().mean().item()

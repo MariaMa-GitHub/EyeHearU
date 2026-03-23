@@ -1,10 +1,11 @@
-The file pytorch_i3d.py in this directory is derived from the
-microsoft/ASL-citizen-code repository (https://github.com/microsoft/ASL-citizen-code),
+The files pytorch_i3d.py and videotransforms.py in this directory are derived from
+the microsoft/ASL-citizen-code repository (https://github.com/microsoft/ASL-citizen-code),
 specifically from the I3D/ subdirectory of that project.
 
 Modifications made for this project:
   - Removed training/evaluation entry-points not needed at inference time.
   - Adapted imports for use as a package module (removed script-level globals).
+  - videotransforms.py: adapted as a local module for reproducible training.
 
 The original source is distributed under the MIT License reproduced below.
 

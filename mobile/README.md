@@ -28,7 +28,12 @@ React Native (Expo) client for Eye Hear U. It:
 5. Update UI with `sign`, `confidence`, `top_k`; optionally speak the label.  
 6. Append successful predictions to history.
 
-The backend base URL is **not** hard-coded in screens; it is resolved in `services/api.ts` from `EXPO_PUBLIC_API_URL` (development) or the production constant.
+The backend base URL is **not** hard-coded in screens; it is resolved in `services/api.ts` using the following priority order:
+
+1. `extra.apiBaseUrl` in `app.json` (runtime config via `expo-constants`) — works in dev and non-dev builds.
+2. `EXPO_PUBLIC_API_URL` env var from `mobile/.env` (dev builds only, inlined at bundle time).
+3. `http://127.0.0.1:8000` — default simulator fallback (dev builds only).
+4. `https://api.eyehearu.app` — production default (non-dev builds).
 
 ---
 

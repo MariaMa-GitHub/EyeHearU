@@ -16,9 +16,9 @@ Eye Hear U translates **isolated ASL signs** (one sign at a time) into **English
 ## How to use the app
 
 1. **Open the app** — scan the Expo QR code from the machine running the dev server, or open a development / store build.
-2. **Home screen**
-   - **Green status**: backend is reachable and the model is loaded.
-   - **Orange / red**: backend not ready — contact the person running the API before demoing.
+2. **Home screen** — you will see the app title, a brief description, and two action buttons:
+   - **Start Translating** — opens the camera so you can record an ASL sign.
+   - **View History** — browses past translations stored on the device.
 3. Tap **Start Translating**.
 4. Allow **camera** (and **microphone** if prompted).
 5. Position the signer so the **sign is visible** in the front camera.

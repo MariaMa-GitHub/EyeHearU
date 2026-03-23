@@ -1,19 +1,22 @@
 /**
  * API client for the Eye Hear U backend.
  *
- * ## Configure the backend URL (development)
+ * ## Configure the backend URL
  *
- * 1. Create `mobile/.env` (copy from `.env.example`).
- * 2. Set `EXPO_PUBLIC_API_URL` to the FastAPI base URL:
- *    - Same LAN: `http://192.168.x.x:8000` (host running uvicorn with `--host 0.0.0.0`)
- *    - Tunnel: run `npx localtunnel --port 8000`, paste the **new** `https://….loca.lt` URL
- *      (URLs stop working when the tunnel exits → 503 "tunnel unavailable").
- * 3. Restart Expo: `npx expo start` (env vars are inlined at bundle time).
+ * URL resolution order (first non-empty value wins):
+ *  1. `extra.apiBaseUrl` in `app.json` — runtime config via expo-constants.
+ *     Set this to override the URL without rebuilding (e.g. in `eas.json` profiles).
+ *  2. `EXPO_PUBLIC_API_URL` env var — inlined at bundle time; set in `mobile/.env`.
+ *     - Same LAN: `http://192.168.x.x:8000` (uvicorn with `--host 0.0.0.0`)
+ *     - Tunnel: run `npx localtunnel --port 8000`, paste the `https://….loca.lt` URL.
+ *  3. `http://127.0.0.1:8000` — simulator default (dev mode only).
  *
  * LocalTunnel can be unreliable; same Wi‑Fi + LAN IP is usually more stable for demos.
  * iOS: if Expo Go cannot load the bundle, enable Local Network access for Expo Go under
  * Settings → Privacy & Security → Local Network.
  */
+
+import Constants from "expo-constants";
 
 /** Strip trailing slash */
 function normalizeBaseUrl(url: string): string {
@@ -21,6 +24,14 @@ function normalizeBaseUrl(url: string): string {
 }
 
 function resolveApiBaseUrl(): string {
+  // 1. Runtime config via expo-constants (app.json → extra.apiBaseUrl)
+  const fromConstants = (
+    Constants.expoConfig?.extra?.apiBaseUrl as string | undefined
+  )?.trim();
+  if (fromConstants) {
+    return normalizeBaseUrl(fromConstants);
+  }
+
   if (!__DEV__) {
     return "https://api.eyehearu.app";
   }

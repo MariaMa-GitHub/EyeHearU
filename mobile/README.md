@@ -13,7 +13,7 @@ React Native (Expo) client for Eye Hear U. It:
 ### Entry points & routing
 
 - `app/_layout.tsx` — `expo-router` stack: Home, Camera, History.  
-- `app/index.tsx` — Home: backend status, **Start Translating**, **View History**.  
+- `app/index.tsx` — Home: animated hero icon, **Start Translating**, **View History**.  
 - `app/camera.tsx` — Records ~3 s video, calls `predictSign`, TTS, errors.  
 - `app/history.tsx` — Reads/writes translation history from AsyncStorage.
 
@@ -40,7 +40,7 @@ The backend base URL is **not** hard-coded in screens; it is resolved in `servic
 ### API client (`services/api.ts`)
 
 - `predictSign(videoUri)` — `FormData` field `file`, `POST /api/v1/predict`.  
-- `checkHealth()` / readiness helpers for the home screen.  
+- `checkHealth()` / readiness helpers (available for future use; not currently shown in the UI).  
 - Tunnel / 503 messaging helpers for clearer errors.
 
 Configure development URL in **`mobile/.env`** (see **`mobile/.env.example`**):
@@ -72,4 +72,4 @@ Open in **Expo Go** (QR) or press `i` for the iOS Simulator. Ensure the backend 
 
 - UI / navigation: `app/*.tsx`, shared styles.  
 - Networking and env handling: `services/api.ts`.  
-- Error copy and tunnel hints: `services/api.ts`, `app/index.tsx`.
+- Error copy and tunnel hints: `services/api.ts`, `app/camera.tsx`.

@@ -98,12 +98,25 @@ def load_model(settings):
             compatible[k] = v
         else:
             skipped.append(k)
-    model.load_state_dict(compatible, strict=False)
+    load_result = model.load_state_dict(compatible, strict=False)
     if skipped:
         print(f"[model] loaded {len(compatible)} keys, skipped {len(skipped)}: {skipped[:5]}")
     else:
         print(f"[model] loaded all {len(compatible)} keys")
 
+    # Inspect any additional incompatibilities reported by PyTorch.
+    missing_keys = getattr(load_result, "missing_keys", None)
+    unexpected_keys = getattr(load_result, "unexpected_keys", None)
+    if missing_keys:
+        print(
+            f"[model][warn] missing keys reported by load_state_dict: "
+            f"{len(missing_keys)} (showing up to 5): {missing_keys[:5]}"
+        )
+    if unexpected_keys:
+        print(
+            f"[model][warn] unexpected keys reported by load_state_dict: "
+            f"{len(unexpected_keys)} (showing up to 5): {unexpected_keys[:5]}"
+        )
     model.to(device)
     model.eval()
     return model, index_to_gloss

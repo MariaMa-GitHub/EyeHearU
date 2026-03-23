@@ -170,7 +170,7 @@ terraform apply -var-file=environments/dev.tfvars
 ### Kubernetes Deployment (alternative to ECS)
 
 ```bash
-kubectl apply -f infrastructure/k8s/
+kubectl apply -k infrastructure/k8s/
 ```
 
 ### Data Pipeline

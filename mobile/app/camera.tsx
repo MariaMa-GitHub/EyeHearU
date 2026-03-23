@@ -36,6 +36,7 @@ export default function CameraScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const busy = isRecording || isProcessing;
 
   useEffect(() => {
     if (!isRecording) return;
@@ -75,7 +76,7 @@ export default function CameraScreen() {
   }
 
   const recordAndPredict = async () => {
-    if (!cameraRef.current || isRecording || isProcessing) return;
+    if (!cameraRef.current || busy) return;
 
     setIsRecording(true);
     setPrediction(null);
@@ -141,8 +142,6 @@ export default function CameraScreen() {
       Speech.speak(prediction, { language: "en-US", rate: 0.9 });
     }
   };
-
-  const busy = isRecording || isProcessing;
 
   return (
     <View style={styles.container}>

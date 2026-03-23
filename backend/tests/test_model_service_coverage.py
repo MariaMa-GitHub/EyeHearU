@@ -208,6 +208,63 @@ def test_load_model_state_dict_returns_non_dict(tmp_path):
             ms.load_model(settings)
 
 
+def test_load_model_reports_missing_keys(tmp_path):
+    """Cover line 111: load_state_dict reports missing_keys."""
+    label = tmp_path / "lm.json"
+    label.write_text(json.dumps({"gloss_to_index": {"a": 0, "b": 1}}))
+
+    from ml.i3d_msft.pytorch_i3d import InceptionI3d
+
+    real = InceptionI3d(400, in_channels=3)
+    real.replace_logits(2)
+    full_state = real.state_dict()
+    # Remove a key so load_state_dict will report it missing
+    partial_state = {k: v for i, (k, v) in enumerate(full_state.items()) if i > 0}
+
+    ckpt = tmp_path / "m.pt"
+    torch.save(partial_state, ckpt)
+
+    settings = SimpleNamespace(
+        model_path=str(ckpt),
+        label_map_path=str(label),
+        model_device="cpu",
+        aws_s3_bucket="b",
+        aws_s3_region="r",
+        aws_s3_model_key="k",
+    )
+    model, idx = ms.load_model(settings)
+    assert model is not None
+
+
+def test_load_model_reports_unexpected_keys(tmp_path):
+    """Cover line 116: load_state_dict reports unexpected_keys."""
+    label = tmp_path / "lm.json"
+    label.write_text(json.dumps({"gloss_to_index": {"a": 0, "b": 1}}))
+
+    from ml.i3d_msft.pytorch_i3d import InceptionI3d
+
+    real = InceptionI3d(400, in_channels=3)
+    real.replace_logits(2)
+    good_state = real.state_dict()
+
+    ckpt = tmp_path / "m.pt"
+    torch.save(good_state, ckpt)
+
+    settings = SimpleNamespace(
+        model_path=str(ckpt),
+        label_map_path=str(label),
+        model_device="cpu",
+        aws_s3_bucket="b",
+        aws_s3_region="r",
+        aws_s3_model_key="k",
+    )
+
+    fake_result = SimpleNamespace(missing_keys=[], unexpected_keys=["bogus.weight"])
+    with patch.object(InceptionI3d, "load_state_dict", return_value=fake_result):
+        model, idx = ms.load_model(settings)
+    assert model is not None
+
+
 def test_repo_root_path_inserted(tmp_path, monkeypatch):
     """Cover sys.path insert when repo root was not on path."""
     import importlib

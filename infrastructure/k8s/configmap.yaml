@@ -4,5 +4,5 @@ metadata:
   name: eyehearu-config
   namespace: eyehearu
 data:
-  s3-bucket: "eyehearu-data"
-  model-s3-key: "models/i3d_mvp_sft_full_v1.pt"
+  s3-bucket: "eye-hear-u-public-data-ca1"
+  model-s3-key: "models/i3d/modal/candidate-ac-eval-v2/mvp-sft-full-v1/best_model.pt"

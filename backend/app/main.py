@@ -10,12 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 
-settings = get_settings()
-
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     """Load ML model into memory on startup, clean up on shutdown."""
+    settings = get_settings()
     from app.services.model_service import load_model
     try:
         model, index_to_gloss = load_model(settings)
@@ -35,7 +34,7 @@ async def lifespan(application: FastAPI):
 
 
 app = FastAPI(
-    title=settings.app_name,
+    title=get_settings().app_name,
     description="API for ASL-to-English sign translation. Accepts video clips and returns predicted sign labels.",
     version="0.1.0",
     lifespan=lifespan,
@@ -43,7 +42,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=get_settings().cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

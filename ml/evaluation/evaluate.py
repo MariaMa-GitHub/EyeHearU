@@ -96,6 +96,8 @@ def evaluate_model(model, loader, device, label_map_inv, num_classes: int):
     for clips, labels in loader:
         clips, labels = clips.to(device), labels.to(device)
 
+        if device.type == "cuda":
+            torch.cuda.synchronize()
         t0 = time.perf_counter()
         logits = model(clips)
         if device.type == "cuda":

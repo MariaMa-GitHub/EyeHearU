@@ -13,6 +13,9 @@ Set PIPELINE_ENV to control the environment:
   PIPELINE_ENV=dev         ->s3://eye-hear-u-dev-data/
   PIPELINE_ENV=staging     ->s3://eye-hear-u-staging-data/
   PIPELINE_ENV=prod        ->s3://eye-hear-u-prod-data/
+
+Optional: set S3_BUCKET to override the default name (e.g. public dataset bucket):
+  PIPELINE_ENV=dev S3_BUCKET=eye-hear-u-public-data-ca1 python ...
 """
 
 import os
@@ -23,7 +26,13 @@ PIPELINE_ENV = os.getenv("PIPELINE_ENV", "local")
 AWS_REGION = os.getenv("AWS_REGION", "ca-central-1")
 
 # ── S3 bucket name (only used when PIPELINE_ENV != "local") ─────
-S3_BUCKET = f"eye-hear-u-{PIPELINE_ENV}-data" if PIPELINE_ENV != "local" else None
+# Default: eye-hear-u-{PIPELINE_ENV}-data. Override with S3_BUCKET for buckets
+# that do not follow that pattern (e.g. eye-hear-u-public-data-ca1).
+if PIPELINE_ENV == "local":
+    S3_BUCKET = None
+else:
+    _s3_bucket_override = os.getenv("S3_BUCKET", "").strip()
+    S3_BUCKET = _s3_bucket_override or f"eye-hear-u-{PIPELINE_ENV}-data"
 
 # ── Local paths (used when PIPELINE_ENV == "local") ─────────────
 _DATA_ROOT = Path(__file__).resolve().parent.parent

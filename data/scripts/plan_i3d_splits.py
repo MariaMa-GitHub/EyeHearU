@@ -118,18 +118,39 @@ def _filename_from_clip_path(clip_path: str) -> tuple[str, str]:
     return rel, rel
 
 
-def _build_rows(raw_rows: list[dict]) -> list[ClipRow]:
+def _build_rows(raw_rows: list[dict]) -> tuple[list[ClipRow], dict[str, int]]:
+    """
+    Turn processed_clips rows into ClipRows. Rows that fail validation are skipped;
+    returned stats count skips by reason (mutually exclusive, in check order).
+    """
     out: list[ClipRow] = []
+    stats = {
+        "raw_csv_rows": len(raw_rows),
+        "kept": 0,
+        "skipped_no_source": 0,
+        "skipped_no_gloss": 0,
+        "skipped_bad_split": 0,
+        "skipped_empty_filename": 0,
+    }
+    valid_splits = {"train", "val", "test"}
     for r in raw_rows:
         source = (r.get("source") or "").strip().lower()
         signer_id = str(r.get("signer_id") or "").strip()
         gloss = (r.get("gloss") or "").strip().lower()
         split = (r.get("split") or "").strip().lower()
         clip_path = (r.get("clip_path") or "").strip()
-        if not source or not gloss or split not in {"train", "val", "test"}:
+        if not source:
+            stats["skipped_no_source"] += 1
+            continue
+        if not gloss:
+            stats["skipped_no_gloss"] += 1
+            continue
+        if split not in valid_splits:
+            stats["skipped_bad_split"] += 1
             continue
         filename, s3_key = _filename_from_clip_path(clip_path)
         if not filename:
+            stats["skipped_empty_filename"] += 1
             continue
         out.append(
             ClipRow(
@@ -141,7 +162,8 @@ def _build_rows(raw_rows: list[dict]) -> list[ClipRow]:
                 s3_key=s3_key,
             )
         )
-    return out
+        stats["kept"] += 1
+    return out, stats
 
 
 def _split_asl_citizen_by_signer(
@@ -409,9 +431,10 @@ def main() -> None:
         raise RuntimeError("This script is intended for S3-backed cloud mode. Set PIPELINE_ENV=dev/staging/prod.")
 
     raw = _load_processed_clips(args.mvp)
-    rows = _build_rows(raw)
+    rows, build_stats = _build_rows(raw)
     if not rows:
         raise RuntimeError("No valid rows found in processed_clips.csv.")
+    print(f"[plan] build_rows: {build_stats}")
 
     dropped_missing = 0
     if args.drop_missing_s3:
@@ -443,6 +466,7 @@ def main() -> None:
         "plan_id": plan_id,
         "created_at_utc": datetime.now(UTC).isoformat(),
         "previous_active_plan_id": prev_active,
+        "build_rows_stats": build_stats,
         "strategy": {
             "asl_citizen": "signer_disjoint_train_val_test",
             "supplemental_sources": "train_only" if args.supplemental_train_only else "keep_original",
@@ -482,6 +506,7 @@ def main() -> None:
     print("[plan] Summary")
     print(f"  plan_id: {plan_id}")
     print(f"  previous_active: {prev_active}")
+    print(f"  build_rows: {build_stats}")
     print(f"  counts: {counts}")
     print(f"  ASL signer overlap: {overlap_ac}")
     print(f"  S3 existence sample: {s3_check}")

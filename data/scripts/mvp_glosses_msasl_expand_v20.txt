@@ -1,3 +1,0 @@
-# MS-ASL expansion vocabulary (v20)
-# Excludes MVP + v1..v19 + glosses already present in processed_clips.csv.
-

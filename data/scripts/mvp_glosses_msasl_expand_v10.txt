@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v10)
+# Excludes MVP + v1..v9 + glosses already present in processed_clips.csv.
+
+kiss
+train
+fishing
+follow
+bacon
+cute
+curious
+lazy
+nervous
+never
+science
+snowboard
+picture
+not like
+me
+fifteen
+sixteen
+seventeen
+eighteen
+nineteen
+ears
+confused
+soap
+email
+fingerspell
+gray
+white
+get
+high school
+accept
+few
+save
+shy
+happen
+hurry
+look at
+cereal
+wedding
+metal
+polite
+house
+mountain
+curly hair
+pepper
+single
+love
+cheap
+more
+restaurant
+half

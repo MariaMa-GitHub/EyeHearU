@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v8)
+# Excludes MVP + v1..v7 + glosses already present in processed_clips.csv.
+
+soda
+long hair
+small
+better
+cochlear implant
+if
+weather
+wood
+language
+magazine
+together
+divorce
+cry
+lie
+moon
+last
+asia
+skateboard
+history
+change
+come
+pow
+personality
+ocean
+emotional
+subway
+win
+cashier
+judge
+lawyer
+librarian
+dinner
+eyes
+shirt
+shoes
+screwdriver
+law
+short hair
+korea
+wednesday
+thursday
+friday
+saturday
+pants
+belt
+backpack
+equal
+most
+easy
+argentina

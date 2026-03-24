@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v3)
+# Excludes existing MVP + expansion v1/v2 words.
+
+hard of hearing
+bicycle
+vacation
+but
+draw
+study
+who
+why
+shop
+your
+sad
+family
+my
+ski
+pink
+france
+beautiful
+office
+rain
+meat
+baseball
+dance
+snow
+favorite
+box
+college
+exam
+see
+corn
+nothing
+stamp
+country
+vomit
+late
+afraid
+for
+here
+math
+how are you
+warm
+education
+quiet
+weekend
+slow
+bald
+key
+newspaper
+boss
+mechanic
+secretary

@@ -126,6 +126,66 @@ What changed (high level):
 - Added optional filtering for missing/unreadable clips before training.
 - Added S3-aware data loading in the training stack (plan resolution, split download, clip sync).
 
+MS-ASL vocabulary expansion update (2026-03-24):
+
+- Added expansion list: `data/scripts/mvp_glosses_msasl_expand_v1.txt` (39 candidate glosses).
+- Added utility script: `data/scripts/boost_low_glosses_to_s3.py` for low-gloss augmentation from MS-ASL + ASL Citizen with deduplication.
+- Downloaded and processed additional MS-ASL data for expansion glosses.
+- Uploaded expansion metadata:
+  - `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v1.csv`
+- Updated processed metadata:
+  - `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/processed_clips.csv`
+  - `s3://eye-hear-u-public-data-ca1/processed/mvp/processed_clips.csv`
+- Net result from expansion processing: `+59` processed clips across `27` new glosses.
+
+Additional expansion rounds (v5-v11, with bad-fragment filtering + full-video fallback):
+
+- Round v5:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v5.txt`
+  - download: `69` success / `104` failed
+  - processed: `+152` clips, `50` new glosses, `21` bad/too-short skipped
+  - metadata total: `1879 -> 2031`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v5.csv`
+- Round v6:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v6.txt`
+  - download: `66` success / `99` failed
+  - processed: `+120` clips, `48` new glosses, `15` bad/too-short skipped
+  - metadata total: `2031 -> 2151`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v6.csv`
+- Round v7:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v7.txt`
+  - download: `80` success / `105` failed
+  - processed: `+125` clips, `50` new glosses, `14` bad/too-short skipped
+  - metadata total: `2151 -> 2276`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v7.csv`
+- Round v8:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v8.txt`
+  - download: `68` success / `73` failed
+  - processed: `+124` clips, `49` new glosses, `13` bad/too-short skipped
+  - metadata total: `2276 -> 2400`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v8.csv`
+- Round v9:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v9.txt`
+  - download: `68` success / `80` failed
+  - processed: `+103` clips, `47` new glosses, `14` bad/too-short skipped
+  - metadata total: `2400 -> 2503`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v9.csv`
+- Round v10:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v10.txt`
+  - download: `62` success / `73` failed
+  - processed: `+100` clips, `44` new glosses, `15` bad/too-short skipped
+  - metadata total: `2503 -> 2603`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v10.csv`
+- Round v11:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v11.txt`
+  - download: `50` success / `71` failed
+  - processed: `+91` clips, `45` new glosses, `2` bad/too-short skipped
+  - metadata total: `2603 -> 2694`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v11.csv`
+- Shared updated metadata keys after each round:
+  - `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/processed_clips.csv`
+  - `s3://eye-hear-u-public-data-ca1/processed/mvp/processed_clips.csv`
+
 How rollback works:
 
 - Each plan is stored under:

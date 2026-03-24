@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v18)
+# Excludes MVP + v1..v17 + glosses already present in processed_clips.csv.
+
+both
+several
+hong kong
+iran
+iraq
+go to
+socks
+bank
+group
+wash face
+animal
+rock
+dumb
+couch
+wall
+portugal
+send
+stove
+after
+hashtag
+worm
+disgusted
+every morning
+every afternoon
+engaged
+truck
+student center
+bookstore
+fox
+sheep
+best friend
+flirt
+cent
+hid
+bitter
+traffic
+short
+eye contact
+hold on
+sleepy
+fat
+partner
+also
+grocery store
+glue
+grey
+march
+love it
+motivated
+spanish

@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v12)
+# Excludes MVP + v1..v11 + glosses already present in processed_clips.csv.
+
+health
+everyday
+dolphin
+business
+accountant
+photography
+microwave
+any
+freeze cream
+tell
+swimming
+cracker
+bear
+lion
+deer
+giraffe
+duck
+turtle
+celebrate
+hanukkah
+later
+dresser
+window
+salt
+south america
+denmark
+grapes
+strawberry
+peach
+watermelon
+nuts
+left
+envelope
+dictionary
+scissors
+comfortable
+tie
+fly
+last year
+cabinets
+music
+today
+do
+travel
+street
+new
+old
+long ago
+minus
+rich

@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v14)
+# Excludes MVP + v1..v13 + glosses already present in processed_clips.csv.
+
+plus
+exercise
+apply
+pie
+sugar
+husband
+disappear
+boyfriend
+date
+whale
+cost
+wet
+get up
+marry
+adopt
+early
+pizza
+soup
+center
+bedroom
+piano
+drop
+gallaudet
+freshman
+sophomore
+senior
+major
+pool
+popcorn
+bright
+north
+south
+east
+lousy
+their
+sometimes
+psychology
+sneeze
+appointment
+take
+strong
+far
+aunt
+wife
+shrimp
+only
+pull
+firefighter
+come on
+head

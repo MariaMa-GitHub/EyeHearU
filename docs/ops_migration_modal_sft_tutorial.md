@@ -138,7 +138,7 @@ MS-ASL vocabulary expansion update (2026-03-24):
   - `s3://eye-hear-u-public-data-ca1/processed/mvp/processed_clips.csv`
 - Net result from expansion processing: `+59` processed clips across `27` new glosses.
 
-Additional expansion rounds (v5-v11, with bad-fragment filtering + full-video fallback):
+Additional expansion rounds (v5-v20, with bad-fragment filtering + full-video fallback):
 
 - Round v5:
   - glossary: `data/scripts/mvp_glosses_msasl_expand_v5.txt`
@@ -182,6 +182,59 @@ Additional expansion rounds (v5-v11, with bad-fragment filtering + full-video fa
   - processed: `+91` clips, `45` new glosses, `2` bad/too-short skipped
   - metadata total: `2603 -> 2694`
   - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v11.csv`
+- Round v12:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v12.txt`
+  - download: `51` success / `62` failed
+  - processed: `+81` clips, `46` new glosses, `11` bad/too-short skipped
+  - metadata total: `2694 -> 2775`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v12.csv`
+- Round v13:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v13.txt`
+  - download: `49` success / `75` failed
+  - processed: `+61` clips, `36` new glosses, `13` bad/too-short skipped
+  - metadata total: `2775 -> 2836`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v13.csv`
+- Round v14:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v14.txt`
+  - download: `45` success / `62` failed
+  - processed: `+76` clips, `43` new glosses, `5` bad/too-short skipped
+  - metadata total: `2836 -> 2912`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v14.csv`
+- Round v15:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v15.txt`
+  - download: `40` success / `53` failed
+  - processed: `+51` clips, `39` new glosses, `6` bad/too-short skipped
+  - metadata total: `2912 -> 2963`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v15.csv`
+- Round v16:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v16.txt`
+  - download: `54` success / `59` failed
+  - processed: `+55` clips, `43` new glosses, `8` bad/too-short skipped
+  - metadata total: `2963 -> 3018`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v16.csv`
+- Round v17:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v17.txt`
+  - download: `41` success / `47` failed
+  - processed: `+54` clips, `42` new glosses, `8` bad/too-short skipped
+  - metadata total: `3018 -> 3072`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v17.csv`
+- Round v18:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v18.txt`
+  - download: `23` success / `37` failed
+  - processed: `+27` clips, `27` new glosses, `3` bad/too-short skipped
+  - metadata total: `3072 -> 3099`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v18.csv`
+- Round v19:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v19.txt`
+  - download: `25` success / `27` failed
+  - processed: `+25` clips, `25` new glosses, `1` bad/too-short skipped
+  - metadata total: `3099 -> 3124`
+  - artifacts: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v19.csv`
+- Round v20:
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v20.txt`
+  - candidate glosses after exclusion/filter: `0`
+  - action: no download / no processing / no metadata change
+  - metadata total: `3124 -> 3124`
 - Shared updated metadata keys after each round:
   - `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/processed_clips.csv`
   - `s3://eye-hear-u-public-data-ca1/processed/mvp/processed_clips.csv`

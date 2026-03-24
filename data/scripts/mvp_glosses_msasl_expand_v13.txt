@@ -1,0 +1,53 @@
+# MS-ASL expansion vocabulary (v13)
+# Excludes MVP + v1..v12 + glosses already present in processed_clips.csv.
+
+guilty
+copy
+underwear
+butter
+every year
+retire
+take off
+internet
+dry
+egg
+since
+hit
+front
+vice president
+maybe
+schedule
+west
+curtains
+oh i see
+airplane
+eleven
+thirteen
+fourteen
+twenty
+last month
+focus
+proud
+lonely
+towel
+transfer
+in
+sign language
+nephew
+young
+graduate
+letter
+bowling
+lead
+swing
+alone
+loan
+listen
+gymnastics
+during
+first
+not
+always
+tomato
+wine
+freeway

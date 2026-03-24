@@ -101,7 +101,7 @@ Observed expansion result:
 - Added `+59` processed clips from MS-ASL expansion runs.
 - Added coverage for `27` new glosses (relative to prior MVP metadata snapshot).
 
-Additional expansion rounds (v5-v11):
+Additional expansion rounds (v5-v20):
 
 - v5
   - glossary: `data/scripts/mvp_glosses_msasl_expand_v5.txt`
@@ -145,6 +145,59 @@ Additional expansion rounds (v5-v11):
   - processed result: `+91` clips, `45` new glosses, `2` bad/too-short skipped
   - metadata total: `2603 -> 2694`
   - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v11.csv`
+- v12
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v12.txt`
+  - download result: `51` success / `62` failed
+  - processed result: `+81` clips, `46` new glosses, `11` bad/too-short skipped
+  - metadata total: `2694 -> 2775`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v12.csv`
+- v13
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v13.txt`
+  - download result: `49` success / `75` failed
+  - processed result: `+61` clips, `36` new glosses, `13` bad/too-short skipped
+  - metadata total: `2775 -> 2836`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v13.csv`
+- v14
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v14.txt`
+  - download result: `45` success / `62` failed
+  - processed result: `+76` clips, `43` new glosses, `5` bad/too-short skipped
+  - metadata total: `2836 -> 2912`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v14.csv`
+- v15
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v15.txt`
+  - download result: `40` success / `53` failed
+  - processed result: `+51` clips, `39` new glosses, `6` bad/too-short skipped
+  - metadata total: `2912 -> 2963`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v15.csv`
+- v16
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v16.txt`
+  - download result: `54` success / `59` failed
+  - processed result: `+55` clips, `43` new glosses, `8` bad/too-short skipped
+  - metadata total: `2963 -> 3018`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v16.csv`
+- v17
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v17.txt`
+  - download result: `41` success / `47` failed
+  - processed result: `+54` clips, `42` new glosses, `8` bad/too-short skipped
+  - metadata total: `3018 -> 3072`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v17.csv`
+- v18
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v18.txt`
+  - download result: `23` success / `37` failed
+  - processed result: `+27` clips, `27` new glosses, `3` bad/too-short skipped
+  - metadata total: `3072 -> 3099`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v18.csv`
+- v19
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v19.txt`
+  - download result: `25` success / `27` failed
+  - processed result: `+25` clips, `25` new glosses, `1` bad/too-short skipped
+  - metadata total: `3099 -> 3124`
+  - S3 ingested metadata: `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/ingested_msasl_expanded_v19.csv`
+- v20
+  - glossary: `data/scripts/mvp_glosses_msasl_expand_v20.txt`
+  - candidate glosses after exclusion/filter: `0`
+  - action: no download / no processing / no metadata change
+  - metadata total: `3124 -> 3124`
 - shared keys updated each round:
   - `s3://eye-hear-u-public-data-ca1/processed/mvp/metadata/processed_clips.csv`
   - `s3://eye-hear-u-public-data-ca1/processed/mvp/processed_clips.csv`

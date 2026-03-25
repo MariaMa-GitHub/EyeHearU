@@ -1,3 +1,3 @@
-from .classifier import ASLClassifier
+from .classifier import ASLVideoClassifier
 
-__all__ = ["ASLClassifier"]
+__all__ = ["ASLVideoClassifier"]

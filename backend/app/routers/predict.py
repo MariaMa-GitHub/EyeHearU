@@ -1,6 +1,6 @@
 """
-Prediction endpoints.
-Accepts video (or image) upload and returns predicted ASL sign label(s).
+Prediction endpoint.
+Accepts video (mp4) upload and returns predicted ASL sign label(s).
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request
@@ -8,7 +8,6 @@ from app.schemas.prediction import PredictionResponse
 
 router = APIRouter()
 
-# Content types we accept for video inference
 VIDEO_TYPES = ("video/mp4", "video/quicktime", "application/octet-stream")
 
 
@@ -16,44 +15,38 @@ VIDEO_TYPES = ("video/mp4", "video/quicktime", "application/octet-stream")
 async def predict_sign(request: Request, file: UploadFile = File(...)):
     """
     Accept a video file (mp4) and return the predicted ASL sign.
-    Model must be loaded at startup (best_model.pt + label_map.json in same dir).
     """
     contents = await file.read()
     if len(contents) == 0:
         raise HTTPException(status_code=400, detail="Empty file uploaded.")
 
-    # Prefer video; treat unknown/octet-stream as potential mp4
     is_video = (
         file.content_type in VIDEO_TYPES
-        or (file.filename or "").lower().endswith(".mp4")
+        or (file.filename or "").lower().endswith((".mp4", ".mov"))
     )
     if not is_video:
-        return PredictionResponse(
-            sign="",
-            confidence=0.0,
-            top_k=[],
-            message="Upload a video (mp4) for sign recognition.",
+        raise HTTPException(
+            status_code=400,
+            detail=f"Upload a video (mp4/mov). Got content_type={file.content_type}",
         )
 
     model = getattr(request.app.state, "model", None)
     index_to_gloss = getattr(request.app.state, "index_to_gloss", None)
     if model is None or index_to_gloss is None:
-        return PredictionResponse(
-            sign="",
-            confidence=0.0,
-            top_k=[],
-            message="Model not loaded. Place best_model.pt and label_map.json in model_path dir.",
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded. Check server logs.",
         )
 
     try:
         from app.services.preprocessing import preprocess_video
         from app.services.model_service import predict as model_predict
         from app.config import get_settings
-        settings = get_settings()
+
         video_tensor = preprocess_video(contents)
         results = model_predict(
             model, index_to_gloss, video_tensor,
-            top_k=5, device=settings.model_device,
+            top_k=5, device=get_settings().model_device,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -65,5 +58,4 @@ async def predict_sign(request: Request, file: UploadFile = File(...)):
         sign=top_1["sign"],
         confidence=top_1["confidence"],
         top_k=results,
-        message=None,
     )

@@ -1,0 +1,17 @@
+[run]
+source = app
+branch = true
+omit =
+    tests/*
+
+[report]
+fail_under = 100
+show_missing = true
+precision = 1
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    if typing.TYPE_CHECKING:
+
+[html]
+directory = htmlcov

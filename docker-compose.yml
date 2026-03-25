@@ -11,12 +11,18 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/app:/app/app          # Hot-reload app code
-      - ./ml/checkpoints:/app/checkpoints  # Model files
+      - ./backend/app:/app/app
+      - ./ml/i3d_msft:/app/ml/i3d_msft
+      - model_cache:/app/model_cache
     environment:
       - DEBUG=true
-      - MODEL_PATH=/app/checkpoints/best_model.pt
+      - MODEL_PATH=/app/model_cache/best_model.pt
+      - LABEL_MAP_PATH=/app/ml/i3d_label_map_mvp-sft-full-v1.json
       - MODEL_DEVICE=cpu
-    # Uncomment when Firebase is configured:
-    # env_file:
-    #   - backend/.env
+      - AWS_S3_BUCKET=eye-hear-u-public-data-ca1
+      - AWS_S3_REGION=ca-central-1
+    env_file:
+      - backend/.env
+
+volumes:
+  model_cache:

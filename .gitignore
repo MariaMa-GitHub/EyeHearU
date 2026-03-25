@@ -18,6 +18,7 @@ backend/firebase-credentials.json
 # ML artifacts (large files)
 ml/checkpoints/*.pt
 ml/checkpoints/*.onnx
+backend/model_cache/
 data/raw/
 data/processed/
 
@@ -42,6 +43,7 @@ Thumbs.db
 # React Native / Expo
 mobile/node_modules/
 mobile/.expo/
+backend/.expo/
 mobile/dist/
 mobile/ios/Pods/
 mobile/android/.gradle/
@@ -55,3 +57,20 @@ infrastructure/*.tfstate.*
 # Misc
 *.log
 *.tmp
+
+# Coverage / pytest
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+backend/.coverage
+backend/coverage.xml
+backend/htmlcov/
+backend/.pytest_cache/
+.hypothesis/
+backend/.hypothesis/
+ml/.pytest_cache/
+ml/.hypothesis/
+
+# Evaluation outputs
+ml/evaluation_results/

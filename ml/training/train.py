@@ -11,10 +11,12 @@ Expects the data pipeline to have been run first:
 """
 
 import json
+import random
 import sys
 import time
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -26,6 +28,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config import Config
 from models.classifier import ASLVideoClassifier
 from training.dataset import ASLVideoDataset
+
+SEED = 42
+
+
+def set_seed(seed: int = SEED):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -72,7 +86,13 @@ def evaluate(model, loader, criterion, device):
     return total_loss / max(total, 1), correct / max(total, 1)
 
 
+def _worker_init_fn(worker_id: int):
+    np.random.seed(SEED + worker_id)
+    random.seed(SEED + worker_id)
+
+
 def main():
+    set_seed(SEED)
     cfg = Config()
 
     # Resolve num_classes from the label map produced by the data pipeline
@@ -107,12 +127,17 @@ def main():
         print(f"  Expected clips at: {cfg.data.processed_data_dir}/clips/train/")
         sys.exit(1)
 
+    g = torch.Generator()
+    g.manual_seed(SEED)
+
     train_loader = DataLoader(
         train_ds,
         batch_size=cfg.train.batch_size,
         shuffle=True,
         num_workers=cfg.data.num_workers,
         pin_memory=True,
+        worker_init_fn=_worker_init_fn,
+        generator=g,
     )
     val_loader = DataLoader(
         val_ds,
@@ -120,6 +145,7 @@ def main():
         shuffle=False,
         num_workers=cfg.data.num_workers,
         pin_memory=True,
+        worker_init_fn=_worker_init_fn,
     )
 
     # --- Model ---

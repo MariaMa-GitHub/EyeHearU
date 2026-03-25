@@ -11,10 +11,13 @@ import csv
 from pathlib import Path
 
 from pipeline_config import (
-    PROCESSED_DIR, MVP_DIR, MVP_CLIPS_DIR,
+    PROCESSED_DIR, get_processed_base,
     NUM_SAMPLE_FRAMES, FRAME_HEIGHT, FRAME_WIDTH,
     MIN_CLIP_FRAMES, MAX_CLIP_SECONDS, VIDEO_FPS,
 )
+
+MVP_DIR = get_processed_base(mvp=True)
+MVP_CLIPS_DIR = MVP_DIR / "clips"
 
 # Same aliases as download_msasl (MS-ASL synonym mapping)
 GLOSS_ALIASES = {

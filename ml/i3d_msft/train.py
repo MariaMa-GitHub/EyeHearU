@@ -7,7 +7,7 @@ Examples:
 
   # Pin a specific plan and run a short smoke training
   python -m i3d_msft.train --bucket eye-hear-u-dev-data --region ca-central-1 \
-    --plan-id candidate-ac-eval-v2 --epochs 3 --clip-limit 500
+    --plan-id candidate-ac-eval-v4 --epochs 3 --clip-limit 500
 """
 
 from __future__ import annotations

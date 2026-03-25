@@ -152,7 +152,7 @@ PIPELINE_ENV=dev AWS_REGION=ca-central-1 python data/scripts/plan_i3d_splits.py 
 # Roll back to old plan
 PIPELINE_ENV=dev AWS_REGION=ca-central-1 python data/scripts/plan_i3d_splits.py \
   --mvp \
-  --activate-plan candidate-ac-eval-v2
+  --activate-plan candidate-ac-eval-v4
 ```
 
 ---
@@ -227,7 +227,7 @@ Entry script:
 cd /Users/chloe/EyeHearU
 modal run modal_train_i3d.py \
   --bucket eye-hear-u-public-data-ca1 \
-  --plan-id candidate-ac-eval-v2 \
+  --plan-id candidate-ac-eval-v4 \
   --epochs 1 \
   --clip-limit 200
 ```
@@ -237,7 +237,7 @@ modal run modal_train_i3d.py \
 ```bash
 modal run modal_train_i3d.py \
   --bucket eye-hear-u-public-data-ca1 \
-  --plan-id candidate-ac-eval-v2 \
+  --plan-id candidate-ac-eval-v4 \
   --epochs 20 \
   --batch-size 6 \
   --num-workers 2
@@ -255,11 +255,11 @@ SFT command:
 ```bash
 modal run modal_train_i3d.py \
   --bucket eye-hear-u-public-data-ca1 \
-  --plan-id candidate-ac-eval-v2 \
+  --plan-id candidate-ac-eval-v4 \
   --epochs 20 \
   --batch-size 6 \
   --num-workers 2 \
-  --init-checkpoint-s3-key models/i3d/modal/candidate-ac-eval-v2/<run_id>/best_model.pt
+  --init-checkpoint-s3-key models/i3d/modal/candidate-ac-eval-v4/<run_id>/best_model.pt
 ```
 
 ---

@@ -21,13 +21,13 @@ All split variants are stored in the same S3 bucket:
   - `s3://eye-hear-u-dev-data/processed/mvp/i3d/splits/{train,val,test}.csv`
 - Versioned candidate plans:
   - `s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v1/...`
-  - `s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v2/...`
+  - `s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v4/...`
 - Active pointer:
   - `s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/ACTIVE_PLAN.json`
 
 Current active plan:
 
-- `candidate-ac-eval-v2`
+- `candidate-ac-eval-v4`
 
 ---
 
@@ -117,7 +117,7 @@ Activate chosen plan:
 PIPELINE_ENV=dev AWS_REGION=ca-central-1 \
 python data/scripts/plan_i3d_splits.py \
   --mvp \
-  --activate-plan candidate-ac-eval-v2
+  --activate-plan candidate-ac-eval-v4
 ```
 
 Verify active pointer:
@@ -152,9 +152,9 @@ On the AWS training instance:
 mkdir -p /opt/eyehearu/i3d_data/{clips,splits}
 
 aws s3 sync s3://eye-hear-u-dev-data/processed/mvp/clips/ /opt/eyehearu/i3d_data/clips/
-aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v2/splits/train.csv /opt/eyehearu/i3d_data/splits/train.csv
-aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v2/splits/val.csv /opt/eyehearu/i3d_data/splits/val.csv
-aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v2/splits/test.csv /opt/eyehearu/i3d_data/splits/test.csv
+aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v4/splits/train.csv /opt/eyehearu/i3d_data/splits/train.csv
+aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v4/splits/val.csv /opt/eyehearu/i3d_data/splits/val.csv
+aws s3 cp s3://eye-hear-u-dev-data/processed/mvp/i3d/split_plans/candidate-ac-eval-v4/splits/test.csv /opt/eyehearu/i3d_data/splits/test.csv
 ```
 
 Note: Microsoft `aslcitizen_dataset.py` builds paths as `datadir + filename`.
@@ -200,7 +200,7 @@ pip install -r requirements.txt
 python -m i3d_msft.train \
   --bucket eye-hear-u-dev-data \
   --region ca-central-1 \
-  --plan-id candidate-ac-eval-v2 \
+  --plan-id candidate-ac-eval-v4 \
   --epochs 20
 ```
 
@@ -218,7 +218,7 @@ Smoke test (recommended first, avoids long stalls on bad clips):
 OPENCV_LOG_LEVEL=ERROR python -m i3d_msft.train \
   --bucket eye-hear-u-dev-data \
   --region ca-central-1 \
-  --plan-id candidate-ac-eval-v2 \
+  --plan-id candidate-ac-eval-v4 \
   --epochs 1 \
   --batch-size 2 \
   --num-workers 0 \
@@ -247,7 +247,7 @@ To compare two plans safely:
 Store outputs in separate S3 prefixes, for example:
 
 - `s3://eye-hear-u-dev-data/models/i3d/plan_candidate-ac-eval-v1/...`
-- `s3://eye-hear-u-dev-data/models/i3d/plan_candidate-ac-eval-v2/...`
+- `s3://eye-hear-u-dev-data/models/i3d/plan_candidate-ac-eval-v4/...`
 
 ---
 

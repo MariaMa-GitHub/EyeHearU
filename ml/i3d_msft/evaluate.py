@@ -6,16 +6,16 @@ Usage examples:
   python -m i3d_msft.evaluate \
     --bucket eye-hear-u-public-data-ca1 \
     --region ca-central-1 \
-    --plan-id candidate-ac-eval-v2 \
+    --plan-id candidate-ac-eval-v4 \
     --split test \
     --checkpoint-s3-key models/i3d/pretrained/ASL_citizen_I3D_weights.pt
 
   # Evaluate a local checkpoint path
   python -m i3d_msft.evaluate \
     --bucket eye-hear-u-public-data-ca1 \
-    --plan-id candidate-ac-eval-v2 \
+    --plan-id candidate-ac-eval-v4 \
     --split val \
-    --checkpoint-local workdir/i3d_msft/checkpoints/candidate-ac-eval-v2/best_model.pt
+    --checkpoint-local workdir/i3d_msft/checkpoints/candidate-ac-eval-v4/best_model.pt
 """
 
 from __future__ import annotations

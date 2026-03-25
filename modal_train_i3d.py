@@ -6,7 +6,7 @@ Usage:
   #    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
   #
   # 2) Run:
-  #    modal run modal_train_i3d.py --bucket eye-hear-u-dev-data --plan-id candidate-ac-eval-v2 --epochs 20
+  #    modal run modal_train_i3d.py --bucket eye-hear-u-dev-data --plan-id candidate-ac-eval-v4 --epochs 20
 """
 
 from __future__ import annotations
@@ -327,7 +327,7 @@ def eval_i3d_modal(
 def main(
     bucket: str = "eye-hear-u-public-data-ca1",
     region: str = "ca-central-1",
-    plan_id: str = "candidate-ac-eval-v2",
+    plan_id: str = "candidate-ac-eval-v4",
     epochs: int = 20,
     batch_size: int = 6,
     num_workers: int = 2,

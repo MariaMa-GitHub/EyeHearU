@@ -10,9 +10,8 @@ httpx>=0.26.0
 boto3>=1.28.0
 firebase-admin>=6.4.0
 
-# ML inference
+# ML inference (I3D uses only torch core — no torchvision needed)
 torch>=2.1.0
-torchvision>=0.16.0
 opencv-python-headless>=4.9.0
 
 # Testing

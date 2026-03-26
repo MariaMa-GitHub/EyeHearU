@@ -1,0 +1,37 @@
+[
+  {
+    "name": "preprocess_video",
+    "wall_time_s": 0.9308,
+    "total_calls": 2726,
+    "total_internal_time_s": 0.9307,
+    "prof_file": "/Users/mariashuruima/Downloads/EyeHearU/ml/profiling/results/preprocess_video.prof"
+  },
+  {
+    "name": "predict",
+    "wall_time_s": 4.1126,
+    "total_calls": 9353,
+    "total_internal_time_s": 4.1125,
+    "prof_file": "/Users/mariashuruima/Downloads/EyeHearU/ml/profiling/results/predict.prof"
+  },
+  {
+    "name": "evaluate_model",
+    "wall_time_s": 6.1668,
+    "total_calls": 15121,
+    "total_internal_time_s": 6.1668,
+    "prof_file": "/Users/mariashuruima/Downloads/EyeHearU/ml/profiling/results/evaluate_model.prof"
+  },
+  {
+    "name": "train_one_epoch",
+    "wall_time_s": 20.5275,
+    "total_calls": 17895,
+    "total_internal_time_s": 20.5275,
+    "prof_file": "/Users/mariashuruima/Downloads/EyeHearU/ml/profiling/results/train_one_epoch.prof"
+  },
+  {
+    "name": "build_gloss_dict_from_csv",
+    "wall_time_s": 0.7478,
+    "total_calls": 2752771,
+    "total_internal_time_s": 0.7477,
+    "prof_file": "/Users/mariashuruima/Downloads/EyeHearU/ml/profiling/results/build_gloss_dict_from_csv.prof"
+  }
+]

@@ -1,13 +1,15 @@
 """
-Central configuration for ML training and evaluation.
+Central configuration for the in-repo baseline training and evaluation.
 
-Eye Hear U uses a video classifier (Approach B): a 3D CNN backbone
-(e.g., I3D or SlowFast pretrained on Kinetics-400) fine-tuned on
-short ASL sign clips.
+NOTE: The deployed model uses Microsoft's Inception I3D (ml/i3d_msft/),
+NOT the torchvision models configured here. This config is only used by
+the in-repo baseline (ml/models/classifier.py, ml/training/train.py,
+ml/evaluation/evaluate.py) for reproducible training experiments.
 
-The vocabulary is NOT limited to a small scenario set — it covers
-the full gloss vocabulary present in ASL Citizen (~2,731 classes),
-supplemented by WLASL and MS-ASL.
+The deployed I3D model differs in key ways:
+  - 64-frame clips (not 16)
+  - [-1, 1] pixel normalization (not ImageNet mean/std)
+  - 856-class label map (i3d_label_map_mvp-sft-full-v1.json)
 """
 
 from dataclasses import dataclass, field

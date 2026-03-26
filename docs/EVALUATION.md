@@ -4,22 +4,21 @@ How to generate accuracy, precision/recall/F1, confusion matrices, and inference
 
 ---
 
-## Quick Context: Two Models in This Repo
+## The Deployed Model
 
-This repo contains **two** model architectures. Understanding which one you are evaluating is essential:
+Eye Hear U uses **Microsoft's Inception I3D** for all production inference. This is the model that the mobile app and backend API use.
 
-| | In-Repo Baseline (`ASLVideoClassifier`) | Deployed Model (`InceptionI3d`) |
-|---|---|---|
-| **Code** | `ml/models/classifier.py` | `ml/i3d_msft/pytorch_i3d.py` |
-| **Backbone** | torchvision R3D-18 (Kinetics-400 pretrain) | Microsoft Inception I3D |
-| **Input frames** | 16 | 64 |
-| **Normalization** | ImageNet (mean/std) | `[-1, 1]` range |
-| **Label map** | `data/processed/label_map.json` | `ml/i3d_label_map_mvp-sft-full-v1.json` (856 classes) |
-| **Checkpoint** | `ml/checkpoints/best_model.pt` (you train it) | S3: `s3://eye-hear-u-public-data-ca1/models/i3d/...` |
-| **Evaluation script** | `ml/evaluation/evaluate.py` | Backend API (`/api/v1/predict`) |
-| **Purpose** | Reproducible training benchmark | Production inference on the mobile app |
+| Property | Value |
+|----------|-------|
+| **Architecture** | Inception I3D (`ml/i3d_msft/pytorch_i3d.py`) |
+| **Input** | `(1, 3, 64, 224, 224)` — 64 RGB frames at 224x224 |
+| **Normalization** | `[-1, 1]` pixel range |
+| **Classes** | 856 ASL glosses |
+| **Label map** | `ml/i3d_label_map_mvp-sft-full-v1.json` |
+| **Checkpoint** | Auto-downloaded from S3 by the backend on first startup |
+| **Evaluate via** | Backend API (`POST /api/v1/predict`) — see [Section 5](#5-evaluating-the-deployed-i3d-model-via-the-backend-api) |
 
-The evaluation script (`ml/evaluation/evaluate.py`) evaluates the **in-repo baseline** (R3D-18). To evaluate the **deployed I3D model**, you use the backend API (see [Section 5](#5-evaluating-the-deployed-i3d-model-via-the-backend-api)).
+The repo also contains an **in-repo baseline** (`ml/models/classifier.py`, torchvision R3D-18, 16 frames, ImageNet normalization) with its own training/evaluation scripts. This baseline is **not deployed** — it exists only for reproducible training experiments. Section 3-4 cover the baseline; Section 5 covers the deployed I3D model.
 
 ---
 

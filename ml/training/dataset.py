@@ -20,7 +20,8 @@ import torch
 from torch.utils.data import Dataset
 
 
-# ImageNet normalisation (standard for Kinetics-pretrained backbones)
+# ImageNet normalisation — used by the in-repo torchvision baseline only.
+# The deployed I3D model uses [-1, 1] normalization (see backend/app/services/preprocessing.py).
 MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
 STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 

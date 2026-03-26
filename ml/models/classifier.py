@@ -1,15 +1,12 @@
 """
-ASL Video Classifier — 3D CNN backbone + classification head.
+ASL Video Classifier — IN-REPO BASELINE ONLY.
 
-Approach B: Train a video classifier on short clips of isolated ASL signs.
+NOT used in production. The deployed model is Inception I3D (ml/i3d_msft/).
+This module wraps torchvision 3D CNNs (R3D-18, MC3-18, R2Plus1D-18)
+for reproducible training experiments.
 
-The backbone (e.g., I3D ResNet-50 or R3D-18) is pretrained on Kinetics-400
-and fine-tuned on our processed ASL clip dataset.  Input is a tensor of
-shape (B, C, T, H, W) — batch of video clips with C=3 channels,
-T=16 uniformly sampled frames, H=W=224.
-
-The deployed model uses Inception I3D (ml/i3d_msft/).  This in-repo
-      baseline supports torchvision 3D CNNs for reproducible training.
+Input: (B, C=3, T=16, H=224, W=224) with ImageNet normalization.
+The deployed I3D uses 64 frames and [-1, 1] normalization instead.
 """
 
 import torch

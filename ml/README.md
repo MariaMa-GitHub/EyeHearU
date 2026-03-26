@@ -25,7 +25,7 @@ The **deployed MVP API** uses the **I3D + 64-frame** pipeline, not this R3D base
 
 ### Train (after data pipeline)
 
-1. Run the data pipeline (see `docs/data_pipeline.md` and `data/scripts/`).
+1. Run the data pipeline (see `data/scripts/`).
 2. Install dependencies:
 
    ```bash

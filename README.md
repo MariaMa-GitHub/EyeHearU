@@ -16,6 +16,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 | Testing & coverage | [Testing](docs/TESTING.md) |
 | Production deployment | [Production](docs/PRODUCTION.md) |
 | Inference preprocessing | [Preprocessing (I3D)](docs/PREPROCESSING.md) |
+| Evaluation metrics guide | [Evaluation](docs/EVALUATION.md) |
 | Benchmarking & evaluation | [Benchmarking](docs/BENCHMARKING.md) |
 
 **Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI still enforces **100%** backend line/branch coverage without Codecov.

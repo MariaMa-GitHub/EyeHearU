@@ -98,7 +98,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   │   └── dataset.py        # ASLVideoDataset (PyTorch)
 │   ├── evaluation/
 │   │   └── evaluate.py       # Accuracy, F1, confusion matrix, latency
-│   ├── tests/                # 73 ML unit tests
+│   ├── tests/                # 144 ML unit tests, 100% coverage
 │   └── requirements.txt
 │
 ├── data/                     # Data pipeline

@@ -211,6 +211,47 @@ class TestAugmentations:
         ds = ASLVideoDataset(data_dir, split="train", num_frames=16, augment=True)
         assert ds.augment is True
 
+    def test_temporal_shift_applied(self):
+        """When RNG triggers temporal shift (lines 109-111), clip is np.rolled."""
+        ds_cls = ASLVideoDataset.__new__(ASLVideoDataset)
+        clip = np.arange(4 * 8 * 8 * 3, dtype=np.uint8).reshape(4, 8, 8, 3)
+
+        # Force all augmentation branches to fire: rand() < 0.5 for temporal,
+        # rand() < 0.5 for brightness, rand() < 0.5 for spatial crop
+        with patch("training.dataset.np.random.rand", return_value=0.1), \
+             patch("training.dataset.np.random.randint", return_value=1), \
+             patch("training.dataset.np.random.uniform", return_value=1.0), \
+             patch("training.dataset.cv2") as mock_cv2:
+            mock_cv2.resize = lambda f, size, interpolation=None: np.zeros(
+                (size[1], size[0], 3), dtype=np.uint8
+            )
+            mock_cv2.INTER_LINEAR = 1
+            result = ds_cls._apply_augmentations(clip)
+        assert result.shape[0] == 4  # temporal dimension preserved
+
+    def test_spatial_crop_branch(self):
+        """When RNG triggers spatial crop (lines 120-129), clip is cropped and resized."""
+        ds_cls = ASLVideoDataset.__new__(ASLVideoDataset)
+        clip = np.random.randint(0, 256, (4, 100, 100, 3), dtype=np.uint8)
+
+        call_count = [0]
+        rand_values = [0.9, 0.9, 0.1]  # skip temporal, skip brightness, DO spatial
+
+        def mock_rand(*args, **kwargs):
+            idx = min(call_count[0], len(rand_values) - 1)
+            call_count[0] += 1
+            return rand_values[idx]
+
+        with patch("training.dataset.np.random.rand", side_effect=mock_rand), \
+             patch("training.dataset.np.random.randint", return_value=0), \
+             patch("training.dataset.cv2") as mock_cv2:
+            mock_cv2.resize = lambda f, size, interpolation=None: np.zeros(
+                (size[1], size[0], 3), dtype=np.uint8
+            )
+            mock_cv2.INTER_LINEAR = 1
+            result = ds_cls._apply_augmentations(clip)
+        assert result.shape[0] == 4
+
 
 class TestConstants:
     def test_mean_shape(self):

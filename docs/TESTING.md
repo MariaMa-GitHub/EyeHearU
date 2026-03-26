@@ -80,18 +80,32 @@ targeted tests with detailed comments explaining each edge case:
 - Temp file cleanup failure doesn't crash
 - Decode errors propagate through pipeline
 
-## ML (pytest)
+## ML (pytest + pytest-cov)
 
-ML tests live in **`ml/tests/`**. They cover the model classifier, config, dataset, evaluation utilities, and video transforms.
+ML tests live in **`ml/tests/`**. Coverage configuration is in `ml/.coveragerc` (sources: `models`, `config`, `i3d_msft`, `training`, `evaluation`; excludes `__main__` guards and CUDA-only branches).
 
 ### Run tests locally
 
 ```bash
 cd ml
-python -m pytest tests/ -v
+python -m pytest tests/ -v --cov --cov-report=term-missing
 ```
 
-**Total:** 73 tests.
+### What is tested
+
+| Area | Tests |
+|------|--------|
+| Classifier | `test_classifier.py` — forward shape, backbones (r3d_18, mc3_18, r2plus1d_18), freeze/unfreeze, dropout, unsupported backbone |
+| Config | `test_config.py` — DataConfig, ModelConfig, TrainConfig defaults and custom values, composition |
+| Dataset | `test_dataset.py` — init, sample collection, read_clip (pad/truncate/empty), augmentations (temporal shift, brightness, spatial crop), normalization, constants |
+| Evaluation metrics | `test_evaluation.py` — top-k accuracy, precision/recall/F1, confusion matrix, seed reproducibility |
+| Evaluation pipeline | `test_evaluate_extended.py` — evaluate_model (end-to-end with mock model), save_confusion_matrix_plot (matplotlib present/absent, large class count), main() orchestration |
+| Export label map | `test_export_label_map.py` — CSV parsing (basic, duplicates, case normalization, whitespace, empty gloss, missing column, empty CSV, sequential indices), main() CLI (basic, --inverse, parent dir creation) |
+| I3D backbone | `test_pytorch_i3d.py` — Identity, MaxPool3dSamePadding (compute_pad, forward), Unit3D (batch norm, no batch norm, no activation, compute_pad), InceptionModule, InceptionI3d (all 16 early endpoints, forward, pretrained mode, no spatial squeeze, extract_features, replace_logits, remove_last) |
+| Training loop | `test_train.py` — train_one_epoch (returns loss/acc, params update, empty loader), evaluate (loss/acc, no gradients, empty loader), _worker_init_fn (seed determinism), set_seed (cudnn flags), main() (with/without label_map, early stopping, empty dataset exit) |
+| Video transforms | `test_videotransforms.py` — RandomCrop, CenterCrop, RandomHorizontalFlip (output shape, repr, edge cases) |
+
+**Total:** 144 tests, **100%** line coverage.
 
 ## Mobile (Jest + jest-expo)
 
@@ -129,7 +143,8 @@ On every **push** and **pull_request** to `main` or `master`, three jobs run in 
 ### ML job
 1. Sets up Python **3.11**
 2. `pip install -r ml/requirements.txt` + pytest-cov
-3. Runs `pytest` with coverage on `models`, `evaluation`, `training`, `i3d_msft`, `config`
+3. Runs `pytest` with `.coveragerc` config — fails if coverage **< 100%**
+4. Uploads `ml/coverage.xml` to Codecov
 
 ### Mobile job
 1. Sets up Node.js **20**

@@ -1,5 +1,5 @@
 {
-  "source_filtered_train_csv": "/mnt/c/26winter/csc490/EyeHearU/workdir/i3d_msft_label_map/filtered_splits/candidate-ac-eval-v4/train.csv",
+  "source_filtered_train_csv": "workdir/i3d_msft_label_map/filtered_splits/candidate-ac-eval-v4/train.csv",
   "num_classes": 856,
   "gloss_to_index": {
     "about": 0,

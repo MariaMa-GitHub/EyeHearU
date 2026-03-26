@@ -219,7 +219,7 @@ def test_load_rgb_frames_portrait_preserves_detail():
         return 30 if prop == cv2.CAP_PROP_FRAME_COUNT else 0
 
     cap.get.side_effect = _get
-    # Simulate portrait phone video after mobile cap: 720x1280 (w x h)
+    # Simulate portrait phone video after mobile cap: 1280x720 (h x w)
     portrait = _bgr_frame(1280, 720)
     cap.read.return_value = (True, portrait)
     with patch("cv2.VideoCapture", return_value=cap):

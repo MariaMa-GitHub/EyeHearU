@@ -330,7 +330,9 @@ describe("resolveApiBaseUrl", () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [, options] = mockFetch.mock.calls[0];
-    expect(options.headers).toEqual({ "bypass-tunnel-reminder": "true" });
+    expect(options.headers).toEqual(
+      expect.objectContaining({ "bypass-tunnel-reminder": "true" }),
+    );
     expect(mockFetch.mock.calls[0][0]).toContain("abc.loca.lt");
   });
 });

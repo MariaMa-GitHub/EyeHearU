@@ -4,15 +4,14 @@
 
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react-native";
-import { router } from "expo-router";
+
+const mockPush = jest.fn();
 
 jest.mock("expo-router", () => ({
-  router: { push: jest.fn() },
+  router: { push: mockPush },
 }));
 
 import HomeScreen from "../app/index";
-
-const mockPush = router.push as jest.Mock;
 
 describe("HomeScreen", () => {
   beforeEach(() => {

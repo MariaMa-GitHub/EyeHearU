@@ -1,9 +1,12 @@
 """
-Gloss bigram language model with add-one (Laplace) smoothing.
+Gloss n-gram language models for multi-clip decoding.
 
-Scores transitions P(g_j | g_{i-1}) with a special start token "<s>" for the
-first gloss in a sequence. Used with beam search to prefer plausible multi-sign
-sequences over independent per-clip argmax.
+- **GlossBigramLM**: Laplace-smoothed bigram P(g_j | g_{i-1}), with ``<s>`` start.
+- **GlossBeamLM**: bigram + optional **trigram** P(g_k | g_{k-2}, g_{k-1}) with backoff to
+  ``log_p_step`` on the bigram when the trigram context has no observed mass.
+
+Beam search uses ``log_p_step(prev2, prev1, next)`` with ``(prev2, prev1) = (<s>, <s>)``
+for the first gloss, then ``(<s>, g0)``, then ``(g_{t-2}, g_{t-1})``.
 """
 
 from __future__ import annotations
@@ -61,6 +64,14 @@ class GlossBigramLM:
         for (prev, _), c in self._bigram.items():
             self._uni[prev] = self._uni.get(prev, 0) + int(c)
 
+    @property
+    def alpha(self) -> float:
+        return self._alpha
+
+    @property
+    def vocab_size(self) -> int:
+        return self._vocab_size
+
     def log_p(self, prev_gloss: str, next_gloss: str) -> float:
         """Log P(next | prev) with Laplace smoothing over the observed vocab."""
         if self._uniform:
@@ -75,6 +86,12 @@ class GlossBigramLM:
         num = c_bg + a
         return math.log(num / denom)
 
+    def log_p_step(self, prev2: str, prev1: str, next_gloss: str) -> float:
+        """One step for beam search: first token uses P(next | <s>); else P(next | prev1)."""
+        if prev2 == START_TOKEN and prev1 == START_TOKEN:
+            return self.log_p(START_TOKEN, next_gloss)
+        return self.log_p(prev1, next_gloss)
+
     @classmethod
     def uniform_over_vocab(cls, vocab: set[str]) -> GlossBigramLM:
         """O(1) storage — all transitions get the same log-prob (beam uses model scores)."""
@@ -82,12 +99,12 @@ class GlossBigramLM:
         return cls(uniform=True, vocab_size_uniform=max(vs, 1))
 
     @classmethod
-    def from_json_file(cls, path: Path, *, vocab_hint: set[str] | None = None) -> GlossBigramLM:
-        """
-        Load LM from JSON:
-          { "bigram_counts": { "prev|||next": int, ... }, "unigram_counts": { "g": int, ... } }
-        """
-        raw = json.loads(path.read_text(encoding="utf-8"))
+    def from_json_raw(
+        cls,
+        raw: dict,
+        *,
+        vocab_hint: set[str] | None = None,
+    ) -> GlossBigramLM:
         bg_raw: dict[str, int] = raw.get("bigram_counts") or {}
         uni_raw: dict[str, int] = raw.get("unigram_counts") or {}
         bigram: dict[tuple[str, str], int] = {}
@@ -101,13 +118,74 @@ class GlossBigramLM:
                 uni.setdefault(g, 0)
         return cls(bigram, uni if uni else None, alpha=float(raw.get("alpha", 1.0)))
 
+    @classmethod
+    def from_json_file(cls, path: Path, *, vocab_hint: set[str] | None = None) -> GlossBigramLM:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        return cls.from_json_raw(raw, vocab_hint=vocab_hint)
 
-def load_gloss_lm(path: Path | None, index_to_gloss: dict[int, str]) -> GlossBigramLM:
-    """Load bigram LM from disk, or fall back to uniform over label-map glosses."""
+
+def _parse_trigram_counts(raw: dict) -> dict[tuple[str, str, str], int]:
+    tri_raw: dict[str, int] = raw.get("trigram_counts") or {}
+    out: dict[tuple[str, str, str], int] = {}
+    for k, c in tri_raw.items():
+        parts = k.split("|||")
+        if len(parts) == 3:
+            out[(parts[0], parts[1], parts[2])] = int(c)
+    return out
+
+
+class GlossBeamLM:
+    """
+    Bigram base LM + optional trigram extension for beam decoding.
+    If trigram context (prev2, prev1) has no observed count mass, falls back to bigram step.
+    """
+
+    __slots__ = ("_bi", "_tri", "_tri_prefix", "_alpha")
+
+    def __init__(
+        self,
+        bigram: GlossBigramLM,
+        trigram_counts: dict[tuple[str, str, str], int],
+    ):
+        self._bi = bigram
+        self._tri = dict(trigram_counts)
+        self._alpha = bigram.alpha
+        self._tri_prefix: dict[tuple[str, str], int] = {}
+        for (a, b, _), c in self._tri.items():
+            self._tri_prefix[(a, b)] = self._tri_prefix.get((a, b), 0) + int(c)
+
+    @classmethod
+    def uniform_over_vocab(cls, vocab: set[str]) -> GlossBeamLM:
+        return cls(GlossBigramLM.uniform_over_vocab(vocab), {})
+
+    @classmethod
+    def from_json_file(cls, path: Path, *, vocab_hint: set[str] | None = None) -> GlossBeamLM:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        bi = GlossBigramLM.from_json_raw(raw, vocab_hint=vocab_hint)
+        tri = _parse_trigram_counts(raw)
+        return cls(bi, tri)
+
+    def log_p_step(self, prev2: str, prev1: str, next_gloss: str) -> float:
+        tot = self._tri_prefix.get((prev2, prev1), 0)
+        if tot > 0:
+            c = self._tri.get((prev2, prev1, next_gloss), 0)
+            v = float(self._bi.vocab_size)
+            a = self._alpha
+            denom = tot + a * v
+            return math.log((c + a) / denom)
+        return self._bi.log_p_step(prev2, prev1, next_gloss)
+
+    # Delegate for tests / introspection that still read bigram mass
+    def log_p(self, prev_gloss: str, next_gloss: str) -> float:
+        return self._bi.log_p(prev_gloss, next_gloss)
+
+
+def load_gloss_lm(path: Path | None, index_to_gloss: dict[int, str]) -> GlossBeamLM:
+    """Load trigram+bigram LM from disk, or fall back to uniform over label-map glosses."""
     vocab = {g for g in index_to_gloss.values() if g}
     if path and path.is_file():
         try:
-            return GlossBigramLM.from_json_file(path, vocab_hint=vocab)
+            return GlossBeamLM.from_json_file(path, vocab_hint=vocab)
         except (json.JSONDecodeError, OSError, ValueError):
             pass
-    return GlossBigramLM.uniform_over_vocab(vocab)
+    return GlossBeamLM.uniform_over_vocab(vocab)

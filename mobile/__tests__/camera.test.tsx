@@ -71,13 +71,19 @@ jest.mock("../services/api", () => ({
     confidence: 0.95,
     top_k: [{ sign: "hello", confidence: 0.95 }],
   })),
+  predictSentence: jest.fn(async () => ({
+    clips: [],
+    beam: [{ glosses: ["hello"], score: 1, english: "Hello there." }],
+    best_glosses: ["hello"],
+    english: "Hello there.",
+  })),
 }));
 
 import CameraScreen from "../app/camera";
 import * as ImagePicker from "expo-image-picker";
 import * as Speech from "expo-speech";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { predictSign } from "../services/api";
+import { predictSign, predictSentence } from "../services/api";
 import { act, waitFor } from "@testing-library/react-native";
 
 /* ------------------------------------------------------------------ */
@@ -498,6 +504,127 @@ describe("CameraScreen", () => {
 
       expect(screen.getByText("78.0% confidence")).toBeTruthy();
       expect(screen.getByText("drink 12%")).toBeTruthy();
+    });
+
+    /* --- Multi-sign (sentence) mode --- */
+
+    it("switches to Multi-sign and does not call predictSign when recording a clip", async () => {
+      render(<CameraScreen />);
+
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Add sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/1 clip\(s\)/)).toBeTruthy();
+      });
+
+      expect(predictSign).not.toHaveBeenCalled();
+      expect(predictSentence).not.toHaveBeenCalled();
+    });
+
+    it("appends a gallery video to sentence clips in Multi-sign without predictSign", async () => {
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("cloud-upload-outline"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/1 clip\(s\)/)).toBeTruthy();
+      });
+
+      expect(predictSign).not.toHaveBeenCalled();
+      expect(predictSentence).not.toHaveBeenCalled();
+    });
+
+    it("switches back to Single sign mode", () => {
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+      fireEvent.press(screen.getByText("Single sign"));
+      expect(screen.getByText("Record Sign")).toBeTruthy();
+    });
+
+    it("calls predictSentence and shows sentence result when Translate is pressed", async () => {
+      (predictSentence as jest.Mock).mockResolvedValueOnce({
+        clips: [{ top_k: [{ sign: "yes", confidence: 0.9 }] }],
+        beam: [{ glosses: ["yes"], score: 2, english: "Yes please." }],
+        best_glosses: ["yes"],
+        english: "Yes please.",
+      });
+
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Add sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Translate")).toBeTruthy();
+      });
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Translate"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Yes please.")).toBeTruthy();
+      });
+
+      expect(predictSentence).toHaveBeenCalledWith(["file:///mock-video.mp4"]);
+      expect(Speech.speak).toHaveBeenCalledWith("Yes please.", {
+        language: "en-US",
+        rate: 0.9,
+      });
+    });
+
+    it("clears sentence clips and result when Clear clips is pressed", async () => {
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Add sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/1 clip\(s\)/)).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByText("Clear clips"));
+
+      await waitFor(() => {
+        expect(screen.queryByText(/1 clip\(s\)/)).toBeNull();
+      });
+    });
+
+    it("shows error when predictSentence fails", async () => {
+      (predictSentence as jest.Mock).mockRejectedValueOnce(
+        new Error("Sentence API down")
+      );
+
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Add sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Translate")).toBeTruthy();
+      });
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Translate"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Request failed")).toBeTruthy();
+      });
+      expect(screen.getByText("Sentence API down")).toBeTruthy();
     });
   });
 });

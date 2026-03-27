@@ -48,13 +48,17 @@ pytest tests/ --cov=app --cov-report=xml
 | Health | `test_health.py` — `/health`, `/ready` |
 | Predict API | `test_predict.py`, `test_predict_extra.py` — empty file, non-video, 503, success, `ValueError`, inference errors, empty `top_k` |
 | Predict sentence | `test_predict_sentence.py` — `POST /predict/sentence` multi-clip, beam + LM, limits, 503, errors |
-| Beam + gloss LM | `test_beam_search.py`, `test_gloss_lm.py` — beam decode, bigram LM, uniform fallback |
+| Beam + gloss LM | `test_beam_search.py`, `test_gloss_lm.py` — beam decode, `GlossBeamLM` trigram/backoff, uniform fallback |
+| Gloss → display line | `test_gloss_to_english.py` — join + polish for `english` field |
+| LM JSON builder | `test_lm_builder.py` — label map load, sequence parsing, `build_lm_dict` |
 | Preprocessing | `test_preprocessing.py`, `test_preprocessing_coverage.py` — pad/crop helpers, cv2 branches, `preprocess_video`, ImportError path |
 | Preprocessing (depth) | `test_preprocessing_depth.py` — 16 edge-case tests (10 positive, 6 negative): portrait 9:16 spatial preservation, 4K downscale, single-frame padding, [-1,1] normalization, frameskip adaptation, square aspect, center-crop geometry, interpolation selection, zero-frame error, all-reads-fail, undersized crop, missing opencv, temp file cleanup, codec crash propagation |
 | Model service | `test_model_service.py`, `test_model_service_coverage.py` — label map formats, S3 download mock, `load_model`, `predict`, `predict_batch`, `sys.path` insert |
 | Firebase | `test_firebase_service.py` — mocked `firebase_admin` |
 
-**Total:** 104 tests, **100%** line and branch coverage on `app/` as configured.
+**Also:** `test_gloss_to_english.py` (offline gloss line formatter), `test_lm_builder.py` (offline `gloss_lm.json` builder).
+
+**Total:** 124+ tests, **100%** line and branch coverage on `app/` as configured (run `pytest --collect-only` for the current count).
 
 ### Coverage depth: preprocessing module
 
@@ -127,12 +131,12 @@ npx jest --coverage
 
 | Area | Tests |
 |------|--------|
-| API service | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, `checkHealth`, `resolveApiBaseUrl` branches (including `loca.lt` tunnel header on `predict`/`checkHealth`) |
+| API service | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, **`predictSentence`**, `checkHealth`, `resolveApiBaseUrl` (including `loca.lt` tunnel header) |
 | Home + layout | `index.test.tsx`, `_layout.test.tsx` — home screen, navigation to camera/history, root stack |
-| Camera screen | `camera.test.tsx` — permissions, recording flow, countdown timer, upload flow, camera toggle, error handling, prediction display, TTS |
+| Camera screen | `camera.test.tsx` — permissions, single-sign flow, **multi-sign** (mode switch, `predictSentence`, clear, errors), countdown, upload, toggle, TTS |
 | History screen | `history.test.tsx` — empty state, history rendering, `timeAgo` formatting, clear history flow, AsyncStorage errors |
 
-**Total:** 66 tests, **100%** line and function coverage on `app/` and `services/`.
+**Total:** 77+ tests, **100%** line and function coverage on `app/` and `services/` (run `npx jest --listTests` / full Jest output for the current count).
 
 ## Continuous Integration (GitHub Actions)
 

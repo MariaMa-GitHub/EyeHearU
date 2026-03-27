@@ -3,9 +3,9 @@
 [![CI](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/MariaMa-GitHub/EyeHearU/branch/main/graph/badge.svg)](https://codecov.io/gh/MariaMa-GitHub/EyeHearU)
 
-**Real-time ASL-to-English translation on iOS** — one sign at a time.
+**ASL → English gloss output on iOS** — **single sign** or **ordered multi-sign** sequences.
 
-Eye Hear U translates isolated American Sign Language (ASL) signs into English text and speech using a mobile app, a backend inference API, and a video classifier trained on public ASL datasets. Infrastructure is provisioned on AWS via Terraform.
+Eye Hear U runs American Sign Language **video clips** through a spatiotemporal classifier (**856 English-like gloss labels**), then optionally **beam search + a gloss n-gram language model** when you send **multiple clips in order**. The app speaks and displays text derived from those glosses. **Fluent, idiomatic English sentences are not generated** — multi-clip “English” is the chosen gloss sequence with light formatting (see [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md)). Classifier and sequence quality depend on the model and data; treat outputs as assistive, not certified translations. Infrastructure is provisioned on AWS via Terraform.
 
 ### Documentation
 
@@ -13,6 +13,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 |----------|----------|
 | End users | [User guide](docs/USER_GUIDE.md) |
 | Developers | [Developer guide](docs/DEVELOPER_GUIDE.md) |
+| Single vs multi-clip pipeline & accuracy scope | [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md) |
 | Testing & coverage | [Testing](docs/TESTING.md) |
 | Production deployment | [Production](docs/PRODUCTION.md) |
 | Inference preprocessing | [Preprocessing (I3D)](docs/PREPROCESSING.md) |
@@ -22,7 +23,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 | Modal / AWS migration | [Ops Migration Tutorial](docs/ops_migration_modal_sft_tutorial.md) |
 | Profiling analysis | [Profiling](docs/PROFILING.md) |
 
-**Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI uploads **three** reports (`backend`, `ml`, `mobile` flags) so the dashboard shows backend, ML, and frontend together; path fixes in `codecov.yml` map Jest’s `app/` and `services/` paths under `mobile/`. CI still enforces **100%** backend and ML coverage and **100%** mobile line and function coverage in Jest, independently of Codecov.
+**Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI uploads **three** reports (`backend`, `ml`, `mobile` flags) so the dashboard shows backend, ML, and frontend together; path fixes in `codecov.yml` map Jest’s `app/` and `services/` paths under `mobile/`. CI still enforces **100%** backend and ML coverage and **100%** mobile line and function coverage in Jest, independently of Codecov. Exact test counts may rise as suites grow; see [Testing](docs/TESTING.md).
 
 ---
 
@@ -34,12 +35,14 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 │   (React Native /    │───────▶│   (FastAPI on ECS Fargate behind ALB)│
 │    Expo)             │        │                                      │
 │                      │        │   POST /api/v1/predict               │
-│  - Camera capture    │◀───────│   → sign label + confidence          │
-│  - Display results   │  JSON  │                                      │
-│  - Text-to-speech    │        │   Loads I3D model from S3 at startup │
-│  - Translation       │        └─────────────────┬────────────────────┘
-│    history           │                          │
-└──────────────────────┘                          │
+│  - Camera capture    │        │   → one clip → top gloss + top_k     │
+│  - Single / Multi-   │◀───────│                                      │
+│    sign modes        │  JSON  │   POST /api/v1/predict/sentence      │
+│  - Text-to-speech    │        │   → N clips → beam + gloss LM →     │
+│  - Local history     │        │      best_glosses + english line      │
+│                      │        │   Loads I3D + gloss_lm.json @ startup│
+└──────────────────────┘        └─────────────────┬────────────────────┘
+                                                  │
                                        ┌──────────▼──────────┐
                                        │   ML Model          │
                                        │   (PyTorch)         │
@@ -90,18 +93,23 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 .
 ├── backend/                  # FastAPI inference API
 │   ├── app/
-│   │   ├── main.py           # App entrypoint, lifespan loads I3D model
-│   │   ├── config.py         # S3 bucket, model path, label map path
-│   │   ├── routers/          # health.py, predict.py
+│   │   ├── main.py           # App entrypoint, lifespan loads I3D + gloss LM
+│   │   ├── config.py         # S3 bucket, model path, label map, gloss_lm_path
+│   │   ├── routers/          # health.py, predict.py (/predict, /predict/sentence)
 │   │   ├── schemas/          # Pydantic models
-│   │   └── services/         # model_service (I3D), preprocessing, firebase
+│   │   └── services/         # model_service (predict + predict_batch), preprocessing,
+│   │                         # gloss_lm, beam_search, gloss_to_english, lm_builder, firebase
+│   ├── data/
+│   │   └── gloss_lm.json     # Gloss n-gram stats (rebuild: scripts/build_gloss_lm.py)
+│   ├── scripts/
+│   │   └── build_gloss_lm.py # Offline LM builder from label map + optional gloss lines
 │   ├── tests/                # 100+ tests, 100% coverage
 │   └── requirements.txt
 │
 ├── mobile/                   # React Native (Expo) mobile app
-│   ├── app/                  # _layout, index, camera, history
-│   ├── __tests__/            # 66 tests, 100% line coverage (enforced in package.json)
-│   ├── services/api.ts       # API client for /predict endpoint
+│   ├── app/                  # _layout, index, camera (single + multi-sign), history
+│   ├── __tests__/            # Jest, 100% line + function coverage (package.json)
+│   ├── services/api.ts     # predictSign (/predict), predictSentence (/predict/sentence)
 │   └── package.json
 │
 ├── ml/                       # Machine learning code
@@ -163,6 +171,7 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 ├── docs/
 │   ├── USER_GUIDE.md         # End-user guide
 │   ├── DEVELOPER_GUIDE.md    # Setup and day-to-day development
+│   ├── ASL_TRANSLATION_PIPELINE.md  # Single vs multi-clip, beam+LM, output semantics
 │   ├── TESTING.md            # Tests, coverage, CI
 │   ├── PRODUCTION.md         # Production deployment
 │   ├── PREPROCESSING.md      # I3D inference preprocessing
@@ -266,9 +275,9 @@ CI runs three parallel jobs on every push/PR to `main`:
 
 | Job | Tests | Coverage | Enforced |
 |-----|-------|----------|----------|
-| Backend | 104 pytest | 100% line + branch | `--cov-fail-under=100` |
+| Backend | 124+ pytest | 100% line + branch | `--cov-fail-under=100` |
 | ML | 190+ pytest | 100% line | `--cov-fail-under=100` |
-| Mobile | 66 Jest | 100% line + function | Jest `coverageThreshold` in `package.json` |
+| Mobile | 77+ Jest | 100% line + function | Jest `coverageThreshold` in `package.json` |
 
 Run locally:
 

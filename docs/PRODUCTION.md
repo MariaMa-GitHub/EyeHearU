@@ -26,6 +26,7 @@ Moving from **local or tunnel demos** to a **stable production** setup.
 
 - **Weights:** `s3://eye-hear-u-public-data-ca1/.../best_model.pt` (or a dedicated production bucket).  
 - **Label map:** Prefer **versioned** JSON in the image or S3 next to the checkpoint so class indices never drift.  
+- **Gloss LM:** Ship `backend/data/gloss_lm.json` with the image (or bake via `scripts/build_gloss_lm.py` in the build). Override path via **`gloss_lm_path`** in settings / env if you relocate it. Multi-clip **`/predict/sentence`** reads this at startup (if missing or corrupt, a **uniform** LM over the loaded label map is used).  
 - **Cold start:** First request after deploy may be slow while the model loads — consider **min capacity 1** and a **warmup** request to `/ready`.
 
 ## Mobile app (production)

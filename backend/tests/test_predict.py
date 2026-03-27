@@ -9,11 +9,11 @@ from app.main import app
 @pytest.fixture(autouse=True)
 def mock_model():
     """Inject a fake model, label map, and gloss LM into app state."""
-    from app.services.gloss_lm import GlossBigramLM
+    from app.services.gloss_lm import GlossBeamLM
 
     app.state.model = MagicMock()
     app.state.index_to_gloss = {0: "hello", 1: "thanks", 2: "water"}
-    app.state.gloss_lm = GlossBigramLM.uniform_over_vocab({"hello", "thanks", "water"})
+    app.state.gloss_lm = GlossBeamLM.uniform_over_vocab({"hello", "thanks", "water"})
     yield
     app.state.model = None
     app.state.index_to_gloss = None

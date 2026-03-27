@@ -7,14 +7,14 @@ from unittest.mock import MagicMock, patch
 import torch
 
 from app.main import app
-from app.services.gloss_lm import GlossBigramLM
+from app.services.gloss_lm import GlossBeamLM
 
 
 @pytest.fixture(autouse=True)
 def sentence_state():
     app.state.model = MagicMock()
     app.state.index_to_gloss = {0: "hello", 1: "thanks", 2: "water"}
-    app.state.gloss_lm = GlossBigramLM.uniform_over_vocab({"hello", "thanks", "water"})
+    app.state.gloss_lm = GlossBeamLM.uniform_over_vocab({"hello", "thanks", "water"})
     yield
     app.state.model = None
     app.state.index_to_gloss = None
@@ -54,7 +54,10 @@ async def test_predict_sentence_two_clips():
     data = r.json()
     assert len(data["clips"]) == 2
     assert data["best_glosses"]
-    assert data["english"] == " ".join(data["best_glosses"])
+    assert data["english"]
+    assert data["english"][-1] in ".?!"
+    for row in data["beam"]:
+        assert row["english"]
     assert len(data["beam"]) >= 1
 
 

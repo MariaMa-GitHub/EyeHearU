@@ -1,7 +1,8 @@
 """
 Prediction endpoint.
 Accepts video (mp4) upload and returns predicted ASL sign label(s).
-Multi-clip sentence decoding uses batched I3D inference + beam search over gloss LM.
+Multi-clip sentence decoding uses batched I3D inference + beam search over gloss LM
+and a lightweight gloss-line formatter (join + light polish) for ``english``.
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Query
@@ -86,7 +87,9 @@ async def predict_sentence(
 ):
     """
     Upload **multiple** video clips in order. Each clip is classified (top-k);
-    then beam search + gloss bigram LM picks a high-scoring gloss sequence.
+    then beam search + gloss n-gram LM picks a high-scoring gloss sequence.
+    The ``english`` field joins ``best_glosses`` with light surface polish only (see
+    ``gloss_sequence_to_english``); it is not automatic full-sentence generation.
 
     Query params: ``beam_size``, ``lm_weight`` (LM vs model balance), ``top_k`` per clip.
     """
@@ -122,19 +125,21 @@ async def predict_sentence(
             )
         raw_blobs.append(contents)
 
-    try:
-        from app.services.preprocessing import preprocess_video
-        from app.services.model_service import predict_batch
-        from app.services.beam_search import beam_search
-        from app.config import get_settings
+    from app.config import get_settings
+    from app.services.beam_search import beam_search
+    from app.services.gloss_to_english import gloss_sequence_to_english
+    from app.services.model_service import predict_batch
+    from app.services.preprocessing import preprocess_video
 
+    settings = get_settings()
+    try:
         tensors = [preprocess_video(blob) for blob in raw_blobs]
         clip_hyps = predict_batch(
             model,
             index_to_gloss,
             tensors,
             top_k=top_k,
-            device=get_settings().model_device,
+            device=settings.model_device,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -148,7 +153,6 @@ async def predict_sentence(
         lm_weight=lm_weight,
         top_sequences=5,
     )
-
     clips_out = [
         SentenceClipResult(
             top_k=[TopKPrediction(sign=x["sign"], confidence=x["confidence"]) for x in h]
@@ -159,13 +163,13 @@ async def predict_sentence(
         SentenceBeamRow(
             glosses=list(b.glosses),
             score=round(b.score, 4),
-            english=" ".join(b.glosses),
+            english=gloss_sequence_to_english(list(b.glosses)),
         )
         for b in beams
     ]
     best = beams[0] if beams else None
     best_glosses = list(best.glosses) if best else []
-    english = " ".join(best_glosses)
+    english = gloss_sequence_to_english(best_glosses)
 
     return SentencePredictionResponse(
         clips=clips_out,

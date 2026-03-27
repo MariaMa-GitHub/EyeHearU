@@ -64,6 +64,26 @@ export interface PredictionResult {
   message?: string;
 }
 
+/** One clip’s classifier output in a multi-clip sentence request. */
+export interface SentenceClipResult {
+  top_k: TopKPrediction[];
+}
+
+/** One beam hypothesis for the full gloss sequence. */
+export interface SentenceBeamRow {
+  glosses: string[];
+  score: number;
+  english: string;
+}
+
+/** Response from POST /api/v1/predict/sentence (beam + gloss LM). */
+export interface SentencePredictionResult {
+  clips: SentenceClipResult[];
+  beam: SentenceBeamRow[];
+  best_glosses: string[];
+  english: string;
+}
+
 /** True when response looks like a dead / overloaded LocalTunnel. */
 export function isTunnelUnavailable(status: number, body: string): boolean {
   if (status !== 503 && status !== 502) return false;
@@ -119,6 +139,54 @@ export async function predictSign(videoUri: string): Promise<PredictionResult> {
   }
 
   return JSON.parse(text) as PredictionResult;
+}
+
+/**
+ * Send multiple recorded clips in order; backend runs batched I3D + beam search + gloss LM.
+ */
+export async function predictSentence(
+  videoUris: string[],
+  opts?: { beamSize?: number; lmWeight?: number; topK?: number }
+): Promise<SentencePredictionResult> {
+  if (videoUris.length === 0) {
+    throw new Error("Add at least one video clip.");
+  }
+  const formData = new FormData();
+  videoUris.forEach((uri, i) => {
+    formData.append("files", {
+      uri,
+      name: `clip_${i}.mp4`,
+      type: "video/mp4",
+    } as any);
+  });
+
+  const params = new URLSearchParams();
+  if (opts?.beamSize != null) {
+    params.set("beam_size", String(opts.beamSize));
+  }
+  if (opts?.lmWeight != null) {
+    params.set("lm_weight", String(opts.lmWeight));
+  }
+  if (opts?.topK != null) {
+    params.set("top_k", String(opts.topK));
+  }
+  const q = params.toString();
+  const url = `${API_BASE_URL}/api/v1/predict/sentence${q ? `?${q}` : ""}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData,
+    headers: { ...EXTRA_HEADERS },
+  });
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    const hint = explainApiFailure(response.status, text);
+    throw new Error(`Sentence prediction failed (${response.status}): ${hint}`);
+  }
+
+  return JSON.parse(text) as SentencePredictionResult;
 }
 
 export interface HealthResult {

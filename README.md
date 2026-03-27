@@ -18,6 +18,9 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 | Inference preprocessing | [Preprocessing (I3D)](docs/PREPROCESSING.md) |
 | Evaluation metrics guide | [Evaluation](docs/EVALUATION.md) |
 | Benchmarking & evaluation | [Benchmarking](docs/BENCHMARKING.md) |
+| I3D training (S3 repro) | [I3D S3 Repro Guide](docs/i3d_s3_repro_guide.md) |
+| Modal / AWS migration | [Ops Migration Tutorial](docs/ops_migration_modal_sft_tutorial.md) |
+| Profiling analysis | [Profiling](docs/PROFILING.md) |
 
 **Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI enforces **100%** backend and ML line/branch coverage independently of Codecov.
 
@@ -105,7 +108,12 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   ├── i3d_msft/             # Inception I3D — the deployed model
 │   │   ├── pytorch_i3d.py    # InceptionI3d architecture (from Microsoft)
 │   │   ├── videotransforms.py
-│   │   └── export_label_map.py
+│   │   ├── export_label_map.py
+│   │   ├── train.py          # I3D training with S3 data + Modal GPU
+│   │   ├── evaluate.py       # I3D evaluation (top-k, MRR, DCG, confusion)
+│   │   ├── dataset.py        # ASLCitizenI3DDataset (64-frame, [-1,1] norm)
+│   │   ├── s3_data.py        # S3 sync helpers (splits, clips)
+│   │   └── build_label_map_artifacts.py  # Rebuild label map from training
 │   ├── i3d_label_map_mvp-sft-full-v1.json  # 856-class label map (v4)
 │   ├── models/classifier.py  # ASLVideoClassifier (in-repo baseline, not deployed)
 │   ├── config.py             # Baseline training config
@@ -114,8 +122,11 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   │   └── dataset.py        # ASLVideoDataset (PyTorch)
 │   ├── evaluation/
 │   │   └── evaluate.py       # Accuracy, F1, confusion matrix, latency
-│   ├── tests/                # 144 unit tests, 100% coverage
+│   ├── profiling/            # cProfile analysis of 5 key functions
+│   ├── tests/                # 300+ unit tests, 100% coverage
 │   └── requirements.txt
+│
+├── modal_train_i3d.py        # Modal GPU wrapper for I3D training
 │
 ├── data/                     # Data pipeline
 │   ├── Dockerfile            # Pipeline container image
@@ -127,6 +138,8 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   │   ├── preprocess_clips.py
 │   │   ├── build_unified_dataset.py
 │   │   ├── validate.py
+│   │   ├── plan_i3d_splits.py          # Versioned S3 split plans
+│   │   ├── prepare_i3d_from_s3.py      # Download & prepare I3D data
 │   │   └── requirements.txt
 │   ├── raw/                  # Raw video files (gitignored)
 │   └── processed/            # Processed clips + metadata (gitignored)
@@ -162,7 +175,10 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   ├── PRODUCTION.md         # Production deployment
 │   ├── PREPROCESSING.md      # I3D inference preprocessing
 │   ├── EVALUATION.md         # How to generate evaluation metrics
-│   └── BENCHMARKING.md       # Evaluation metrics and reproduction
+│   ├── BENCHMARKING.md       # Evaluation metrics and reproduction
+│   ├── PROFILING.md          # cProfile analysis of 5 key functions
+│   ├── i3d_s3_repro_guide.md # I3D training reproduction with S3
+│   └── ops_migration_modal_sft_tutorial.md  # AWS/Modal migration
 │
 ├── .github/workflows/ci.yml  # GitHub Actions CI (backend, ML, mobile)
 ├── Dockerfile
@@ -216,6 +232,19 @@ python build_unified_dataset.py
 python validate.py
 ```
 
+### I3D Training (Modal GPU)
+
+```bash
+pip install modal
+modal setup  # one-time auth
+# Smoke test (1 epoch, 200 clips)
+modal run modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 1 --clip-limit 200
+# Full training
+modal run modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 20
+```
+
+See [I3D S3 Repro Guide](docs/i3d_s3_repro_guide.md) and [Ops Migration Tutorial](docs/ops_migration_modal_sft_tutorial.md) for details.
+
 ### Infrastructure (Terraform)
 
 ```bash
@@ -243,7 +272,7 @@ CI runs three parallel jobs on every push/PR to `main`:
 | Job | Tests | Coverage | Enforced |
 |-----|-------|----------|----------|
 | Backend | 82 pytest | 100% line + branch | `--cov-fail-under=100` |
-| ML | 144 pytest | 100% line | `--cov-fail-under=100` |
+| ML | 300+ pytest | 100% line | `--cov-fail-under=100` |
 | Mobile | 59 Jest | 100% function | Jest coverage thresholds |
 
 Run locally:

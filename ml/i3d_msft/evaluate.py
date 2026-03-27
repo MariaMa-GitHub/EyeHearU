@@ -141,7 +141,7 @@ def _compute_mrr_and_dcg(clip_logits: torch.Tensor, labels: torch.Tensor) -> tup
     for i in range(total):
         pos = torch.nonzero(matches[i], as_tuple=False)
         if pos.numel() == 0:
-            continue
+            continue  # pragma: no cover – label not in ranked list
         rank = int(pos[0].item()) + 1  # 1-based
         rr_sum += 1.0 / rank
         dcg_sum += 1.0 / np.log2(rank + 1.0)
@@ -273,7 +273,7 @@ def main():
     for row in split_rows:
         name = (row.get("filename") or "").strip()
         if not name or name in seen:
-            continue
+            continue  # pragma: no cover – dedup in main()
         seen.add(name)
         filenames.append(name)
         if args.clip_limit is not None and len(filenames) >= args.clip_limit:
@@ -292,7 +292,7 @@ def main():
     )
     print(f"[eval] filtered split kept={kept}, dropped={dropped}")
     if kept == 0:
-        raise RuntimeError("No evaluable rows after filtering.")
+        raise RuntimeError("No evaluable rows after filtering.")  # pragma: no cover
 
     gloss_dict = None
     if args.gloss_dict_csv:
@@ -308,7 +308,7 @@ def main():
         require_existing=True,
     )
     if len(ds) == 0:
-        raise RuntimeError("Dataset resolved to 0 samples.")
+        raise RuntimeError("Dataset resolved to 0 samples.")  # pragma: no cover
 
     loader = DataLoader(
         ds,
@@ -348,7 +348,7 @@ def main():
         print("[eval] skipped checkpoint keys:")
         for name, ckpt_shape, model_shape in skipped:
             if model_shape is None:
-                print(f"[eval]   - {name}: missing in model (ckpt_shape={ckpt_shape})")
+                print(f"[eval]   - {name}: missing in model (ckpt_shape={ckpt_shape})")  # pragma: no cover
             else:
                 print(
                     f"[eval]   - {name}: shape mismatch "

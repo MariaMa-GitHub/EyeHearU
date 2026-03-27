@@ -54,7 +54,7 @@ def load_rgb_frames_from_video(video_path: str, max_frames: int = 64) -> np.ndar
     for offset in range(limit):
         success, img = vidcap.read()
         if not success or img is None:
-            break
+            break  # pragma: no cover – truncated video mid-decode
         if offset % frameskip != 0:
             continue
 

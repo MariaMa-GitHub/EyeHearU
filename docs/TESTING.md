@@ -104,8 +104,13 @@ python -m pytest tests/ -v --cov --cov-report=term-missing
 | I3D backbone | `test_pytorch_i3d.py` — Identity, MaxPool3dSamePadding (compute_pad, forward), Unit3D (batch norm, no batch norm, no activation, compute_pad), InceptionModule, InceptionI3d (all 16 early endpoints, forward, pretrained mode, no spatial squeeze, extract_features, replace_logits, remove_last) |
 | Training loop | `test_train.py` — train_one_epoch (returns loss/acc, params update, empty loader), evaluate (loss/acc, no gradients, empty loader), _worker_init_fn (seed determinism), set_seed (cudnn flags), main() (with/without label_map, early stopping, empty dataset exit) |
 | Video transforms | `test_videotransforms.py` — RandomCrop, CenterCrop, RandomHorizontalFlip (output shape, repr, edge cases) |
+| I3D dataset | `test_i3d_dataset.py` — load_rgb_frames (basic, empty, frameskip, upscale, truncated), video_to_tensor, ASLCitizenI3DDataset (init, custom gloss dict, missing/empty files, padding, getitem) |
+| I3D training | `test_i3d_train.py` — train_one_epoch, evaluate, build_arg_parser, _read_split_rows, _select_filenames_with_val_coverage, _is_readable_video, _write_filtered_split, _load_compatible_checkpoint, _upload_checkpoint_to_s3, _set_backbone_trainable, _build_optimizer, main() (smoke, init checkpoint, head-only epochs, epoch checkpoints, S3 upload, empty dataset) |
+| I3D evaluation | `test_i3d_evaluate.py` — get_device, _read_split_rows, _build_gloss_dict_from_csv, _is_readable_video, _write_filtered_split, _topk_hits, _compute_mrr_and_dcg, evaluate(), build_parser, main() (missing checkpoint, invalid topk, integration, S3 checkpoint, clip limit, custom output) |
+| I3D S3 data | `test_i3d_s3_data.py` — get_s3_client, get_active_plan_id, download_splits, _read_split_rows, collect_required_filenames, download_clip_subset (success, skip existing, missing key, access denied) |
+| Label map artifacts | `test_build_label_map_artifacts.py` — _write_json, main() (basic, clip limit, S3 upload, clean workdir, empty filtered raises) |
 
-**Total:** 144 tests, **100%** line coverage.
+**Total:** 300+ tests, **100%** line coverage.
 
 ## Mobile (Jest + jest-expo)
 

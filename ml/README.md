@@ -1,60 +1,86 @@
 ## ML (`ml/`) — training code and inference artifacts
 
-This directory holds **training scripts**, **shared config**, the **Inception I3D** module used at inference, and **label maps** for the MVP checkpoint.
+This directory holds **training scripts**, **shared config**, the **Inception I3D** module used at inference, **label maps** for the MVP checkpoint, and the **I3D training pipeline** with S3-based data management.
 
 ---
 
 ### Inference (used by the FastAPI backend)
 
-- **`i3d_msft/`** — `pytorch_i3d.py`, `videotransforms.py` (must stay aligned with the training branch that produced the checkpoint).
-- **`i3d_label_map_mvp-sft-full-v1.json`** — class index ↔ gloss for the MVP model.
+- **`i3d_msft/pytorch_i3d.py`** — InceptionI3d architecture (from Microsoft).
+- **`i3d_msft/videotransforms.py`** — RandomCrop, CenterCrop, RandomHorizontalFlip for video tensors.
+- **`i3d_label_map_mvp-sft-full-v1.json`** — class index ↔ gloss for the MVP model (856 classes).
 
 The backend decodes uploads with **`backend/app/services/preprocessing.py`**, documented in **`docs/PREPROCESSING.md`**.
 
 ---
 
-### Training (in-repo baseline)
+### I3D Training (deployed model)
 
-- **`config.py`** — dataclass configuration for paths, backbone, hyperparameters.
-- **`models/classifier.py`** — `ASLVideoClassifier` around a torchvision **3D CNN** (e.g. R3D-18), **16-frame** clips, `(B, 3, 16, 224, 224)`.
-- **`training/dataset.py`** / **`training/train.py`** / **`evaluation/evaluate.py`** — standard train/eval loop on processed clips under `data/processed/`.
+The training pipeline pulls data from S3 using versioned split plans and trains on Modal GPUs.
 
-The **deployed MVP API** uses the **I3D + 64-frame** pipeline, not this R3D baseline, unless the checkpoint and preprocessing are switched together.
+| File | Purpose |
+|------|---------|
+| `i3d_msft/train.py` | I3D training with S3 data, differential LR, backbone freezing |
+| `i3d_msft/evaluate.py` | Evaluation: top-k accuracy, MRR, DCG, confusion matrix |
+| `i3d_msft/dataset.py` | `ASLCitizenI3DDataset` — 64-frame clips, [-1,1] normalization |
+| `i3d_msft/s3_data.py` | S3 sync helpers: split downloads, clip downloads |
+| `i3d_msft/build_label_map_artifacts.py` | Rebuild label map from training splits |
+| `i3d_msft/export_label_map.py` | CSV → JSON label map utility |
+| `modal_train_i3d.py` (repo root) | Modal GPU wrapper for cloud training |
+
+**Quick start (Modal):**
+
+```bash
+pip install modal && modal setup
+# Smoke test
+modal run modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 1 --clip-limit 200
+# Full training
+modal run modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 20
+```
+
+See **`docs/i3d_s3_repro_guide.md`** for the full reproducible workflow and **`docs/ops_migration_modal_sft_tutorial.md`** for the AWS/Modal migration playbook.
 
 ---
 
-### Train (after data pipeline)
+### In-Repo Baseline (not deployed)
 
-1. Run the data pipeline (see `data/scripts/`).
-2. Install dependencies:
+These files wrap torchvision 3D CNNs (R3D-18, MC3-18, R2Plus1D-18) for reproducible local experiments. The deployed MVP uses I3D, not this baseline.
 
-   ```bash
-   cd ml
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
+- **`config.py`** — dataclass configuration for paths, backbone, hyperparameters.
+- **`models/classifier.py`** — `ASLVideoClassifier`, **16-frame** clips, `(B, 3, 16, 224, 224)`, ImageNet normalization.
+- **`training/dataset.py`** / **`training/train.py`** / **`evaluation/evaluate.py`** — standard train/eval loop on processed clips under `data/processed/`.
 
-3. Train:
+```bash
+cd ml
+pip install -r requirements.txt
+python -m training.train
+python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
+```
 
-   ```bash
-   python -m training.train
-   ```
+---
 
-4. Evaluate:
+### Profiling
 
-   ```bash
-   python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
-   ```
+5 key functions profiled with `cProfile`. See **`docs/PROFILING.md`** for full analysis.
+
+```bash
+cd ml && python -m profiling.profile_functions
+```
 
 ---
 
 ### Label maps
 
-`i3d_msft/export_label_map.py` can help produce JSON maps compatible with the backend. The MVP map file is checked in at the repo root of `ml/`.
+`i3d_msft/export_label_map.py` produces JSON maps compatible with the backend. `i3d_msft/build_label_map_artifacts.py` rebuilds the exact label map from a training run's filtered splits. The MVP map file is checked in at `ml/i3d_label_map_mvp-sft-full-v1.json`.
 
 ---
 
-### Sync with the I3D training branch
+### Testing
 
-Training for the shipped I3D checkpoint may live on a separate branch (see **`docs/DEVELOPER_GUIDE.md`**). After any change to **`i3d_msft/`** or training preprocessing, mirror updates in **`backend/app/services/preprocessing.py`** and run backend tests with **`--cov-fail-under=100`**.
+300+ tests with 100% line coverage:
+
+```bash
+cd ml && python -m pytest tests/ -v --cov --cov-fail-under=100
+```
+
+After any change to **`i3d_msft/`** or training preprocessing, mirror updates in **`backend/app/services/preprocessing.py`** and run backend tests with **`--cov-fail-under=100`**.

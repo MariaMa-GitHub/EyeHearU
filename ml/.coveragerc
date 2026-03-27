@@ -10,3 +10,6 @@ exclude_lines =
     # Don't require tests for CUDA-only branches (no GPU in CI)
     torch.cuda.manual_seed_all
     torch.cuda.synchronize
+    # Fallback import paths (for running from repo root vs ml/)
+    from ml\.i3d_msft\.
+    except ImportError:

@@ -121,7 +121,7 @@ jobs:
         if: always()
         uses: codecov/codecov-action@v5
         with:
-          # Jest writes lcov here; path is from repo root (job cwd is mobile/)
+          # Jest writes lcov here; Codecov runs from the workspace root, so this path is from repo root
           files: mobile/coverage/lcov.info
           flags: mobile
           name: mobile

@@ -22,7 +22,7 @@ Eye Hear U translates isolated American Sign Language (ASL) signs into English t
 | Modal / AWS migration | [Ops Migration Tutorial](docs/ops_migration_modal_sft_tutorial.md) |
 | Profiling analysis | [Profiling](docs/PROFILING.md) |
 
-**Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI enforces **100%** backend and ML line/branch coverage independently of Codecov.
+**Codecov:** Register the repository at [codecov.io](https://about.codecov.io/) and add the `CODECOV_TOKEN` secret under GitHub → Settings → Secrets → Actions so PR comments and the badge update automatically. CI uploads **three** reports (`backend`, `ml`, `mobile` flags) so the dashboard shows backend, ML, and frontend together; path fixes in `codecov.yml` map Jest’s `app/` and `services/` paths under `mobile/`. CI still enforces **100%** backend and ML coverage and **100%** mobile line and function coverage in Jest, independently of Codecov.
 
 ---
 
@@ -100,7 +100,7 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │
 ├── mobile/                   # React Native (Expo) mobile app
 │   ├── app/                  # _layout, index, camera, history
-│   ├── __tests__/            # 59 tests, 100% line coverage
+│   ├── __tests__/            # 66 tests, 100% line coverage (enforced in package.json)
 │   ├── services/api.ts       # API client for /predict endpoint
 │   └── package.json
 │
@@ -265,7 +265,7 @@ CI runs three parallel jobs on every push/PR to `main`:
 |-----|-------|----------|----------|
 | Backend | 82 pytest | 100% line + branch | `--cov-fail-under=100` |
 | ML | 190+ pytest | 100% line | `--cov-fail-under=100` |
-| Mobile | 59 Jest | 100% function | Jest coverage thresholds |
+| Mobile | 66 Jest | 100% line + function | Jest `coverageThreshold` in `package.json` |
 
 Run locally:
 

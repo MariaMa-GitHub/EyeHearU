@@ -48,7 +48,7 @@ The CI workflow ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs
 |-----|---------|-------------|-----------------|
 | Backend | `pytest --cov=app --cov-report=xml --cov-fail-under=100` | 100% line + branch | Codecov (flag: `backend`) |
 | ML | `pytest --cov --cov-report=xml --cov-fail-under=100` | 100% line | Codecov (flag: `ml`) |
-| Mobile | `npx jest --coverage --ci` | 100% function (Jest thresholds) | — |
+| Mobile | `npx jest --coverage --ci` | 100% line + function (`coverageThreshold` in `package.json`) | Codecov (flag: `mobile`, `lcov.info`) |
 
 ### README badge
 
@@ -77,7 +77,7 @@ pytest tests/ -v --cov=app --cov-report=term-missing --cov-fail-under=100
 cd ml
 python -m pytest tests/ -v --cov --cov-report=term-missing --cov-fail-under=100
 
-# Mobile (100% function)
+# Mobile (100% line + function on app/ and services/)
 cd mobile
 npx jest --coverage
 ```
@@ -88,14 +88,16 @@ npx jest --coverage
 
 ### Current coverage
 
-| Component | Tests | Line Coverage | Branch Coverage |
-|-----------|-------|--------------|-----------------|
+| Component | Tests | Line coverage | Branch coverage |
+|-----------|-------|---------------|-----------------|
 | Backend (`app/`) | 82 pytest | **100%** | **100%** |
 | ML (`i3d_msft/`, `modal_train_i3d`) | 191 pytest | **100%** | — |
-| Mobile | 59 Jest | **100%** line | **100%** function |
-| **Total** | **332 tests** | **100%** | |
+| Mobile (`app/`, `services/`) | 66 Jest | **100%** | — |
+| **Total** | **339 tests** | **100%** on each component’s measured tree | |
 
-Coverage is enforced in CI with `--cov-fail-under=100` for backend and ML. Any PR that drops below 100% will fail the CI check.
+Mobile Jest also enforces **100% function** coverage on those paths (`coverageThreshold` in `mobile/package.json`).
+
+Coverage is enforced in CI with `--cov-fail-under=100` for backend and ML, and Jest `coverageThreshold` for mobile. Any PR that drops below 100% on those targets will fail the CI check.
 
 ### What is covered
 
@@ -116,9 +118,10 @@ Coverage is enforced in CI with `--cov-fail-under=100` for backend and ML. Any P
 - Video transforms: random crop, center crop, horizontal flip
 - Modal wrapper: run name parsing, command building, checkpoint resolution
 
-**Mobile (59 tests):**
-- API service: health check, predict, URL resolution, error explanations
-- Camera screen: permissions, recording, upload, camera toggle, prediction display, TTS
+**Mobile (66 tests):**
+- API service: health check, predict, URL resolution (including LocalTunnel `loca.lt` header), error explanations
+- Home and root layout: landing screen, stack layout, navigation to camera and history
+- Camera screen: permissions, recording, countdown completion, upload, camera toggle, prediction display, TTS
 - History screen: empty state, rendering, time formatting, clear history, storage errors
 
 ---

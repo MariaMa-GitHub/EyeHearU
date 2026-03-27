@@ -109,7 +109,10 @@ python -m pytest tests/ -v --cov --cov-report=term-missing
 
 ## Mobile (Jest + jest-expo)
 
-Mobile tests live in **`mobile/__tests__/`**. Configuration is in `mobile/package.json` (`"preset": "jest-expo"`).
+Mobile tests live in **`mobile/__tests__/`**. Jest is configured in `mobile/package.json` (`"preset": "jest-expo"`):
+
+- **`collectCoverageFrom`** — `app/**` and `services/**` only (TypeScript sources under test).
+- **`coverageThreshold`** — **100%** lines and **100%** functions globally on those paths; CI fails if coverage drops.
 
 ### Run tests locally
 
@@ -122,11 +125,12 @@ npx jest --coverage
 
 | Area | Tests |
 |------|--------|
-| API service | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, `checkHealth`, `resolveApiBaseUrl` branches |
-| Camera screen | `camera.test.tsx` — permissions, recording flow, upload flow, camera toggle, error handling, prediction display, TTS |
+| API service | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, `checkHealth`, `resolveApiBaseUrl` branches (including `loca.lt` tunnel header on `predict`/`checkHealth`) |
+| Home + layout | `index.test.tsx`, `_layout.test.tsx` — home screen, navigation to camera/history, root stack |
+| Camera screen | `camera.test.tsx` — permissions, recording flow, countdown timer, upload flow, camera toggle, error handling, prediction display, TTS |
 | History screen | `history.test.tsx` — empty state, history rendering, `timeAgo` formatting, clear history flow, AsyncStorage errors |
 
-**Total:** 59 tests, **100%** line and function coverage.
+**Total:** 66 tests, **100%** line and function coverage on `app/` and `services/`.
 
 ## Continuous Integration (GitHub Actions)
 
@@ -149,14 +153,17 @@ On every **push** and **pull_request** to `main` or `master`, three jobs run in 
 ### Mobile job
 1. Sets up Node.js **20**
 2. `npm ci`
-3. Runs `npx jest --coverage --ci`
+3. Runs `npx jest --coverage --ci` — fails if coverage falls below **100%** lines or **100%** functions on `app/` and `services/` (see `coverageThreshold` in `mobile/package.json`)
+4. Uploads `mobile/coverage/lcov.info` to Codecov (flag: **`mobile`**) so the dashboard includes frontend with backend and ML
+
+`codecov.yml` defines flags for **`backend`**, **`ml`**, and **`mobile`**, plus **`fixes`** so Jest’s `SF:app/...` and `SF:services/...` paths resolve under `mobile/` in the UI.
 
 ### Codecov setup (README badge + PR comments)
 
 1. Sign in at [codecov.io](https://about.codecov.io/) with GitHub.
 2. Enable the **EyeHearU** repository.
 3. In GitHub: **Settings → Secrets and variables → Actions** → add **`CODECOV_TOKEN`**.
-4. Open a PR — Codecov comments with diff coverage after the first upload.
+4. Open a PR — after all three jobs upload, Codecov merges reports and comments with per-flag coverage (wait is configured via `codecov.notify.after_n_builds: 3`).
 
 The README badge URL:
 
@@ -166,4 +173,4 @@ The README badge URL:
 
 ### Without Codecov
 
-CI still passes or fails on **`--cov-fail-under=100`** (backend). The external badge and PR bot are omitted until `CODECOV_TOKEN` is configured.
+CI still passes or fails on **`--cov-fail-under=100`** (backend and ML) and Jest **`coverageThreshold`** (mobile). The external badge and PR bot are omitted until `CODECOV_TOKEN` is configured.

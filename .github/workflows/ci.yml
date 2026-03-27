@@ -117,6 +117,17 @@ jobs:
       - name: Run tests with coverage
         run: npx jest --coverage --ci
 
+      - name: Upload coverage report (Codecov)
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          # Jest writes lcov here; path is from repo root (job cwd is mobile/)
+          files: mobile/coverage/lcov.info
+          flags: mobile
+          name: mobile
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Test summary (job summary)
         if: always()
         run: |

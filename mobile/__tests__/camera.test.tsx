@@ -431,6 +431,43 @@ describe("CameraScreen", () => {
       });
     });
 
+    it("countdown hits final tick and clears interval at 0s label", async () => {
+      let resolveRecord!: (v: { uri: string }) => void;
+      mockRecordAsync = jest.fn(
+        () =>
+          new Promise<{ uri: string }>((resolve) => {
+            resolveRecord = resolve;
+          })
+      );
+
+      jest.useFakeTimers({ legacyFakeTimers: false });
+
+      render(<CameraScreen />);
+
+      act(() => {
+        fireEvent.press(screen.getByText("Record Sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Recording 5s")).toBeTruthy();
+      });
+
+      // 5s → 4 → 3 → 2 → 1 → (final tick clears interval, shows "Recording" only)
+      act(() => {
+        jest.advanceTimersByTime(5000);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Recording")).toBeTruthy();
+      });
+      expect(screen.queryByText(/Recording \d+s/)).toBeNull();
+
+      jest.useRealTimers();
+      await act(async () => {
+        resolveRecord({ uri: "file:///mock-video.mp4" });
+      });
+    });
+
     /* --- upload flow with successful prediction --- */
 
     it("displays prediction after successful upload", async () => {

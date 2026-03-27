@@ -307,4 +307,30 @@ describe("resolveApiBaseUrl", () => {
     const { API_BASE_URL } = require("../services/api");
     expect(API_BASE_URL).toBe("https://example.com");
   });
+
+  it("sends bypass-tunnel-reminder header when apiBaseUrl uses loca.lt", async () => {
+    jest.resetModules();
+    jest.doMock("expo-constants", () => ({
+      expoConfig: { extra: { apiBaseUrl: "https://abc.loca.lt/" } },
+    }));
+    const mockFetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          sign: "hello",
+          confidence: 0.9,
+          top_k: [{ sign: "hello", confidence: 0.9 }],
+        }),
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+
+    const { predictSign } = require("../services/api");
+    await predictSign("file:///clip.mp4");
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [, options] = mockFetch.mock.calls[0];
+    expect(options.headers).toEqual({ "bypass-tunnel-reminder": "true" });
+    expect(mockFetch.mock.calls[0][0]).toContain("abc.loca.lt");
+  });
 });

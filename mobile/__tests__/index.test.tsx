@@ -41,10 +41,13 @@ describe("HomeScreen", () => {
 
   it("runs hand animation loop on mount", () => {
     jest.useFakeTimers();
-    render(<HomeScreen />);
-    act(() => {
-      jest.advanceTimersByTime(3500);
-    });
-    jest.useRealTimers();
+    try {
+      render(<HomeScreen />);
+      act(() => {
+        jest.advanceTimersByTime(3500);
+      });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

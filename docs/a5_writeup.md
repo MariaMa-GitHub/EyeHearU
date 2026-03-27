@@ -126,7 +126,7 @@ Coverage is enforced in CI with `--cov-fail-under=100` for backend and ML, and J
 
 ---
 
-## Part Three: Test Coverage Depth
+## Part Four: Test Coverage Depth
 
 ### Chosen module: `backend/app/services/preprocessing.py`
 
@@ -164,6 +164,6 @@ The file contains **16 targeted tests** (10 positive, 6 negative), each with det
 
 ---
 
-## Part Four: Two Memorable Bugs
+## Part Five: Two Memorable Bugs
 
-TODO — video walkthrough to be recorded and linked here.
+https://utoronto-my.sharepoint.com/:f:/g/personal/zx_fu_mail_utoronto_ca/IgBR75GGL4K8QKH950mXqxCyAavsmy9elaImVMED8Aiv3DM?e=sFqudf

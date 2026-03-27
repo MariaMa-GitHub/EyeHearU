@@ -67,13 +67,15 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | GET | `/health` | Liveness |
 | GET | `/ready` | Readiness + `model_loaded` |
 | POST | `/api/v1/predict` | Multipart file field `file` — **mp4/mov** video |
+| POST | `/api/v1/predict/sentence` | Multipart field `files` (repeat per clip) — batched I3D + beam + gloss LM; query `beam_size`, `lm_weight`, `top_k` |
 
 ### Important code paths
 
-- `app/main.py` — FastAPI app; **lifespan** loads the model on startup
-- `app/services/model_service.py` — S3 download (if needed), `torch.load`, I3D, `predict()`
+- `app/main.py` — FastAPI app; **lifespan** loads the model and gloss LM on startup
+- `app/services/model_service.py` — S3 download (if needed), `torch.load`, I3D, `predict()`, `predict_batch()`
+- `app/services/gloss_lm.py`, `app/services/beam_search.py` — bigram LM + beam over per-clip top-k
 - `app/services/preprocessing.py` — bytes → tensor `(1, 3, 64, 224, 224)` — **must match training**
-- `app/routers/predict.py` — validates upload, calls preprocess + predict
+- `app/routers/predict.py` — validates upload, calls preprocess + predict / sentence pipeline
 
 ## Mobile (Expo)
 

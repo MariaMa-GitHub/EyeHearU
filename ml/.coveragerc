@@ -1,5 +1,5 @@
 [run]
-source = models,config,i3d_msft,training,evaluation,modal_train_i3d
+source = i3d_msft,modal_train_i3d
 
 [report]
 exclude_lines =

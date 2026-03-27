@@ -18,7 +18,7 @@ Eye Hear U uses **Microsoft's Inception I3D** for all production inference. This
 | **Checkpoint** | Auto-downloaded from S3 by the backend on first startup |
 | **Evaluate via** | Backend API (`POST /api/v1/predict`) — see [Section 5](#5-evaluating-the-deployed-i3d-model-via-the-backend-api) |
 
-The repo also contains an **in-repo baseline** (`ml/models/classifier.py`, torchvision R3D-18, 16 frames, ImageNet normalization) with its own training/evaluation scripts. This baseline is **not deployed** — it exists only for reproducible training experiments. Section 3-4 cover the baseline; Section 5 covers the deployed I3D model.
+All training and evaluation code lives in `ml/i3d_msft/`. Section 3 covers I3D training, Section 4 covers I3D evaluation via the standalone script, and Section 5 covers evaluation via the backend API.
 
 ---
 
@@ -42,7 +42,7 @@ The default training device is `mps` (Apple Silicon). If you are on a different 
 python3 -c "import torch; print('CUDA:', torch.cuda.is_available()); print('MPS:', torch.backends.mps.is_available())"
 ```
 
-If you need to change the device, edit `ml/config.py` line `device: str = "mps"` to `"cpu"` or `"cuda"`.
+If you need to change the device, pass the `--device` flag to the training/evaluation scripts (e.g. `--device cpu` or `--device cuda`).
 
 ---
 
@@ -109,87 +109,46 @@ done
 
 ---
 
-## 3. Training the In-Repo Baseline (R3D-18)
+## 3. Training the I3D Model
 
-**Where to run:** from the `ml/` directory.
+Training is done via Modal cloud GPU. See [I3D S3 Repro Guide](i3d_s3_repro_guide.md) and [Ops Migration Tutorial](ops_migration_modal_sft_tutorial.md) for full details.
 
 ```bash
-cd ml
-python -m training.train
+pip install modal
+modal setup  # one-time auth
+
+# Smoke test (1 epoch, 200 clips)
+modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 1 --clip-limit 200
+
+# Full training
+modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 20
 ```
 
-### What happens
-
-1. Reads config from `ml/config.py` (batch_size=8, lr=1e-3, 30 epochs, etc.)
-2. Loads data from `data/processed/clips/{train,val}/`
-3. Creates an R3D-18 model with a classification head for N classes
-4. Trains with:
-   - Backbone frozen for the first 3 epochs (transfer learning warmup)
-   - Cosine annealing LR schedule
-   - Early stopping (patience=5 epochs)
-5. Saves checkpoints to `ml/checkpoints/`
-
-### Where checkpoints go
-
-```
-ml/checkpoints/
-├── best_model.pt       ← saved whenever val accuracy improves (this is the one you evaluate)
-├── epoch_5.pt          ← periodic checkpoint
-├── epoch_10.pt
-└── ...
-```
-
-### Training output (example)
-
-```
-Loaded label map: 856 classes
-Device: mps
-Model parameters: 33,456,856
-
-Epoch   1/30 | Train Loss: 3.12  Acc: 0.05 | Val Loss: 2.89  Acc: 0.09 | LR: 0.001000 | 45.2s
-Epoch   2/30 | Train Loss: 2.45  Acc: 0.18 | Val Loss: 2.10  Acc: 0.23 | LR: 0.000998 | 44.8s
-  -> New best (val_acc=0.2301)
-...
-Early stopping at epoch 18
-
-Done. Best validation accuracy: 0.4512
-```
+Checkpoints are uploaded to S3 during training. The best checkpoint is used by the backend API.
 
 ---
 
-## 4. Running the Evaluation Script
+## 4. Running the I3D Evaluation Script
 
 ### The command
 
 ```bash
 cd ml
-python -m evaluation.evaluate \
-    --checkpoint checkpoints/best_model.pt \
-    --split test \
-    --seed 42
+python -m i3d_msft.evaluate \
+    --checkpoint path/to/best_model.pt \
+    --split-csv path/to/test.csv \
+    --clip-dir path/to/clips/ \
+    --topk 1 5 10
 ```
-
-**All three arguments are optional:**
-
-| Flag | Default | What it does |
-|------|---------|--------------|
-| `--checkpoint` | `checkpoints/best_model.pt` | Path to the `.pt` state_dict file |
-| `--split` | `test` | Which data split to evaluate: `train`, `val`, or `test` |
-| `--seed` | `42` | Random seed for reproducibility |
 
 ### What it computes
 
 | Metric | What it means | Why it matters for your report |
 |--------|---------------|-------------------------------|
-| **Overall Accuracy (top-1)** | % of clips where `argmax(logits) == true_label` | Primary comparison metric in ASL recognition papers |
-| **Top-5 Accuracy** | % of clips where true label is in the 5 highest-scoring predictions | Shows model "nearly knows" the sign even when top-1 misses |
-| **Macro Precision** | Average precision across all classes (unweighted) | Measures false positive rate, class-balanced |
-| **Macro Recall** | Average recall across all classes (unweighted) | Measures false negative rate, class-balanced |
-| **Macro F1** | Harmonic mean of macro precision and recall | Single balanced metric for multi-class performance |
-| **Per-class accuracy/P/R/F1** | Metrics broken down by individual sign | Identifies which signs are easy vs. hard |
+| **Top-k Accuracy** | % of clips where true label is in the k highest-scoring predictions | Primary comparison metric in ASL recognition papers |
+| **MRR (Mean Reciprocal Rank)** | Average 1/rank of the correct prediction | Measures how high the correct answer ranks |
+| **DCG (Discounted Cumulative Gain)** | Log-discounted rank of the correct prediction | Penalises lower-ranked correct answers more heavily |
 | **Confusion matrix** | N x N table: `matrix[true][predicted] = count` | Reveals systematic confusions (e.g., "hello" vs. "goodbye") |
-| **Top confusion pairs** | The 20 most frequent misclassification pairs | Highlights for error analysis section of report |
-| **Inference latency** | Per-sample time in ms: mean, p50, p95, p99 | Proves real-time capability for mobile deployment |
 
 ### Output files
 
@@ -198,63 +157,14 @@ After running, check `ml/evaluation_results/`:
 ```
 ml/evaluation_results/
 ├── evaluation_results.json     ← all metrics as JSON (parseable for tables)
-├── confusion_matrix.json       ← full N x N matrix with class names
-└── confusion_matrix.png        ← heatmap visualization (if matplotlib installed)
-```
-
-### Console output (example)
-
-```
-============================================================
-Evaluation — test set  (seed=42)
-============================================================
-Overall Accuracy:  0.4512
-Top-5 Accuracy:    0.8234
-Macro Precision:   0.3901
-Macro Recall:      0.3745
-Macro F1:          0.3651
-Total Samples:     8320
-
-Inference Latency (per sample):
-  Mean:  12.3 ms
-  p50:   11.8 ms
-  p95:   18.4 ms
-  p99:   24.1 ms
-
-Per-class detail:
-  about               : acc=0.600  P=0.550  R=0.600  F1=0.574
-  absent              : acc=0.450  P=0.400  R=0.450  F1=0.424
-  ...
-
-Most confused pairs:
-  hello           -> goodbye         (15)
-  please          -> thank_you       (12)
-  ...
-
-Results saved to evaluation_results/evaluation_results.json
-Confusion matrix JSON saved to evaluation_results/confusion_matrix.json
-Confusion matrix plot saved to evaluation_results/confusion_matrix.png
-```
-
-### Evaluating on different splits
-
-Run on validation set (to compare with training output):
-
-```bash
-python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt --split val
-```
-
-Run on training set (to check for overfitting — train accuracy should be higher):
-
-```bash
-python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt --split train
+└── confusion_matrix.json       ← full N x N matrix with class names
 ```
 
 ---
 
 ## 5. Evaluating the Deployed I3D Model via the Backend API
 
-The production model (Inception I3D, 856 classes, 64-frame input) is a different architecture from the in-repo baseline. It is loaded and served by the backend API. You can evaluate it by sending test videos to the API endpoint.
+The I3D model is loaded and served by the backend API. You can evaluate it by sending test videos to the API endpoint.
 
 ### Start the backend
 
@@ -466,7 +376,6 @@ The ASL Citizen paper reports results on their test set. If you used the same da
 |-------|-----------|-----------|--------|
 | I3D (ASL Citizen paper) | — | — | Li et al. 2024 |
 | Our I3D (856 classes) | — | — | This project (deployed) |
-| Our R3D-18 baseline | — | — | This project (in-repo) |
 
 Fill in from your evaluation results.
 
@@ -483,13 +392,9 @@ ERROR: No training data found. Run the data pipeline first.
 
 The data pipeline has not been run. See [Section 2](#2-preparing-the-data).
 
-### "FileNotFoundError: checkpoints/best_model.pt"
+### "FileNotFoundError: best_model.pt"
 
-You need to train the model first (`python -m training.train`). The checkpoint is created during training. See [Section 3](#3-training-the-in-repo-baseline-r3d-18).
-
-### "label_map.json not found"
-
-The data pipeline creates this file. Make sure `data/processed/label_map.json` exists after running the pipeline.
+You need to train the model first. See [Section 3](#3-training-the-i3d-model).
 
 ### evaluation_results/ already has files from before
 
@@ -497,4 +402,4 @@ The existing `evaluation_results.json` in the repo contains **dummy data from te
 
 ### Device errors (MPS/CUDA)
 
-If you get device-related errors, edit `ml/config.py` and set `device: str = "cpu"`. CPU is slower but always works.
+Pass `--device cpu` to the training or evaluation script. CPU is slower but always works.

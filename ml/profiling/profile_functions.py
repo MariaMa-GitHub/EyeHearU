@@ -4,8 +4,8 @@ Profile 5 key functions in the EyeHearU codebase using cProfile.
 Profiled functions:
   1. preprocess_video   — video preprocessing pipeline (backend)
   2. predict            — model inference (backend)
-  3. evaluate_model     — full evaluation loop (ML)
-  4. train_one_epoch    — single training epoch (ML)
+  3. i3d_evaluate       — I3D evaluation loop (ML)
+  4. i3d_train_one_epoch — single I3D training epoch (ML)
   5. build_gloss_dict_from_csv — label map construction (ML)
 
 Usage:
@@ -44,10 +44,10 @@ for p in (_ML_ROOT, _BACKEND_ROOT):
 
 from app.services.preprocessing import preprocess_video
 from app.services.model_service import predict
-from evaluation.evaluate import evaluate_model
+from i3d_msft.evaluate import evaluate as i3d_evaluate
 from i3d_msft.export_label_map import build_gloss_dict_from_csv
-from models.classifier import ASLVideoClassifier
-from training.train import train_one_epoch
+from i3d_msft.pytorch_i3d import InceptionI3d
+from i3d_msft.train import train_one_epoch as i3d_train_one_epoch
 
 PROFILE_DIR = _ML_ROOT / "profiling" / "results"
 PROFILE_DIR.mkdir(parents=True, exist_ok=True)
@@ -93,9 +93,9 @@ def _make_synthetic_csv(n_rows: int = 1000, n_classes: int = 50) -> Path:
 
 
 def _make_fake_loader(num_batches: int = 5, batch_size: int = 4,
-                      num_classes: int = 20, num_frames: int = 16):
+                      num_classes: int = 20, num_frames: int = 64):
     """Create a DataLoader with random tensors (B, C, T, H, W)."""
-    clips = torch.randn(num_batches * batch_size, 3, num_frames, 112, 112)
+    clips = torch.randn(num_batches * batch_size, 3, num_frames, 224, 224)
     labels = torch.randint(0, num_classes, (num_batches * batch_size,))
     return DataLoader(TensorDataset(clips, labels), batch_size=batch_size)
 
@@ -136,41 +136,45 @@ def profile_predict():
     return _run_profile("predict", run)
 
 
-def profile_evaluate_model():
-    """Profile 3: evaluate_model — evaluation over a synthetic dataset."""
+def profile_i3d_evaluate():
+    """Profile 3: i3d_evaluate — I3D evaluation over a synthetic dataset."""
     num_classes = 20
-    label_map_inv = {i: f"sign_{i}" for i in range(num_classes)}
 
-    model = ASLVideoClassifier(num_classes=num_classes, backbone="r3d_18", pretrained=False)
+    model = InceptionI3d(num_classes=400, in_channels=3)
+    model.replace_logits(num_classes)
     model.eval()
     device = torch.device("cpu")
 
+    # I3D expects (B, 3, T, 224, 224)
     loader = _make_fake_loader(num_batches=5, batch_size=4,
-                               num_classes=num_classes, num_frames=16)
+                               num_classes=num_classes, num_frames=64)
 
     def run():
-        evaluate_model(model, loader, device, label_map_inv, num_classes)
+        i3d_evaluate(model, loader, device, topk=[1, 5])
 
-    return _run_profile("evaluate_model", run)
+    return _run_profile("i3d_evaluate", run)
 
 
-def profile_train_one_epoch():
-    """Profile 4: train_one_epoch — one full training pass."""
+def profile_i3d_train_one_epoch():
+    """Profile 4: i3d_train_one_epoch — one full I3D training pass."""
     num_classes = 20
-    model = ASLVideoClassifier(num_classes=num_classes, backbone="r3d_18", pretrained=False)
+
+    model = InceptionI3d(num_classes=400, in_channels=3)
+    model.replace_logits(num_classes)
     device = torch.device("cpu")
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
+    # I3D expects (B, 3, T, 224, 224)
     loader = _make_fake_loader(num_batches=5, batch_size=4,
-                               num_classes=num_classes, num_frames=16)
+                               num_classes=num_classes, num_frames=64)
 
     def run():
-        train_one_epoch(model, loader, criterion, optimizer, device)
+        i3d_train_one_epoch(model, loader, optimizer, criterion, device)
 
-    return _run_profile("train_one_epoch", run)
+    return _run_profile("i3d_train_one_epoch", run)
 
 
 def profile_build_gloss_dict():
@@ -245,8 +249,8 @@ def main():
     for profiler in [
         profile_preprocess_video,
         profile_predict,
-        profile_evaluate_model,
-        profile_train_one_epoch,
+        profile_i3d_evaluate,
+        profile_i3d_train_one_epoch,
         profile_build_gloss_dict,
     ]:
         results.append(profiler())

@@ -115,16 +115,9 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   │   ├── s3_data.py        # S3 sync helpers (splits, clips)
 │   │   └── build_label_map_artifacts.py  # Rebuild label map from training
 │   ├── i3d_label_map_mvp-sft-full-v1.json  # 856-class label map (v4)
-│   ├── models/classifier.py  # ASLVideoClassifier (in-repo baseline, not deployed)
-│   ├── config.py             # Baseline training config
-│   ├── training/
-│   │   ├── train.py          # Baseline training script
-│   │   └── dataset.py        # ASLVideoDataset (PyTorch)
-│   ├── evaluation/
-│   │   └── evaluate.py       # Accuracy, F1, confusion matrix, latency
 │   ├── modal_train_i3d.py    # Modal GPU wrapper for cloud training
 │   ├── profiling/            # cProfile analysis of 5 key functions
-│   ├── tests/                # 300+ unit tests, 100% coverage
+│   ├── tests/                # 190+ unit tests, 100% coverage
 │   └── requirements.txt
 │
 ├── data/                     # Data pipeline
@@ -271,7 +264,7 @@ CI runs three parallel jobs on every push/PR to `main`:
 | Job | Tests | Coverage | Enforced |
 |-----|-------|----------|----------|
 | Backend | 82 pytest | 100% line + branch | `--cov-fail-under=100` |
-| ML | 300+ pytest | 100% line | `--cov-fail-under=100` |
+| ML | 190+ pytest | 100% line | `--cov-fail-under=100` |
 | Mobile | 59 Jest | 100% function | Jest coverage thresholds |
 
 Run locally:

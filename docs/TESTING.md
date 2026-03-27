@@ -82,7 +82,7 @@ targeted tests with detailed comments explaining each edge case:
 
 ## ML (pytest + pytest-cov)
 
-ML tests live in **`ml/tests/`**. Coverage configuration is in `ml/.coveragerc` (sources: `models`, `config`, `i3d_msft`, `training`, `evaluation`; excludes `__main__` guards and CUDA-only branches).
+ML tests live in **`ml/tests/`**. Coverage configuration is in `ml/.coveragerc` (sources: `i3d_msft`, `modal_train_i3d`; excludes `__main__` guards and CUDA-only branches).
 
 ### Run tests locally
 
@@ -95,14 +95,8 @@ python -m pytest tests/ -v --cov --cov-report=term-missing
 
 | Area | Tests |
 |------|--------|
-| Classifier | `test_classifier.py` — forward shape, backbones (r3d_18, mc3_18, r2plus1d_18), freeze/unfreeze, dropout, unsupported backbone |
-| Config | `test_config.py` — DataConfig, ModelConfig, TrainConfig defaults and custom values, composition |
-| Dataset | `test_dataset.py` — init, sample collection, read_clip (pad/truncate/empty), augmentations (temporal shift, brightness, spatial crop), normalization, constants |
-| Evaluation metrics | `test_evaluation.py` — top-k accuracy, precision/recall/F1, confusion matrix, seed reproducibility |
-| Evaluation pipeline | `test_evaluate_extended.py` — evaluate_model (end-to-end with mock model), save_confusion_matrix_plot (matplotlib present/absent, large class count), main() orchestration |
 | Export label map | `test_export_label_map.py` — CSV parsing (basic, duplicates, case normalization, whitespace, empty gloss, missing column, empty CSV, sequential indices), main() CLI (basic, --inverse, parent dir creation) |
 | I3D backbone | `test_pytorch_i3d.py` — Identity, MaxPool3dSamePadding (compute_pad, forward), Unit3D (batch norm, no batch norm, no activation, compute_pad), InceptionModule, InceptionI3d (all 16 early endpoints, forward, pretrained mode, no spatial squeeze, extract_features, replace_logits, remove_last) |
-| Training loop | `test_train.py` — train_one_epoch (returns loss/acc, params update, empty loader), evaluate (loss/acc, no gradients, empty loader), _worker_init_fn (seed determinism), set_seed (cudnn flags), main() (with/without label_map, early stopping, empty dataset exit) |
 | Video transforms | `test_videotransforms.py` — RandomCrop, CenterCrop, RandomHorizontalFlip (output shape, repr, edge cases) |
 | I3D dataset | `test_i3d_dataset.py` — load_rgb_frames (basic, empty, frameskip, upscale, truncated), video_to_tensor, ASLCitizenI3DDataset (init, custom gloss dict, missing/empty files, padding, getitem) |
 | I3D training | `test_i3d_train.py` — train_one_epoch, evaluate, build_arg_parser, _read_split_rows, _select_filenames_with_val_coverage, _is_readable_video, _write_filtered_split, _load_compatible_checkpoint, _upload_checkpoint_to_s3, _set_backbone_trainable, _build_optimizer, main() (smoke, init checkpoint, head-only epochs, epoch checkpoints, S3 upload, empty dataset) |
@@ -111,7 +105,7 @@ python -m pytest tests/ -v --cov --cov-report=term-missing
 | Label map artifacts | `test_build_label_map_artifacts.py` — _write_json, main() (basic, clip limit, S3 upload, clean workdir, empty filtered raises) |
 | Modal GPU wrapper | `test_modal_train_i3d.py` — _parse_run_name, _build_train_cmd, _build_eval_cmd, _resolve_active_plan, _upload_checkpoints, _upload_run_metadata |
 
-**Total:** 300+ tests, **100%** line coverage.
+**Total:** 190+ tests, **100%** line coverage.
 
 ## Mobile (Jest + jest-expo)
 

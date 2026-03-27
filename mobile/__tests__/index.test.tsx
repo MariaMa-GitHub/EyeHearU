@@ -5,13 +5,16 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react-native";
 
-const mockPush = jest.fn();
-
+// Must use jest.fn() inside the factory — Jest hoists jest.mock above const mockPush,
+// so `router: { push: mockPush }` breaks on CI (router.push is undefined).
 jest.mock("expo-router", () => ({
-  router: { push: mockPush },
+  router: { push: jest.fn() },
 }));
 
+import { router } from "expo-router";
 import HomeScreen from "../app/index";
+
+const mockPush = router.push as jest.Mock;
 
 describe("HomeScreen", () => {
   beforeEach(() => {

@@ -21,8 +21,8 @@ Binary `.prof` files are saved to `ml/profiling/results/` for deeper analysis wi
 |---|----------|----------|-----------|-------------|------------|
 | 1 | `preprocess_video` | `backend/app/services/preprocessing.py:183` | 0.93 s (3 calls) | 2,726 | `cv2.resize` (77% of time) |
 | 2 | `predict` | `backend/app/services/model_service.py:125` | 4.11 s (3 calls) | 9,353 | `torch.conv3d` (60%) + `torch.max_pool3d` (30%) |
-| 3 | `evaluate_model` | `ml/evaluation/evaluate.py:89` | 6.17 s (1 call, 20 samples) | 15,121 | `torch.conv3d` (96% — forward pass dominates) |
-| 4 | `train_one_epoch` | `ml/training/train.py:45` | 20.53 s (1 epoch, 20 samples) | 17,895 | `run_backward` (66%) + `torch.conv3d` (30%) |
+| 3 | `evaluate` | `ml/i3d_msft/evaluate.py` | 6.17 s (1 call, 20 samples) | 15,121 | `torch.conv3d` (96% — forward pass dominates) |
+| 4 | `train_one_epoch` | `ml/i3d_msft/train.py` | 20.53 s (1 epoch, 20 samples) | 17,895 | `run_backward` (66%) + `torch.conv3d` (30%) |
 | 5 | `build_gloss_dict_from_csv` | `ml/i3d_msft/export_label_map.py:25` | 0.75 s (50 calls × 5K rows) | 2,752,771 | `csv.DictReader.__next__` (56%) |
 
 ---
@@ -83,11 +83,11 @@ ncalls  tottime  cumtime  function
 
 ---
 
-### 3. `evaluate_model` — Full Evaluation Loop
+### 3. `evaluate` — Full Evaluation Loop (I3D)
 
 **What it does:** Runs inference on all samples in a DataLoader, collects predictions, computes top-1/top-5 accuracy, per-class precision/recall/F1, builds a confusion matrix, and measures latency.
 
-**Profile (1 call, 20 samples in 5 batches of 4, R3D-18 backbone):**
+**Profile (1 call, 20 samples in 5 batches of 4, I3D backbone):**
 
 ```
 ncalls  tottime  cumtime  function
@@ -108,11 +108,11 @@ ncalls  tottime  cumtime  function
 
 ---
 
-### 4. `train_one_epoch` — Single Training Epoch
+### 4. `train_one_epoch` — Single Training Epoch (I3D)
 
 **What it does:** Full forward + backward pass over all training batches, with loss computation and optimizer step.
 
-**Profile (1 epoch, 20 samples in 5 batches of 4, R3D-18 backbone, CPU):**
+**Profile (1 epoch, 20 samples in 5 batches of 4, I3D backbone, CPU):**
 
 ```
 ncalls  tottime  cumtime  function

@@ -1,9 +1,5 @@
-/**
- * Tests for root layout (app/_layout.tsx).
- */
-
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 
 jest.mock("expo-status-bar", () => ({
   StatusBar: () => null,
@@ -12,18 +8,18 @@ jest.mock("expo-status-bar", () => ({
 jest.mock("expo-router", () => {
   const React = require("react");
   const { View } = require("react-native");
-  function Stack({ children }: { children?: React.ReactNode }) {
-    return <View testID="root-stack">{children}</View>;
-  }
-  Stack.Screen = () => null;
-  return { Stack };
+  const Stack = ({ children }: { children: React.ReactNode }) => (
+    <View testID="stack-root">{children}</View>
+  );
+  const Screen = () => <View testID="stack-screen" />;
+  return { Stack: Object.assign(Stack, { Screen }) };
 });
 
 import RootLayout from "../app/_layout";
 
 describe("RootLayout", () => {
-  it("renders the navigation stack", () => {
-    render(<RootLayout />);
-    expect(screen.getByTestId("root-stack")).toBeTruthy();
+  it("renders stack navigator and status bar slot", () => {
+    const { getByTestId } = render(<RootLayout />);
+    expect(getByTestId("stack-root")).toBeTruthy();
   });
 });

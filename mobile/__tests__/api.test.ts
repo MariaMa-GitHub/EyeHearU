@@ -400,31 +400,33 @@ describe("resolveApiBaseUrl", () => {
     expect(API_BASE_URL).toBe("https://example.com");
   });
 
-  it("sends bypass-tunnel-reminder header when apiBaseUrl uses loca.lt", async () => {
+  it("adds bypass-tunnel-reminder header when API base URL is a LocalTunnel host", async () => {
     jest.resetModules();
-    jest.doMock("expo-constants", () => ({
-      expoConfig: { extra: { apiBaseUrl: "https://abc.loca.lt/" } },
+    jest.mock("expo-constants", () => ({
+      expoConfig: {
+        extra: { apiBaseUrl: "https://abc123.loca.lt" },
+      },
     }));
+    const { predictSign } = require("../services/api");
     const mockFetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
       text: async () =>
         JSON.stringify({
-          sign: "hello",
-          confidence: 0.9,
-          top_k: [{ sign: "hello", confidence: 0.9 }],
+          sign: "hi",
+          confidence: 1,
+          top_k: [{ sign: "hi", confidence: 1 }],
         }),
     });
-    global.fetch = mockFetch as unknown as typeof fetch;
+    global.fetch = mockFetch;
 
-    const { predictSign } = require("../services/api");
     await predictSign("file:///clip.mp4");
 
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    const [, options] = mockFetch.mock.calls[0];
-    expect(options.headers).toEqual(
-      expect.objectContaining({ "bypass-tunnel-reminder": "true" }),
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("abc123.loca.lt"),
+      expect.objectContaining({
+        headers: { "bypass-tunnel-reminder": "true" },
+      })
     );
-    expect(mockFetch.mock.calls[0][0]).toContain("abc.loca.lt");
   });
 });

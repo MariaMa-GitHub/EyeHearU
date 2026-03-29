@@ -24,11 +24,12 @@ Eye Hear U translates **isolated ASL signs** (one sign at a time) into **English
 5. Position the signer so the **sign is visible** in the front camera.
 6. Tap **Record Sign**. The app records a **short clip** (about 3 seconds).
 7. Wait for **Processing…**. The screen shows:
-   - The **top prediction** (English gloss)
+   - The **top prediction** (English gloss) — tap it to watch a **reference ASL video**
    - **Confidence**
-   - Sometimes **other likely signs** as small chips
+   - Sometimes **other likely signs** as small chips — tap any chip to see its video too
 8. The app may **read the word aloud** (text-to-speech) if confidence is high enough.
 9. Tap **Speak Again** to repeat the audio.
+10. You can also **upload a video** from your photo library instead of recording live — tap the upload icon in the top right corner.
 10. Use **View History** for **past translations** stored on the device (local storage by default; cloud sync only if configured in the project).
 
 ## Tips for better accuracy

@@ -17,7 +17,7 @@ Repository layout, how to run each component, and where to change behavior.
 ## Prerequisites
 
 - **Python 3.11+** (3.12 is fine locally; CI uses 3.11)
-- **Node.js 20+** and npm
+- **Node.js 20+** (22 LTS recommended) and npm
 - **AWS CLI** (optional) — to download `best_model.pt` from S3
 - **Expo CLI** via `npx expo`
 
@@ -128,6 +128,9 @@ The app sends `bypass-tunnel-reminder: true` when the URL contains `loca.lt`.
 
 - `expo-camera` — video recording
 - `expo-speech` — TTS
+- `expo-video` — in-app ASL reference video playback (video dictionary)
+- `expo-web-browser` — fallback browser for sign video lookup (SignASL.org)
+- `expo-image-picker` — video upload from gallery
 - `@react-native-async-storage/async-storage` — history
 
 ## Docker (optional)

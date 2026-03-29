@@ -5,7 +5,9 @@ React Native (Expo) client for Eye Hear U. It:
 - Records short **video** clips of isolated ASL signs via the device camera  
 - Sends them to the FastAPI backend for prediction  
 - Shows the predicted English gloss, confidence, and optional top‑k alternatives  
+- Tap any predicted sign to watch an **ASL reference video** in-app (sourced from SignASL.org CDN with multi-source fallback)  
 - Uses **text-to-speech** for high-confidence results  
+- Supports **video upload** from the photo library as an alternative to live recording  
 - Persists a local **history** (AsyncStorage)
 
 ---
@@ -23,10 +25,11 @@ React Native (Expo) client for Eye Hear U. It:
 
 1. Request camera permission (`useCameraPermissions` from `expo-camera`).  
 2. Show `CameraView` (front camera, video mode).  
-3. On **Record Sign**, call `recordAsync` with max duration ~3 s.  
+3. On **Record Sign**, call `recordAsync` with max duration ~5 s. Alternatively, upload a video from the gallery via `expo-image-picker`.  
 4. POST the file via `predictSign(uri)` in `services/api.ts`.  
 5. Update UI with `sign`, `confidence`, `top_k`; optionally speak the label.  
-6. Append successful predictions to history.
+6. Tap the predicted sign or any top‑k chip to open an **in-app video modal** showing the reference ASL sign (auto-tries multiple CDN sources; falls back to SignASL.org in browser).  
+7. Append successful predictions to history.
 
 The backend base URL is **not** hard-coded in screens; it is resolved in `services/api.ts` using the following priority order:
 

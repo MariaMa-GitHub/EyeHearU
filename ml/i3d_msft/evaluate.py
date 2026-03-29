@@ -38,7 +38,7 @@ try:
     from i3d_msft.pytorch_i3d import InceptionI3d
     from i3d_msft.s3_data import download_clip_subset, download_splits, get_active_plan_id, get_s3_client
     from i3d_msft.videotransforms import CenterCrop
-except ImportError:
+except ImportError:  # pragma: no cover
     from ml.i3d_msft.dataset import ASLCitizenI3DDataset
     from ml.i3d_msft.pytorch_i3d import InceptionI3d
     from ml.i3d_msft.s3_data import download_clip_subset, download_splits, get_active_plan_id, get_s3_client
@@ -376,6 +376,6 @@ def main():
     print(f"[eval] mrr={metrics['mrr']:.4f} dcg={metrics['dcg']:.4f}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
 

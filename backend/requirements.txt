@@ -14,6 +14,10 @@ firebase-admin>=6.4.0
 torch>=2.1.0
 opencv-python-headless>=4.9.0
 
+# Optional: T5-small for gloss→English (set GLOSS_ENGLISH_MODE=t5 in .env)
+transformers>=4.36.0
+sentencepiece>=0.1.99
+
 # Testing
 pytest>=7.4.0
 pytest-asyncio>=0.23.0

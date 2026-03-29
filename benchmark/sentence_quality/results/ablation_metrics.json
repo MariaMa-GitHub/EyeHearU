@@ -1,0 +1,603 @@
+{
+  "count": 5,
+  "summary": {
+    "greedy_rule": {
+      "exact_match": 0.2,
+      "token_precision": 0.3333,
+      "token_recall": 0.3067,
+      "token_f1": 0.3167,
+      "bleu1_precision": 0.3333,
+      "bleu4_precision": 0.0,
+      "sentence_bleu": 0.0,
+      "rougeL_recall": 0.3067,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "greedy_t5": {
+      "exact_match": 0.0,
+      "token_precision": 0.2667,
+      "token_recall": 0.3067,
+      "token_f1": 0.2767,
+      "bleu1_precision": 0.2667,
+      "bleu4_precision": 0.0,
+      "sentence_bleu": 0.0,
+      "rougeL_recall": 0.3067,
+      "capitalization_ok": 0.8,
+      "punctuation_ok": 1.0
+    },
+    "greedy_bedrock": {
+      "exact_match": 0.0,
+      "token_precision": 0.25,
+      "token_recall": 0.3333,
+      "token_f1": 0.2838,
+      "bleu1_precision": 0.25,
+      "bleu4_precision": 0.0,
+      "sentence_bleu": 0.0,
+      "rougeL_recall": 0.3333,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "beam_rule": {
+      "exact_match": 0.2,
+      "token_precision": 0.8,
+      "token_recall": 0.5533,
+      "token_f1": 0.6433,
+      "bleu1_precision": 0.8,
+      "bleu4_precision": 0.0,
+      "sentence_bleu": 0.0,
+      "rougeL_recall": 0.5533,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "beam_t5": {
+      "exact_match": 0.0,
+      "token_precision": 0.5667,
+      "token_recall": 0.5533,
+      "token_f1": 0.5524,
+      "bleu1_precision": 0.5667,
+      "bleu4_precision": 0.0,
+      "sentence_bleu": 0.0,
+      "rougeL_recall": 0.5533,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "beam_bedrock": {
+      "exact_match": 0.4,
+      "token_precision": 0.75,
+      "token_recall": 0.71,
+      "token_f1": 0.7278,
+      "bleu1_precision": 0.75,
+      "bleu4_precision": 0.2,
+      "sentence_bleu": 0.1558,
+      "rougeL_recall": 0.66,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    }
+  },
+  "details": [
+    {
+      "case_id": "lm_flip_want_food",
+      "reference": "I want food.",
+      "greedy_glosses": [
+        "need",
+        "water"
+      ],
+      "beam_glosses": [
+        "want",
+        "food"
+      ],
+      "systems": {
+        "greedy_rule": {
+          "prediction": "Need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_t5": {
+          "prediction": "Glosses: need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_bedrock": {
+          "prediction": "I need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.3333333333333333,
+            "token_f1": 0.3333333333333333,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_rule": {
+          "prediction": "Want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.8,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_t5": {
+          "prediction": "Glosses: want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_bedrock": {
+          "prediction": "I want food.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "lm_flip_please_help",
+      "reference": "Please help me.",
+      "greedy_glosses": [
+        "doctor",
+        "table",
+        "me"
+      ],
+      "beam_glosses": [
+        "please",
+        "help",
+        "me"
+      ],
+      "systems": {
+        "greedy_rule": {
+          "prediction": "Doctor table me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.3333333333333333,
+            "token_f1": 0.3333333333333333,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_t5": {
+          "prediction": "doctor table me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.3333333333333333,
+            "token_f1": 0.3333333333333333,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 0.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_bedrock": {
+          "prediction": "The doctor examined me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.25,
+            "token_recall": 0.3333333333333333,
+            "token_f1": 0.28571428571428575,
+            "bleu1_precision": 0.25,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_rule": {
+          "prediction": "Please help me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_t5": {
+          "prediction": "Glosses: please help me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_bedrock": {
+          "prediction": "Please help me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "lm_where_bathroom",
+      "reference": "Where is the bathroom?",
+      "greedy_glosses": [
+        "thank_you",
+        "you"
+      ],
+      "beam_glosses": [
+        "where",
+        "bathroom"
+      ],
+      "systems": {
+        "greedy_rule": {
+          "prediction": "Thank you you.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_t5": {
+          "prediction": "Glosses: thank you you.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_bedrock": {
+          "prediction": "Thank you.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_rule": {
+          "prediction": "Where bathroom.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_t5": {
+          "prediction": "Glosses: where bathroom.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_bedrock": {
+          "prediction": "The bathroom is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "lm_yes_nurse_fine",
+      "reference": "Yes, the nurse is fine.",
+      "greedy_glosses": [
+        "hello",
+        "hello",
+        "fine"
+      ],
+      "beam_glosses": [
+        "yes",
+        "nurse",
+        "fine"
+      ],
+      "systems": {
+        "greedy_rule": {
+          "prediction": "Hello hello fine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.2,
+            "token_f1": 0.25,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.2,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_t5": {
+          "prediction": "Hello, hello fine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.2,
+            "token_f1": 0.25,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.2,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_bedrock": {
+          "prediction": "Hello, I'm doing well.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_rule": {
+          "prediction": "Yes nurse fine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.6,
+            "token_f1": 0.7499999999999999,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_t5": {
+          "prediction": "Glosses: yes, nurse fine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_bedrock": {
+          "prediction": "The nurse is fine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 0.7788007830714049,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "tie_break_two_clip",
+      "reference": "Need water.",
+      "greedy_glosses": [
+        "need",
+        "water"
+      ],
+      "beam_glosses": [
+        "want",
+        "food"
+      ],
+      "systems": {
+        "greedy_rule": {
+          "prediction": "Need water.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_t5": {
+          "prediction": "Glosses: need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 1.0,
+            "token_f1": 0.8,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "greedy_bedrock": {
+          "prediction": "I need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 1.0,
+            "token_f1": 0.8,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_rule": {
+          "prediction": "Want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_t5": {
+          "prediction": "Glosses: want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "beam_bedrock": {
+          "prediction": "I want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    }
+  ]
+}

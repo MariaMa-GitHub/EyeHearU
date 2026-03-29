@@ -527,6 +527,6 @@ def main():
     print(f"[i3d] done. best_val_acc={best_val:.4f}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
 

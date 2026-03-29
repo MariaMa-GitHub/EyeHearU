@@ -7,7 +7,7 @@ Repository layout, how to run each component, and where to change behavior.
 | Path | Role |
 |------|------|
 | `mobile/` | Expo (React Native) app — UI, camera, API client, local history |
-| `backend/` | FastAPI inference API — loads I3D, `/predict`, health checks |
+| `backend/` | FastAPI inference API — loads I3D + gloss LM, `/predict`, `/predict/sentence`, health |
 | `ml/i3d_msft/` | **Inception I3D** model code (must match the training branch) |
 | `ml/i3d_label_map_mvp-sft-full-v1.json` | Class index ↔ gloss (856 signs, v4) |
 | `infrastructure/` | Terraform (S3, ECS, Batch, etc.) |
@@ -67,13 +67,21 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | GET | `/health` | Liveness |
 | GET | `/ready` | Readiness + `model_loaded` |
 | POST | `/api/v1/predict` | Multipart file field `file` — **mp4/mov** video |
+| POST | `/api/v1/predict/sentence` | Multipart field **`files`** repeated once per clip **in order** — batched I3D → beam + gloss LM → `best_glosses` + `english`; query `beam_size`, `lm_weight`, `top_k` (max 12 clips) |
 
 ### Important code paths
 
-- `app/main.py` — FastAPI app; **lifespan** loads the model on startup
-- `app/services/model_service.py` — S3 download (if needed), `torch.load`, I3D, `predict()`
+- `app/main.py` — FastAPI app; **lifespan** loads the I3D model and `GlossBeamLM` from `data/gloss_lm.json` (via `config.gloss_lm_path`)
+- `app/services/model_service.py` — S3 download (if needed), `torch.load`, I3D, `predict()` (single tensor), `predict_batch()` (multi-clip)
+- `app/services/gloss_lm.py` — `GlossBeamLM` (trigram + bigram backoff), `load_gloss_lm`
+- `app/services/beam_search.py` — beam search over per-clip top‑k using `log_p_step(prev2, prev1, next)`
+- `app/services/gloss_to_english.py` — joins `best_glosses` for `english` with light polish (not full MT)
+- `app/services/gloss_to_english_t5.py`, `gloss_to_english_bedrock.py` — optional rewriters when `GLOSS_ENGLISH_MODE` is `t5` or `bedrock` (see `app/config.py` / `.env.example`)
+- `app/services/lm_builder.py` — offline construction of LM JSON; CLI: `scripts/build_gloss_lm.py`
 - `app/services/preprocessing.py` — bytes → tensor `(1, 3, 64, 224, 224)` — **must match training**
-- `app/routers/predict.py` — validates upload, calls preprocess + predict
+- `app/routers/predict.py` — `/predict` (one file), `/predict/sentence` (repeated `files`)
+
+**Pipeline reference:** [ASL translation pipeline](ASL_TRANSLATION_PIPELINE.md) (accuracy scope, rebuilding `gloss_lm.json`).
 
 ## Mobile (Expo)
 
@@ -124,6 +132,10 @@ Restart **`npx expo start`** after any `.env` change (variables are inlined at b
 
 The app sends `bypass-tunnel-reminder: true` when the URL contains `loca.lt`.
 
+### Camera: single sign vs multi-sign
+
+In `mobile/app/camera.tsx`, **Single sign** calls `predictSign` (`POST /api/v1/predict`) after each recording. **Multi-sign** queues URIs, then calls `predictSentence` (`POST /api/v1/predict/sentence` with repeated `files`). Both modes share upload-from-library; multi-sign uses **Add sign** + **Translate** in the bottom bar.
+
 ### Native modules
 
 - `expo-camera` — video recording
@@ -153,10 +165,10 @@ Ensure `ml/i3d_msft` is included in the image (see root `Dockerfile`). Model cac
 
 ## Syncing with training code
 
-Training lives on branch **`freya-a5-training`**. Inference must stay aligned:
+If your team maintains I3D training in a **separate branch or repo**, keep **inference** here aligned with it:
 
-- `ml/i3d_msft/pytorch_i3d.py` — I3D definition
-- Training-side preprocessing (on that branch) must stay aligned with `backend/app/services/preprocessing.py` — see `docs/PREPROCESSING.md`
+- `ml/i3d_msft/pytorch_i3d.py` — I3D definition shipped with this API
+- Training-side preprocessing must match `backend/app/services/preprocessing.py` — see `docs/PREPROCESSING.md`
 
 ## Git workflow
 

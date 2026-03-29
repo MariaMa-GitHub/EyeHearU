@@ -157,3 +157,55 @@ def predict(model, index_to_gloss: dict, video_tensor, top_k: int = 5, device: s
         sign = index_to_gloss.get(int(idx), f"class_{idx}")
         results.append({"sign": sign, "confidence": round(prob, 4)})
     return results
+
+
+def predict_batch(
+    model,
+    index_to_gloss: dict,
+    video_tensors: list,
+    top_k: int = 5,
+    device: str = "cpu",
+) -> list[list[dict]]:
+    """
+    Run inference on a batch of video tensors (one tensor per clip).
+
+    Args:
+        model: Loaded InceptionI3d
+        index_to_gloss: Map from class index to gloss string
+        video_tensors: List of tensors, each (1, C, T, H, W) or (C, T, H, W)
+        top_k: Top-k per clip
+        device: Torch device
+
+    Returns:
+        List of length B; each item is a list of {"sign", "confidence"} dicts.
+    """
+    import torch
+
+    if not video_tensors:
+        return []
+
+    normed = []
+    for t in video_tensors:
+        if t.dim() == 4:
+            t = t.unsqueeze(0)
+        normed.append(t)
+    batch = torch.cat(normed, dim=0).to(device)
+
+    with torch.no_grad():
+        logits_t = model(batch, pretrained=False)
+        if logits_t.dim() == 3:
+            clip_logits = torch.max(logits_t, dim=2)[0]
+        else:
+            clip_logits = logits_t
+        probs = torch.softmax(clip_logits, dim=-1)
+        k = min(top_k, clip_logits.size(-1))
+        top_probs, top_indices = torch.topk(probs, k=k, dim=-1)
+
+    out: list[list[dict]] = []
+    for b in range(batch.size(0)):
+        row = []
+        for prob, idx in zip(top_probs[b].tolist(), top_indices[b].tolist()):
+            sign = index_to_gloss.get(int(idx), f"class_{idx}")
+            row.append({"sign": sign, "confidence": round(prob, 4)})
+        out.append(row)
+    return out

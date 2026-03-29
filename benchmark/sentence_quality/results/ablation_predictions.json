@@ -1,0 +1,96 @@
+[
+  {
+    "case_id": "lm_flip_want_food",
+    "reference": "I want food.",
+    "greedy_glosses": [
+      "need",
+      "water"
+    ],
+    "beam_glosses": [
+      "want",
+      "food"
+    ],
+    "greedy_rule": "Need water.",
+    "greedy_t5": "Glosses: need water.",
+    "greedy_bedrock": "I need water.",
+    "beam_rule": "Want food.",
+    "beam_t5": "Glosses: want food.",
+    "beam_bedrock": "I want food."
+  },
+  {
+    "case_id": "lm_flip_please_help",
+    "reference": "Please help me.",
+    "greedy_glosses": [
+      "doctor",
+      "table",
+      "me"
+    ],
+    "beam_glosses": [
+      "please",
+      "help",
+      "me"
+    ],
+    "greedy_rule": "Doctor table me.",
+    "greedy_t5": "doctor table me.",
+    "greedy_bedrock": "The doctor examined me.",
+    "beam_rule": "Please help me.",
+    "beam_t5": "Glosses: please help me.",
+    "beam_bedrock": "Please help me."
+  },
+  {
+    "case_id": "lm_where_bathroom",
+    "reference": "Where is the bathroom?",
+    "greedy_glosses": [
+      "thank_you",
+      "you"
+    ],
+    "beam_glosses": [
+      "where",
+      "bathroom"
+    ],
+    "greedy_rule": "Thank you you.",
+    "greedy_t5": "Glosses: thank you you.",
+    "greedy_bedrock": "Thank you.",
+    "beam_rule": "Where bathroom.",
+    "beam_t5": "Glosses: where bathroom.",
+    "beam_bedrock": "The bathroom is there."
+  },
+  {
+    "case_id": "lm_yes_nurse_fine",
+    "reference": "Yes, the nurse is fine.",
+    "greedy_glosses": [
+      "hello",
+      "hello",
+      "fine"
+    ],
+    "beam_glosses": [
+      "yes",
+      "nurse",
+      "fine"
+    ],
+    "greedy_rule": "Hello hello fine.",
+    "greedy_t5": "Hello, hello fine.",
+    "greedy_bedrock": "Hello, I'm doing well.",
+    "beam_rule": "Yes nurse fine.",
+    "beam_t5": "Glosses: yes, nurse fine.",
+    "beam_bedrock": "The nurse is fine."
+  },
+  {
+    "case_id": "tie_break_two_clip",
+    "reference": "Need water.",
+    "greedy_glosses": [
+      "need",
+      "water"
+    ],
+    "beam_glosses": [
+      "want",
+      "food"
+    ],
+    "greedy_rule": "Need water.",
+    "greedy_t5": "Glosses: need water.",
+    "greedy_bedrock": "I need water.",
+    "beam_rule": "Want food.",
+    "beam_t5": "Glosses: want food.",
+    "beam_bedrock": "I want food."
+  }
+]

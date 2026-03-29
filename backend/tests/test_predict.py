@@ -8,12 +8,16 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def mock_model():
-    """Inject a fake model and label map into app state."""
+    """Inject a fake model, label map, and gloss LM into app state."""
+    from app.services.gloss_lm import GlossBeamLM
+
     app.state.model = MagicMock()
     app.state.index_to_gloss = {0: "hello", 1: "thanks", 2: "water"}
+    app.state.gloss_lm = GlossBeamLM.uniform_over_vocab({"hello", "thanks", "water"})
     yield
     app.state.model = None
     app.state.index_to_gloss = None
+    app.state.gloss_lm = None
 
 
 @pytest.mark.asyncio
@@ -72,6 +76,7 @@ async def test_predict_returns_result():
 async def test_predict_no_model_returns_503():
     app.state.model = None
     app.state.index_to_gloss = None
+    app.state.gloss_lm = None
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

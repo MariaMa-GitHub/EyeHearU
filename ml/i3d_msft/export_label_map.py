@@ -70,5 +70,5 @@ def main() -> None:
     print(f"[export] wrote {len(gloss_to_idx)} classes -> {args.output}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

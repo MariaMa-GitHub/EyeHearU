@@ -12,6 +12,7 @@ def restore_model_state():
     yield
     app.state.model = None
     app.state.index_to_gloss = None
+    app.state.gloss_lm = None
 
 
 @pytest.mark.asyncio

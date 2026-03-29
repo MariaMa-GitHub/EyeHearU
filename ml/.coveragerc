@@ -1,15 +1,5 @@
-[run]
-source = i3d_msft,modal_train_i3d
-
+# Used with: pytest --cov=i3d_msft --cov=modal_train_i3d (excludes profiling/ and other untested helpers).
 [report]
-exclude_lines =
-    # Standard pragmas
-    pragma: no cover
-    # Don't require tests for script entry points
-    if __name__ == .__main__.
-    # Don't require tests for CUDA-only branches (no GPU in CI)
-    torch.cuda.manual_seed_all
-    torch.cuda.synchronize
-    # Fallback import paths (for running from repo root vs ml/)
-    from ml\.i3d_msft\.
-    except ImportError:
+fail_under = 100
+precision = 1
+show_missing = true

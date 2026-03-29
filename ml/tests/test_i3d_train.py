@@ -38,6 +38,14 @@ def test_set_seed_deterministic():
     assert torch.equal(a, b)
 
 
+def test_set_seed_calls_cuda_when_available():
+    with patch("i3d_msft.train.torch.cuda.is_available", return_value=True):
+        with patch("i3d_msft.train.torch.cuda.manual_seed_all") as m_cuda:
+            set_seed(7)
+    m_cuda.assert_called()
+    assert all(c.args[0] == 7 for c in m_cuda.call_args_list)
+
+
 # ── get_device ─────────────────────────────────────────────────────────
 
 def test_get_device_cpu():

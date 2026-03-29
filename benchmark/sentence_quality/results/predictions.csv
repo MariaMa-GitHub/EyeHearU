@@ -1,0 +1,51 @@
+case_id,glosses,reference,rule,t5,bedrock
+1,nurse|yes|table,"Yes, the nurse is at the table.",Nurse yes table.,"Glosses: nurse, yes table.",The nurse is at the table.
+2,help|me|please,Please help me.,Help me please.,Help me please.,Please help me.
+3,where|bathroom,Where is the bathroom?,Where bathroom.,Glosses: where bathroom.,The bathroom is there.
+4,i|need|water,I need water.,I need water.,Glosses: I need water.,I need water.
+5,thank_you|doctor,"Thank you, doctor.",Thank you doctor.,Glosses: thank you doctor.,"Thank you, doctor."
+6,i|need|help|now,I need help now.,I need help now.,Glosses: I need help now.,I need help now.
+7,you|help|me,Can you help me?,You help me.,You help me.,You helped me.
+8,doctor|where,Where is the doctor?,Doctor where.,Glosses: doctor where.,The doctor is there.
+9,nurse|come|here,"Nurse, come here.",Nurse come here.,Nurse come here.,The nurse came here.
+10,water|please,"Water, please.",Water please.,Glosses: water please.,Please give me some water.
+11,i|want|water,I want water.,I want water.,Glosses: I want water.,I want some water.
+12,i|want|food,I want food.,I want food.,Glosses: I want food.,I want food.
+13,where|food,Where is the food?,Where food.,Glosses: where food.,Where is the food?
+14,where|table,Where is the table?,Where table.,Glosses: where table.,The table is there.
+15,bathroom|where,Where is the bathroom?,Bathroom where.,Glosses: bathroom where.,The bathroom is there.
+16,please|sit|here,Please sit here.,Please sit here.,Glosses: please sit here.,Please sit here.
+17,stand|here,Stand here.,Stand here.,Glosses: stand here.,Stand here.
+18,come|with|me,Come with me.,Come with me.,Come with me.,Come with me.
+19,wait|here,Wait here.,Wait here.,Glosses: wait here.,Wait here.
+20,thank_you|very|much,Thank you very much.,Thank you very much.,Glosses: thank you very much.,Thank you very much.
+21,sorry|i|late,I am sorry I am late.,Sorry I late.,Sorry i late.,I'm sorry I was late.
+22,i|not|understand,I do not understand.,I not understand.,Glosses: i do not understand.,I don't understand.
+23,can|you|repeat|please,"Can you repeat that, please?",Can you repeat please.,Can you repeat please?,Could you please repeat that?
+24,speak|slow|please,Please speak slowly.,Speak slow please.,Glosses: speak slow please.,Please speak slowly.
+25,write|it|down,Write it down.,Write it down.,Glosses: write it down.,Write it down.
+26,i|feel|sick,I feel sick.,I feel sick.,Glosses: i feel sick.,I feel unwell.
+27,i|need|doctor|now,I need a doctor now.,I need doctor now.,I need a doctor now.,I need a doctor now.
+28,my|head|hurt,My head hurts.,My head hurt.,My head hurt.,My head hurts.
+29,my|stomach|hurt,My stomach hurts.,My stomach hurt.,My stomach hurt.,My stomach hurts.
+30,i|have|pain,I am in pain.,I have pain.,Glosses: i have pain.,I have pain.
+31,call|ambulance|please,Please call an ambulance.,Call ambulance please.,Glosses: call ambulance.,Please call an ambulance.
+32,i|allergic|medicine,I am allergic to this medicine.,I allergic medicine.,Glosses: i allergic medicine.,I am allergic to the medicine.
+33,medicine|where,Where is the medicine?,Medicine where.,Glosses: medicine where.,The medicine is there.
+34,i|take|medicine,I take medicine.,I take medicine.,Glosses: I take medicine.,I take the medicine.
+35,appointment|today|what|time,What time is my appointment today?,Appointment today what time.,What time is the appointment?,What time is your appointment today?
+36,my|name|what,What is my name?,My name what.,Glosses: my name.,My name is what.
+37,you|name|what,What is your name?,You name what.,You name what?,What is your name?
+38,i|from|canada,I am from Canada.,I from canada.,Glosses: from canada.,I am from Canada.
+39,i|live|here,I live here.,I live here.,I live here.,I live here.
+40,i|go|home|now,I am going home now.,I go home now.,I go home now.,I'm going home now.
+41,can|i|go|home,Can I go home?,Can I go home.,Glosses: Can I go home?,You can go home.
+42,i|come|back|tomorrow,I will come back tomorrow.,I come back tomorrow.,I come back tomorrow.,I will come back tomorrow.
+43,today|weather|good,The weather is good today.,Today weather good.,Glosses: today weather good.,The weather is good today.
+44,today|weather|bad,The weather is bad today.,Today weather bad.,Glosses: today weather bad.,The weather is bad today.
+45,meeting|start|now,The meeting starts now.,Meeting start now.,The meeting start now.,The meeting is starting now.
+46,class|finish|when,When does class finish?,Class finish when.,Glosses: class finish when.,The class finished.
+47,i|need|book,I need a book.,I need book.,I need a book.,I need a book.
+48,where|library,Where is the library?,Where library.,Glosses: where library.,The library is where.
+49,hello|hello,Hello there.,Hello hello.,Glosses: hello hello.,Hello.
+50,five|hello|hello,"Hello, hello, hello, hello, hello.",Five hello hello.,Glosses: five.,They greeted each other.

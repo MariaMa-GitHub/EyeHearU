@@ -1,3 +1,4 @@
+# Backend app package: 100% line + branch coverage (pytest-cov + fail_under).
 [run]
 source = app
 branch = true

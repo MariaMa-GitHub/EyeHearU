@@ -1,0 +1,85 @@
+[
+  {
+    "case_id": "lm_flip_want_food",
+    "reference": "I want food.",
+    "description": "Model slightly prefers want/food in logits but first-clip argmax is need; beam uses LM to prefer want→food.",
+    "candidates": [
+      [
+        { "sign": "need", "confidence": 0.502 },
+        { "sign": "want", "confidence": 0.498 }
+      ],
+      [
+        { "sign": "water", "confidence": 0.502 },
+        { "sign": "food", "confidence": 0.498 }
+      ]
+    ]
+  },
+  {
+    "case_id": "lm_flip_please_help",
+    "reference": "Please help me.",
+    "description": "Greedy: doctor→table (top-1 each). LM strongly favors please→help→me chain.",
+    "candidates": [
+      [
+        { "sign": "doctor", "confidence": 0.503 },
+        { "sign": "please", "confidence": 0.497 }
+      ],
+      [
+        { "sign": "table", "confidence": 0.503 },
+        { "sign": "help", "confidence": 0.497 }
+      ],
+      [
+        { "sign": "me", "confidence": 0.503 },
+        { "sign": "you", "confidence": 0.497 }
+      ]
+    ]
+  },
+  {
+    "case_id": "lm_where_bathroom",
+    "reference": "Where is the bathroom?",
+    "description": "Greedy: thank_you→you vs beam: where→bathroom via LM.",
+    "candidates": [
+      [
+        { "sign": "thank_you", "confidence": 0.503 },
+        { "sign": "where", "confidence": 0.497 }
+      ],
+      [
+        { "sign": "you", "confidence": 0.503 },
+        { "sign": "bathroom", "confidence": 0.497 }
+      ]
+    ]
+  },
+  {
+    "case_id": "lm_yes_nurse_fine",
+    "reference": "Yes, the nurse is fine.",
+    "description": "Greedy h hello-hello-fine (top-1). LM: <s>→yes, yes→nurse, nurse→fine.",
+    "candidates": [
+      [
+        { "sign": "hello", "confidence": 0.503 },
+        { "sign": "yes", "confidence": 0.497 }
+      ],
+      [
+        { "sign": "hello", "confidence": 0.503 },
+        { "sign": "nurse", "confidence": 0.497 }
+      ],
+      [
+        { "sign": "fine", "confidence": 0.503 },
+        { "sign": "yes", "confidence": 0.497 }
+      ]
+    ]
+  },
+  {
+    "case_id": "tie_break_two_clip",
+    "reference": "Need water.",
+    "description": "Nearly tied logits; LM need→water should align beam with reference.",
+    "candidates": [
+      [
+        { "sign": "need", "confidence": 0.5001 },
+        { "sign": "want", "confidence": 0.4999 }
+      ],
+      [
+        { "sign": "water", "confidence": 0.5001 },
+        { "sign": "food", "confidence": 0.4999 }
+      ]
+    ]
+  }
+]

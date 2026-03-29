@@ -1,0 +1,2643 @@
+{
+  "count": 50,
+  "summary": {
+    "rule": {
+      "exact_match": 0.26,
+      "token_precision": 0.9383,
+      "token_recall": 0.7489,
+      "token_f1": 0.819,
+      "bleu1_precision": 0.9383,
+      "bleu4_precision": 0.06,
+      "sentence_bleu": 0.06,
+      "rougeL_recall": 0.683,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "t5": {
+      "exact_match": 0.08,
+      "token_precision": 0.745,
+      "token_recall": 0.7449,
+      "token_f1": 0.7315,
+      "bleu1_precision": 0.745,
+      "bleu4_precision": 0.08,
+      "sentence_bleu": 0.0935,
+      "rougeL_recall": 0.6957,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    },
+    "bedrock": {
+      "exact_match": 0.48,
+      "token_precision": 0.8463,
+      "token_recall": 0.8451,
+      "token_f1": 0.8392,
+      "bleu1_precision": 0.8463,
+      "bleu4_precision": 0.2467,
+      "sentence_bleu": 0.2477,
+      "rougeL_recall": 0.7861,
+      "capitalization_ok": 1.0,
+      "punctuation_ok": 1.0
+    }
+  },
+  "details": [
+    {
+      "case_id": "1",
+      "glosses": "nurse|yes|table",
+      "reference": "Yes, the nurse is at the table.",
+      "systems": {
+        "rule": {
+          "prediction": "Nurse yes table.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.42857142857142855,
+            "token_f1": 0.6,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.2857142857142857,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: nurse, yes table.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.42857142857142855,
+            "token_f1": 0.5454545454545454,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.2857142857142857,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The nurse is at the table.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8571428571428571,
+            "token_f1": 0.923076923076923,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 0.846481724890614,
+            "rougeL_recall": 0.8571428571428571,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "2",
+      "glosses": "help|me|please",
+      "reference": "Please help me.",
+      "systems": {
+        "rule": {
+          "prediction": "Help me please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Help me please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Please help me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "3",
+      "glosses": "where|bathroom",
+      "reference": "Where is the bathroom?",
+      "systems": {
+        "rule": {
+          "prediction": "Where bathroom.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: where bathroom.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The bathroom is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "4",
+      "glosses": "i|need|water",
+      "reference": "I need water.",
+      "systems": {
+        "rule": {
+          "prediction": "I need water.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: I need water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I need water.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "5",
+      "glosses": "thank_you|doctor",
+      "reference": "Thank you, doctor.",
+      "systems": {
+        "rule": {
+          "prediction": "Thank you doctor.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: thank you doctor.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Thank you, doctor.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "6",
+      "glosses": "i|need|help|now",
+      "reference": "I need help now.",
+      "systems": {
+        "rule": {
+          "prediction": "I need help now.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: I need help now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 1.0,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.5,
+            "sentence_bleu": 0.668740304976422,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I need help now.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "7",
+      "glosses": "you|help|me",
+      "reference": "Can you help me?",
+      "systems": {
+        "rule": {
+          "prediction": "You help me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "You help me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "You helped me.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "8",
+      "glosses": "doctor|where",
+      "reference": "Where is the doctor?",
+      "systems": {
+        "rule": {
+          "prediction": "Doctor where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: doctor where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The doctor is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "9",
+      "glosses": "nurse|come|here",
+      "reference": "Nurse, come here.",
+      "systems": {
+        "rule": {
+          "prediction": "Nurse come here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Nurse come here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The nurse came here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.5,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.5,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "10",
+      "glosses": "water|please",
+      "reference": "Water, please.",
+      "systems": {
+        "rule": {
+          "prediction": "Water please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: water please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 1.0,
+            "token_f1": 0.8,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Please give me some water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.4,
+            "token_recall": 1.0,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.4,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "11",
+      "glosses": "i|want|water",
+      "reference": "I want water.",
+      "systems": {
+        "rule": {
+          "prediction": "I want water.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: I want water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I want some water.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "12",
+      "glosses": "i|want|food",
+      "reference": "I want food.",
+      "systems": {
+        "rule": {
+          "prediction": "I want food.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: I want food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I want food.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "13",
+      "glosses": "where|food",
+      "reference": "Where is the food?",
+      "systems": {
+        "rule": {
+          "prediction": "Where food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: where food.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Where is the food?",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "14",
+      "glosses": "where|table",
+      "reference": "Where is the table?",
+      "systems": {
+        "rule": {
+          "prediction": "Where table.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: where table.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The table is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "15",
+      "glosses": "bathroom|where",
+      "reference": "Where is the bathroom?",
+      "systems": {
+        "rule": {
+          "prediction": "Bathroom where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: bathroom where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The bathroom is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "16",
+      "glosses": "please|sit|here",
+      "reference": "Please sit here.",
+      "systems": {
+        "rule": {
+          "prediction": "Please sit here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: please sit here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Please sit here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "17",
+      "glosses": "stand|here",
+      "reference": "Stand here.",
+      "systems": {
+        "rule": {
+          "prediction": "Stand here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: stand here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 1.0,
+            "token_f1": 0.8,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Stand here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "18",
+      "glosses": "come|with|me",
+      "reference": "Come with me.",
+      "systems": {
+        "rule": {
+          "prediction": "Come with me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Come with me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Come with me.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "19",
+      "glosses": "wait|here",
+      "reference": "Wait here.",
+      "systems": {
+        "rule": {
+          "prediction": "Wait here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: wait here.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 1.0,
+            "token_f1": 0.8,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Wait here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "20",
+      "glosses": "thank_you|very|much",
+      "reference": "Thank you very much.",
+      "systems": {
+        "rule": {
+          "prediction": "Thank you very much.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: thank you very much.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 1.0,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.5,
+            "sentence_bleu": 0.668740304976422,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Thank you very much.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "21",
+      "glosses": "sorry|i|late",
+      "reference": "I am sorry I am late.",
+      "systems": {
+        "rule": {
+          "prediction": "Sorry I late.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Sorry i late.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I'm sorry I was late.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6,
+            "token_recall": 0.5,
+            "token_f1": 0.5454545454545454,
+            "bleu1_precision": 0.6,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "22",
+      "glosses": "i|not|understand",
+      "reference": "I do not understand.",
+      "systems": {
+        "rule": {
+          "prediction": "I not understand.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: i do not understand.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 1.0,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.5,
+            "sentence_bleu": 0.668740304976422,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I don't understand.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "23",
+      "glosses": "can|you|repeat|please",
+      "reference": "Can you repeat that, please?",
+      "systems": {
+        "rule": {
+          "prediction": "Can you repeat please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Can you repeat please?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Could you please repeat that?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 0.8,
+            "token_f1": 0.8000000000000002,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "24",
+      "glosses": "speak|slow|please",
+      "reference": "Please speak slowly.",
+      "systems": {
+        "rule": {
+          "prediction": "Speak slow please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: speak slow please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.5,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.5,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Please speak slowly.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "25",
+      "glosses": "write|it|down",
+      "reference": "Write it down.",
+      "systems": {
+        "rule": {
+          "prediction": "Write it down.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: write it down.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Write it down.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "26",
+      "glosses": "i|feel|sick",
+      "reference": "I feel sick.",
+      "systems": {
+        "rule": {
+          "prediction": "I feel sick.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: i feel sick.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I feel unwell.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "27",
+      "glosses": "i|need|doctor|now",
+      "reference": "I need a doctor now.",
+      "systems": {
+        "rule": {
+          "prediction": "I need doctor now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "I need a doctor now.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I need a doctor now.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "28",
+      "glosses": "my|head|hurt",
+      "reference": "My head hurts.",
+      "systems": {
+        "rule": {
+          "prediction": "My head hurt.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "My head hurt.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "My head hurts.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "29",
+      "glosses": "my|stomach|hurt",
+      "reference": "My stomach hurts.",
+      "systems": {
+        "rule": {
+          "prediction": "My stomach hurt.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "My stomach hurt.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "My stomach hurts.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "30",
+      "glosses": "i|have|pain",
+      "reference": "I am in pain.",
+      "systems": {
+        "rule": {
+          "prediction": "I have pain.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: i have pain.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.5,
+            "token_recall": 0.5,
+            "token_f1": 0.5,
+            "bleu1_precision": 0.5,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I have pain.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "31",
+      "glosses": "call|ambulance|please",
+      "reference": "Please call an ambulance.",
+      "systems": {
+        "rule": {
+          "prediction": "Call ambulance please.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: call ambulance.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Please call an ambulance.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "32",
+      "glosses": "i|allergic|medicine",
+      "reference": "I am allergic to this medicine.",
+      "systems": {
+        "rule": {
+          "prediction": "I allergic medicine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: i allergic medicine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.5,
+            "token_f1": 0.6,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I am allergic to the medicine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8333333333333334,
+            "token_recall": 0.8333333333333334,
+            "token_f1": 0.8333333333333334,
+            "bleu1_precision": 0.8333333333333334,
+            "bleu4_precision": 0.3333333333333333,
+            "sentence_bleu": 0.537284965911771,
+            "rougeL_recall": 0.8333333333333334,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "33",
+      "glosses": "medicine|where",
+      "reference": "Where is the medicine?",
+      "systems": {
+        "rule": {
+          "prediction": "Medicine where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: medicine where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The medicine is there.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "34",
+      "glosses": "i|take|medicine",
+      "reference": "I take medicine.",
+      "systems": {
+        "rule": {
+          "prediction": "I take medicine.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: I take medicine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I take the medicine.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 1.0,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "35",
+      "glosses": "appointment|today|what|time",
+      "reference": "What time is my appointment today?",
+      "systems": {
+        "rule": {
+          "prediction": "Appointment today what time.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.8,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.3333333333333333,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "What time is the appointment?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 0.6666666666666666,
+            "token_f1": 0.7272727272727272,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6666666666666666,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "What time is your appointment today?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8333333333333334,
+            "token_recall": 0.8333333333333334,
+            "token_f1": 0.8333333333333334,
+            "bleu1_precision": 0.8333333333333334,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8333333333333334,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "36",
+      "glosses": "my|name|what",
+      "reference": "What is my name?",
+      "systems": {
+        "rule": {
+          "prediction": "My name what.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: my name.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "My name is what.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "37",
+      "glosses": "you|name|what",
+      "reference": "What is your name?",
+      "systems": {
+        "rule": {
+          "prediction": "You name what.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "You name what?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "What is your name?",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "38",
+      "glosses": "i|from|canada",
+      "reference": "I am from Canada.",
+      "systems": {
+        "rule": {
+          "prediction": "I from canada.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: from canada.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I am from Canada.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "39",
+      "glosses": "i|live|here",
+      "reference": "I live here.",
+      "systems": {
+        "rule": {
+          "prediction": "I live here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "I live here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I live here.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "40",
+      "glosses": "i|go|home|now",
+      "reference": "I am going home now.",
+      "systems": {
+        "rule": {
+          "prediction": "I go home now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "I go home now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I'm going home now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.6,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "41",
+      "glosses": "can|i|go|home",
+      "reference": "Can I go home?",
+      "systems": {
+        "rule": {
+          "prediction": "Can I go home.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: Can I go home?",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.8,
+            "token_recall": 1.0,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 0.8,
+            "bleu4_precision": 0.5,
+            "sentence_bleu": 0.668740304976422,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "You can go home.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "42",
+      "glosses": "i|come|back|tomorrow",
+      "reference": "I will come back tomorrow.",
+      "systems": {
+        "rule": {
+          "prediction": "I come back tomorrow.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "I come back tomorrow.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.8,
+            "token_f1": 0.888888888888889,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.8,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I will come back tomorrow.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "43",
+      "glosses": "today|weather|good",
+      "reference": "The weather is good today.",
+      "systems": {
+        "rule": {
+          "prediction": "Today weather good.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.6,
+            "token_f1": 0.7499999999999999,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.4,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: today weather good.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.4,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The weather is good today.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "44",
+      "glosses": "today|weather|bad",
+      "reference": "The weather is bad today.",
+      "systems": {
+        "rule": {
+          "prediction": "Today weather bad.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.6,
+            "token_f1": 0.7499999999999999,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.4,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: today weather bad.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.6,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.4,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The weather is bad today.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "45",
+      "glosses": "meeting|start|now",
+      "reference": "The meeting starts now.",
+      "systems": {
+        "rule": {
+          "prediction": "Meeting start now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "The meeting start now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The meeting is starting now.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6,
+            "token_recall": 0.75,
+            "token_f1": 0.6666666666666665,
+            "bleu1_precision": 0.6,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "46",
+      "glosses": "class|finish|when",
+      "reference": "When does class finish?",
+      "systems": {
+        "rule": {
+          "prediction": "Class finish when.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: class finish when.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.75,
+            "token_recall": 0.75,
+            "token_f1": 0.75,
+            "bleu1_precision": 0.75,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The class finished.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.25,
+            "token_f1": 0.28571428571428575,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.25,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "47",
+      "glosses": "i|need|book",
+      "reference": "I need a book.",
+      "systems": {
+        "rule": {
+          "prediction": "I need book.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.75,
+            "token_f1": 0.8571428571428571,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.75,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "I need a book.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "I need a book.",
+          "metrics": {
+            "exact_match": 1.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 1.0,
+            "sentence_bleu": 1.0,
+            "rougeL_recall": 1.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "48",
+      "glosses": "where|library",
+      "reference": "Where is the library?",
+      "systems": {
+        "rule": {
+          "prediction": "Where library.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: where library.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.5,
+            "token_f1": 0.5714285714285715,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "The library is where.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 1.0,
+            "token_f1": 1.0,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "49",
+      "glosses": "hello|hello",
+      "reference": "Hello there.",
+      "systems": {
+        "rule": {
+          "prediction": "Hello hello.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.5,
+            "token_recall": 0.5,
+            "token_f1": 0.5,
+            "bleu1_precision": 0.5,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: hello hello.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.3333333333333333,
+            "token_recall": 0.5,
+            "token_f1": 0.4,
+            "bleu1_precision": 0.3333333333333333,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "Hello.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 1.0,
+            "token_recall": 0.5,
+            "token_f1": 0.6666666666666666,
+            "bleu1_precision": 1.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.5,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    },
+    {
+      "case_id": "50",
+      "glosses": "five|hello|hello",
+      "reference": "Hello, hello, hello, hello, hello.",
+      "systems": {
+        "rule": {
+          "prediction": "Five hello hello.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.6666666666666666,
+            "token_recall": 0.4,
+            "token_f1": 0.5,
+            "bleu1_precision": 0.6666666666666666,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.4,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "t5": {
+          "prediction": "Glosses: five.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        },
+        "bedrock": {
+          "prediction": "They greeted each other.",
+          "metrics": {
+            "exact_match": 0.0,
+            "token_precision": 0.0,
+            "token_recall": 0.0,
+            "token_f1": 0.0,
+            "bleu1_precision": 0.0,
+            "bleu4_precision": 0.0,
+            "sentence_bleu": 0.0,
+            "rougeL_recall": 0.0,
+            "capitalization_ok": 1.0,
+            "punctuation_ok": 1.0
+          }
+        }
+      }
+    }
+  ]
+}

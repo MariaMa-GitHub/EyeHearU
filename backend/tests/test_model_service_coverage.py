@@ -265,6 +265,57 @@ def test_load_model_reports_unexpected_keys(tmp_path):
     assert model is not None
 
 
+def test_predict_batch_two_clips():
+    from ml.i3d_msft.pytorch_i3d import InceptionI3d
+
+    m = InceptionI3d(400, 3)
+    m.replace_logits(3)
+    m.eval()
+    t1 = torch.randn(1, 3, 64, 224, 224)
+    t2 = torch.randn(1, 3, 64, 224, 224)
+    idx = {0: "a", 1: "b", 2: "c"}
+    out = ms.predict_batch(m, idx, [t1, t2], top_k=2, device="cpu")
+    assert len(out) == 2
+    assert all(len(row) == 2 for row in out)
+
+
+def test_predict_batch_four_dim_tensor():
+    from ml.i3d_msft.pytorch_i3d import InceptionI3d
+
+    m = InceptionI3d(400, 3)
+    m.replace_logits(2)
+    m.eval()
+    t = torch.randn(3, 64, 224, 224)
+    idx = {0: "x", 1: "y"}
+    out = ms.predict_batch(m, idx, [t], top_k=2, device="cpu")
+    assert len(out) == 1
+
+
+def test_predict_batch_empty():
+    assert ms.predict_batch(MagicMock(), {}, [], top_k=5) == []
+
+
+def test_predict_batch_non3d_logits():
+    """Cover branch when model returns 2D logits (B, C) without temporal dim."""
+
+    class FlatLogits(torch.nn.Module):
+        def forward(self, x, pretrained=False):
+            b = x.size(0)
+            return torch.randn(b, 4)
+
+    m = FlatLogits()
+    m.eval()
+    idx = {0: "a", 1: "b", 2: "c", 3: "d"}
+    out = ms.predict_batch(
+        m,
+        idx,
+        [torch.randn(1, 3, 64, 224, 224), torch.randn(1, 3, 64, 224, 224)],
+        top_k=2,
+        device="cpu",
+    )
+    assert len(out) == 2
+
+
 def test_repo_root_path_inserted(tmp_path, monkeypatch):
     """Cover sys.path insert when repo root was not on path."""
     import importlib

@@ -14,6 +14,7 @@ import {
   isTunnelUnavailable,
   explainApiFailure,
   predictSign,
+  predictSentence,
   checkHealth,
 } from "../services/api";
 
@@ -144,6 +145,97 @@ describe("predictSign", () => {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
     await expect(predictSign("file:///video.mp4")).rejects.toThrow(
+      "Network error"
+    );
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  predictSentence                                                    */
+/* ------------------------------------------------------------------ */
+describe("predictSentence", () => {
+  const mockFetch = jest.fn();
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    global.fetch = mockFetch;
+  });
+
+  it("throws when no clips are provided", async () => {
+    await expect(predictSentence([])).rejects.toThrow(
+      "Add at least one video clip."
+    );
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("sends POST with repeated files and returns parsed result", async () => {
+    const mockResult = {
+      clips: [{ top_k: [{ sign: "hello", confidence: 0.9 }] }],
+      beam: [{ glosses: ["hello"], score: 1, english: "Hello." }],
+      best_glosses: ["hello"],
+      english: "Hello.",
+    };
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify(mockResult),
+    });
+
+    const result = await predictSentence([
+      "file:///a.mp4",
+      "file:///b.mp4",
+    ]);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/v1/predict/sentence");
+    expect(url).not.toContain("?");
+    expect(options.method).toBe("POST");
+    expect(options.body).toBeInstanceOf(FormData);
+    expect(result).toEqual(mockResult);
+  });
+
+  it("appends beam_size, lm_weight, top_k when opts are set", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () =>
+        JSON.stringify({
+          clips: [],
+          beam: [],
+          best_glosses: [],
+          english: "",
+        }),
+    });
+
+    await predictSentence(["file:///v.mp4"], {
+      beamSize: 8,
+      lmWeight: 0.5,
+      topK: 3,
+    });
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toContain("beam_size=8");
+    expect(url).toContain("lm_weight=0.5");
+    expect(url).toContain("top_k=3");
+  });
+
+  it("throws with explanatory message on non-ok response", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: async () => "tunnel expired",
+    });
+
+    await expect(predictSentence(["file:///v.mp4"])).rejects.toThrow(
+      /Sentence prediction failed \(503\)/
+    );
+  });
+
+  it("throws on network error", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+    await expect(predictSentence(["file:///v.mp4"])).rejects.toThrow(
       "Network error"
     );
   });

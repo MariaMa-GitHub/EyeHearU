@@ -46,9 +46,19 @@ def beam_search(
 
     Returns:
         Best full sequences with total log scores (higher is better).
+
+    Raises:
+        ValueError: If any clip has an empty candidate list.
     """
     if not candidates_per_clip:
         return []
+
+    for clip_idx, cands in enumerate(candidates_per_clip):
+        if not cands:
+            raise ValueError(
+                f"Empty top-k hypotheses for clip {clip_idx + 1} of {len(candidates_per_clip)}; "
+                "cannot run beam search. Each clip must have at least one classifier candidate."
+            )
 
     beam: list[tuple[float, tuple[str, ...], str, str]] = []
     # (total_score, path, prev2, prev1) — context for the *next* LM step

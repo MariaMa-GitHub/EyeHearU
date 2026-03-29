@@ -76,7 +76,9 @@ jobs:
       - name: Run tests with coverage
         run: |
           python -m pytest tests/ -v \
-            --cov --cov-report=xml --cov-report=term-missing \
+            --cov=i3d_msft --cov=modal_train_i3d \
+            --cov-config=.coveragerc \
+            --cov-report=xml --cov-report=term-missing \
             --cov-fail-under=100
 
       - name: Upload coverage report (Codecov)

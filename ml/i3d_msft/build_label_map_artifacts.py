@@ -139,6 +139,6 @@ def main() -> None:
         print(f"  - s3://{args.bucket}/{upload_label_key}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
 

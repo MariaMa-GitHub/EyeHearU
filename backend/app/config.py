@@ -29,13 +29,8 @@ class Settings(BaseSettings):
     model_device: str = "cpu"  # "cpu" or "cuda" or "mps"
     # Gloss n-gram LM for multi-clip sentence decoding (relative to backend root)
     gloss_lm_path: str = "data/gloss_lm.json"
-    # "rule" = original join+polish, "t5" = local FLAN-T5,
-    # "openai" = hosted LLM API, "bedrock" = AWS Bedrock hosted LLM
+    # "rule" = original join+polish, "t5" = local FLAN-T5, "bedrock" = AWS Bedrock
     gloss_english_mode: str = "rule"
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_timeout_s: float = 20.0
     bedrock_region: str = "ca-central-1"
     bedrock_model_id: str = "anthropic.claude-3-haiku-20240307-v1:0"
     bedrock_timeout_s: float = 20.0

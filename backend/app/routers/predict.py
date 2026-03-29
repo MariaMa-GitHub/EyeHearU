@@ -5,6 +5,8 @@ Multi-clip sentence decoding uses batched I3D inference + beam search over gloss
 and a lightweight gloss-line formatter (join + light polish) for ``english``.
 """
 
+import logging
+
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Query
 from app.schemas.prediction import (
     PredictionResponse,
@@ -15,6 +17,7 @@ from app.schemas.prediction import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 VIDEO_TYPES = ("video/mp4", "video/quicktime", "application/octet-stream")
 MAX_SENTENCE_CLIPS = 12
@@ -145,42 +148,35 @@ async def predict_sentence(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference error: {e}")
 
-    beams = beam_search(
-        clip_hyps,
-        gloss_lm,
-        beam_size=beam_size,
-        lm_weight=lm_weight,
-        top_sequences=5,
-    )
+    try:
+        beams = beam_search(
+            clip_hyps,
+            gloss_lm,
+            beam_size=beam_size,
+            lm_weight=lm_weight,
+            top_sequences=5,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     mode = (settings.gloss_english_mode or "rule").strip().lower()
-    print(f"[english] mode={mode}")
 
     if mode == "t5":
-        from app.services.gloss_to_english_t5 import gloss_sequence_to_english_t5 as _to_eng
-        beam_to_eng = _to_eng
-    elif mode == "openai":
         from app.services.gloss_to_english import gloss_sequence_to_english as _rule_to_eng
-        from app.services.gloss_to_english_openai import gloss_sequence_to_english_openai as _openai_to_eng
+        from app.services.gloss_to_english_t5 import gloss_sequence_to_english_t5 as _t5_to_eng
 
         def _to_eng(glosses: list[str]) -> str:
-            if not settings.openai_api_key.strip():
-                print("[english] openai missing key -> fallback=rule")
-                return _rule_to_eng(glosses)
             try:
-                return _openai_to_eng(
-                    glosses,
-                    api_key=settings.openai_api_key,
-                    model=settings.openai_model,
-                    base_url=settings.openai_base_url,
-                    timeout_s=settings.openai_timeout_s,
-                )
+                return _t5_to_eng(glosses)
             except Exception as e:
-                # Never fail inference because rewrite API fails.
-                print(f"[english] openai failed -> fallback=rule: {e}")
+                logger.warning(
+                    "T5 gloss rewrite failed, using rule fallback: %s",
+                    e,
+                    exc_info=True,
+                )
                 return _rule_to_eng(glosses)
 
-        # Avoid multiple paid API calls per request for beam rows.
+        # Same as Bedrock: only the best hypothesis pays for a heavy rewrite; beam rows stay rule.
         beam_to_eng = _rule_to_eng
     elif mode == "bedrock":
         from app.services.gloss_to_english import gloss_sequence_to_english as _rule_to_eng
@@ -197,15 +193,15 @@ async def predict_sentence(
                     timeout_s=settings.bedrock_timeout_s,
                 )
             except Exception as e:
-                # Never fail inference because rewrite API fails.
-                print(f"[english] bedrock failed -> fallback=rule: {e}")
+                logger.warning(
+                    "Bedrock gloss rewrite failed, using rule fallback: %s",
+                    e,
+                    exc_info=True,
+                )
                 return _rule_to_eng(glosses)
 
-        # Avoid multiple paid API calls per request for beam rows.
         beam_to_eng = _rule_to_eng
     else:
-        if mode != "rule":
-            print(f"[english] unknown mode='{mode}' -> fallback=rule")
         from app.services.gloss_to_english import gloss_sequence_to_english as _to_eng
         beam_to_eng = _to_eng
 

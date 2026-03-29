@@ -1,5 +1,15 @@
 # Eye Hear U — Testing & Coverage
 
+## Coverage targets (CI)
+
+| Component | Enforced metric | Config / command |
+|-----------|-----------------|------------------|
+| **Backend** | **100%** lines **and** branches on `app/` | `backend/.coveragerc` + `pytest --cov=app --cov-fail-under=100` |
+| **ML** | **100%** lines on `i3d_msft/` and `modal_train_i3d.py` only (not `profiling/`) | `ml/.coveragerc` + `pytest --cov=i3d_msft --cov=modal_train_i3d --cov-fail-under=100` |
+| **Mobile** | **100%** **lines** and **100%** **functions** on `app/**` and `services/**` | `mobile/package.json` → `jest.coverageThreshold` |
+
+Jest may report **statement** or **branch** percentages below 100% on some files; CI still passes as long as **line** and **function** thresholds are met.
+
 ## Backend (pytest + pytest-cov)
 
 All backend tests live in **`backend/tests/`**. Configuration:
@@ -44,12 +54,14 @@ pytest tests/ --cov=app --cov-report=xml
 
 | Area | Tests |
 |------|--------|
-| Lifespan / startup | `test_main_lifespan.py` — model load OK, `FileNotFoundError`, generic `Exception` |
+| Lifespan / startup | `test_main_lifespan.py` — model load OK, `FileNotFoundError`, generic `Exception`, T5 preload when `GLOSS_ENGLISH_MODE=t5` |
 | Health | `test_health.py` — `/health`, `/ready` |
 | Predict API | `test_predict.py`, `test_predict_extra.py` — empty file, non-video, 503, success, `ValueError`, inference errors, empty `top_k` |
-| Predict sentence | `test_predict_sentence.py` — `POST /predict/sentence` multi-clip, beam + LM, limits, 503, errors |
-| Beam + gloss LM | `test_beam_search.py`, `test_gloss_lm.py` — beam decode, `GlossBeamLM` trigram/backoff, uniform fallback |
+| Predict sentence | `test_predict_sentence.py` — `POST /predict/sentence` multi-clip, beam + LM, limits, 503, errors, **400** if any clip has empty top-k |
+| Sentence `GLOSS_ENGLISH_MODE` | `test_predict_sentence_modes.py` — `rule` / `t5` / `bedrock` (T5/Bedrock failures log WARNING and fall back to rule for the best line) |
+| Beam + gloss LM | `test_beam_search.py`, `test_gloss_lm.py` — beam decode, **ValueError** if any clip has empty candidates, `GlossBeamLM` trigram/backoff, uniform fallback |
 | Gloss → display line | `test_gloss_to_english.py` — join + polish for `english` field |
+| T5 / Bedrock rewriters | `test_gloss_to_english_t5.py`, `test_gloss_to_english_bedrock.py` — mocked inference |
 | LM JSON builder | `test_lm_builder.py` — label map load, sequence parsing, `build_lm_dict` |
 | Preprocessing | `test_preprocessing.py`, `test_preprocessing_coverage.py` — pad/crop helpers, cv2 branches, `preprocess_video`, ImportError path |
 | Preprocessing (depth) | `test_preprocessing_depth.py` — 16 edge-case tests (10 positive, 6 negative): portrait 9:16 spatial preservation, 4K downscale, single-frame padding, [-1,1] normalization, frameskip adaptation, square aspect, center-crop geometry, interpolation selection, zero-frame error, all-reads-fail, undersized crop, missing opencv, temp file cleanup, codec crash propagation |
@@ -58,7 +70,7 @@ pytest tests/ --cov=app --cov-report=xml
 
 **Also:** `test_gloss_to_english.py` (offline gloss line formatter), `test_lm_builder.py` (offline `gloss_lm.json` builder).
 
-**Total:** 124+ tests, **100%** line and branch coverage on `app/` as configured (run `pytest --collect-only` for the current count).
+**Total:** run `pytest tests/ --collect-only -q` for the current count; **100%** line and branch coverage on `app/` as configured in `.coveragerc`.
 
 ### Coverage depth: preprocessing module
 
@@ -88,13 +100,19 @@ targeted tests with detailed comments explaining each edge case:
 
 ## ML (pytest + pytest-cov)
 
-ML tests live in **`ml/tests/`**. Coverage configuration is in `ml/.coveragerc` (sources: `i3d_msft`, `modal_train_i3d`; excludes `__main__` guards and CUDA-only branches).
+ML tests live in **`ml/tests/`**. Config: **`ml/pytest.ini`** (test paths), **`ml/.coveragerc`** (`fail_under = 100` on the combined report).
+
+Coverage is measured only for **`i3d_msft`** and **`modal_train_i3d.py`** so auxiliary folders (e.g. `profiling/`) do not dilute the gate. A few entry points use `# pragma: no cover` (`if __name__ == "__main__"`, alternate `evaluate.py` imports).
 
 ### Run tests locally
 
 ```bash
 cd ml
-python -m pytest tests/ -v --cov --cov-report=term-missing
+python -m pytest tests/ -v \
+  --cov=i3d_msft --cov=modal_train_i3d \
+  --cov-config=.coveragerc \
+  --cov-report=term-missing \
+  --cov-fail-under=100
 ```
 
 ### What is tested
@@ -111,7 +129,7 @@ python -m pytest tests/ -v --cov --cov-report=term-missing
 | Label map artifacts | `test_build_label_map_artifacts.py` — _write_json, main() (basic, clip limit, S3 upload, clean workdir, empty filtered raises) |
 | Modal GPU wrapper | `test_modal_train_i3d.py` — _parse_run_name, _build_train_cmd, _build_eval_cmd, _resolve_active_plan, _upload_checkpoints, _upload_run_metadata |
 
-**Total:** 190+ tests, **100%** line coverage.
+**Total:** run `pytest tests/ --collect-only -q` for the count; **100%** line coverage on the scoped modules above.
 
 ## Mobile (Jest + jest-expo)
 
@@ -147,13 +165,13 @@ On every **push** and **pull_request** to `main` or `master`, three jobs run in 
 ### Backend job
 1. Sets up Python **3.11**
 2. `pip install -r backend/requirements.txt`
-3. Runs `pytest` — fails if coverage **< 100%**
+3. Runs `pytest` with `backend/.coveragerc` — fails if **line or branch** coverage **< 100%** on `app/`
 4. Uploads `backend/coverage.xml` to Codecov
 
 ### ML job
 1. Sets up Python **3.11**
 2. `pip install -r ml/requirements.txt` + pytest-cov
-3. Runs `pytest` with `.coveragerc` config — fails if coverage **< 100%**
+3. Runs `pytest` with `--cov=i3d_msft --cov=modal_train_i3d --cov-config=.coveragerc --cov-fail-under=100` — fails if **line** coverage **< 100%** on those modules
 4. Uploads `ml/coverage.xml` to Codecov
 
 ### Mobile job

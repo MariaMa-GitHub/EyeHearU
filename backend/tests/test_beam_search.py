@@ -1,5 +1,7 @@
 """Unit tests for beam_search."""
 
+import pytest
+
 from app.services.beam_search import beam_search
 from app.services.gloss_lm import GlossBeamLM, GlossBigramLM, START_TOKEN
 
@@ -33,6 +35,18 @@ def test_beam_prefers_lm_plausible_sequence():
 def test_beam_empty_input():
     lm = GlossBigramLM.uniform_over_vocab({"x"})
     assert beam_search([], lm) == []
+
+
+def test_beam_raises_when_any_clip_has_empty_candidates():
+    lm = GlossBigramLM.uniform_over_vocab({"a", "b"})
+    with pytest.raises(ValueError, match="Empty top-k hypotheses for clip 2"):
+        beam_search(
+            [
+                [{"sign": "a", "confidence": 0.9}],
+                [],
+            ],
+            lm,
+        )
 
 
 def test_beam_single_clip():

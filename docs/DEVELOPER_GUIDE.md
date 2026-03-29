@@ -76,6 +76,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `app/services/gloss_lm.py` — `GlossBeamLM` (trigram + bigram backoff), `load_gloss_lm`
 - `app/services/beam_search.py` — beam search over per-clip top‑k using `log_p_step(prev2, prev1, next)`
 - `app/services/gloss_to_english.py` — joins `best_glosses` for `english` with light polish (not full MT)
+- `app/services/gloss_to_english_t5.py`, `gloss_to_english_bedrock.py` — optional rewriters when `GLOSS_ENGLISH_MODE` is `t5` or `bedrock` (see `app/config.py` / `.env.example`)
 - `app/services/lm_builder.py` — offline construction of LM JSON; CLI: `scripts/build_gloss_lm.py`
 - `app/services/preprocessing.py` — bytes → tensor `(1, 3, 64, 224, 224)` — **must match training**
 - `app/routers/predict.py` — `/predict` (one file), `/predict/sentence` (repeated `files`)
@@ -161,10 +162,10 @@ Ensure `ml/i3d_msft` is included in the image (see root `Dockerfile`). Model cac
 
 ## Syncing with training code
 
-Training lives on branch **`freya-a5-training`**. Inference must stay aligned:
+If your team maintains I3D training in a **separate branch or repo**, keep **inference** here aligned with it:
 
-- `ml/i3d_msft/pytorch_i3d.py` — I3D definition
-- Training-side preprocessing (on that branch) must stay aligned with `backend/app/services/preprocessing.py` — see `docs/PREPROCESSING.md`
+- `ml/i3d_msft/pytorch_i3d.py` — I3D definition shipped with this API
+- Training-side preprocessing must match `backend/app/services/preprocessing.py` — see `docs/PREPROCESSING.md`
 
 ## Git workflow
 

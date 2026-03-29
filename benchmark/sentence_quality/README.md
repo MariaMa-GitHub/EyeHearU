@@ -1,19 +1,19 @@
-# Sentence Quality Benchmark (`rule` vs `t5` vs `bedrock`) with ablation study Beam Search 
+# Sentence quality benchmark (rule vs T5 vs Bedrock) and beam-search ablation
 
 This benchmark evaluates how well each gloss-to-English mode converts the **same gloss sequence** into natural English.
 
 ## What to compare
 
-- `rule`: beamsearch + LM + join/polish
-- `t5`: beamsearch + FLAN-T5 rewrite
-- `bedrock`: beamsearch + Bedrock (Claude Haiku) rewrite
+- **rule**: beam search + LM + join/polish
+- **t5**: beam search + FLAN-T5 rewrite
+- **bedrock**: beam search + Bedrock (Claude Haiku) rewrite
 
 ## Metrics (automatic)
 
 For each system against your reference sentence:
 
 - `token_precision`, `token_recall`, `token_f1` (class-style precision/recall/F1 on words)
-- `sentence_bleu` (1-4 gram BLEU with brevity penalty)
+- `sentence_bleu` (1–4 gram BLEU with brevity penalty)
 - `rougeL_recall` (sequence overlap recall)
 - `exact_match` (strict normalized equality)
 - `capitalization_ok`, `punctuation_ok` (surface quality)
@@ -26,17 +26,18 @@ Create CSV like `data_template.csv` with:
 - `glosses` (use `|` separator, e.g. `nurse|yes|table`)
 - `reference` (human target English sentence)
 
-Use 30-100 cases for a meaningful comparison.
+Use 30–100 cases for a meaningful comparison.
 
 ## 2) Generate model outputs
 
-Run from repo root:
+From the **`backend`** directory (repo root as `PYTHONPATH` parent as usual):
 
 ```bash
 cd backend
-python ..\benchmark\sentence_quality\evaluate.py generate ^
-  --input ..\benchmark\sentence_quality\data_template.csv ^
-  --output ..\benchmark\sentence_quality\results\predictions.csv
+export PYTHONPATH=..
+python ../benchmark/sentence_quality/evaluate.py generate \
+  --input ../benchmark/sentence_quality/data_template.csv \
+  --output ../benchmark/sentence_quality/results/predictions.csv
 ```
 
 This calls:
@@ -51,9 +52,10 @@ Bedrock uses your backend `.env` settings (`BEDROCK_REGION`, `BEDROCK_MODEL_ID`)
 
 ```bash
 cd backend
-python ..\benchmark\sentence_quality\evaluate.py score ^
-  --predictions ..\benchmark\sentence_quality\results\predictions.csv ^
-  --out ..\benchmark\sentence_quality\results\metrics.json
+export PYTHONPATH=..
+python ../benchmark/sentence_quality/evaluate.py score \
+  --predictions ../benchmark/sentence_quality/results/predictions.csv \
+  --out ../benchmark/sentence_quality/results/metrics.json
 ```
 
 ## 4) Suggested reporting categories
@@ -61,15 +63,14 @@ python ..\benchmark\sentence_quality\evaluate.py score ^
 Use three sections in your report:
 
 1. **Faithfulness**: token recall/F1, ROUGE-L (did it keep meaning)
-2. **Fluency**: punctuation/capitalization + manual 1-5 rating
+2. **Fluency**: punctuation/capitalization + manual 1–5 rating
 3. **Overall quality**: sentence BLEU + side-by-side examples
 
-Add 5-10 qualitative examples where systems differ the most.
+Add 5–10 qualitative examples where systems differ the most.
 
-## Beam vs No-Beam ablation
+## Beam vs no-beam ablation
 
-To test your intended question ("does beam search over top-k candidate matrix help?"),
-use `evaluate_ablation.py`.
+To test whether beam search over the per-clip top-k matrix helps, use `evaluate_ablation.py`.
 
 ### Input format
 
@@ -77,25 +78,22 @@ Use JSON like `data_ablation_template.json`:
 
 - `case_id`
 - `reference`
-- `candidates`: list of clips; each clip is list of top-k candidates with
-`{"sign": "...", "confidence": ...}`.
+- `candidates`: list of clips; each clip is a list of top-k candidates `{"sign": "...", "confidence": ...}`.
 
-This directly matches your matrix intuition:
+This matches the matrix view: **rows** = clip positions, **columns** = top-k hypotheses for that clip.
 
-- rows = clip positions
-- columns = top-k candidates for that clip
-
-### Why greedy equalled beam before
+### Why greedy matched beam on the production LM
 
 The repo’s `backend/data/gloss_lm.json` is mostly `<s> → gloss` mass; **after the first gloss**, bigrams are nearly Laplace-uniform. Then total score ≈ sum of per-clip log-confidence, and **beam ≈ greedy**.
 
-To *demonstrate* beam changing the path, this folder includes `**gloss_lm_ablation.json`** — a tiny LM with **strong bigrams** — and **near-tied** fake confidences in `data_ablation_template.json`. The script uses that LM by default (`--lm-json` optional).
+To **demonstrate** beam changing the path, this folder includes `gloss_lm_ablation.json` (tiny LM with strong bigrams) and near-tied fake confidences in `data_ablation_template.json`. The script uses that LM by default (`--lm-json` optional).
 
 ### Generate ablation predictions
 
 ```bash
-cd /mnt/c/26winter/csc490/EyeHearU/backend
-PYTHONPATH=. python ../benchmark/sentence_quality/evaluate_ablation.py generate \
+cd backend
+export PYTHONPATH=..
+python ../benchmark/sentence_quality/evaluate_ablation.py generate \
   --input ../benchmark/sentence_quality/data_ablation_template.json \
   --output ../benchmark/sentence_quality/results/ablation_predictions.json \
   --beam-size 8 \
@@ -107,8 +105,9 @@ Use `--lm-json path/to/gloss_lm.json` to score against the **production** LM ins
 ### Score ablation
 
 ```bash
-cd /mnt/c/26winter/csc490/EyeHearU/backend
-PYTHONPATH=. python ../benchmark/sentence_quality/evaluate_ablation.py score \
+cd backend
+export PYTHONPATH=..
+python ../benchmark/sentence_quality/evaluate_ablation.py score \
   --predictions ../benchmark/sentence_quality/results/ablation_predictions.json \
   --out ../benchmark/sentence_quality/results/ablation_metrics.json
 ```
@@ -118,31 +117,30 @@ PYTHONPATH=. python ../benchmark/sentence_quality/evaluate_ablation.py score \
 - `greedy_rule`, `greedy_t5`, `greedy_bedrock`
 - `beam_rule`, `beam_t5`, `beam_bedrock`
 
-So you can isolate:
+You can isolate:
 
-1. **decoding effect**: greedy vs beam (same rewriter)
-2. **rewriter effect**: rule vs t5 vs bedrock (same decoding)
+1. **Decoding**: greedy vs beam (same rewriter)
+2. **Rewriter**: rule vs T5 vs Bedrock (same decoding)
 
-Our result: (gloss to natural sentence)- across different last model
+### Example aggregate numbers (one project run; your mileage will vary)
 
-rule     F1=0.819 BLEU=0.060 ROUGE-L=0.683 Cap=1.000 Punct=1.000
+**Main benchmark (gloss → natural sentence)**
 
-t5       F1=0.732 BLEU=0.093 ROUGE-L=0.696 Cap=1.000 Punct=1.000
+| Mode    | F1    | BLEU  | ROUGE-L |
+|---------|-------|-------|---------|
+| rule    | 0.819 | 0.060 | 0.683   |
+| t5      | 0.732 | 0.093 | 0.696   |
+| bedrock | 0.839 | 0.248 | 0.786   |
 
-bedrock  F1=0.839 BLEU=0.248 ROUGE-L=0.786 Cap=1.000 Punct=1.000
+**Ablation (beam vs greedy)**
 
-Ablation on Beam Search
+| System         | F1    | BLEU  | ROUGE-L |
+|----------------|-------|-------|---------|
+| greedy_rule    | 0.317 | 0.000 | 0.307   |
+| greedy_t5      | 0.277 | 0.000 | 0.307   |
+| greedy_bedrock | 0.284 | 0.000 | 0.333   |
+| beam_rule      | 0.643 | 0.000 | 0.553   |
+| beam_t5        | 0.552 | 0.000 | 0.553   |
+| beam_bedrock   | 0.728 | 0.156 | 0.660   |
 
-=== Ablation aggregate (higher is better) === 
-
-greedy_rule    F1=0.317 BLEU=0.000 ROUGE-L=0.307
-
-greedy_t5      F1=0.277 BLEU=0.000 ROUGE-L=0.307
-
-greedy_bedrock F1=0.284 BLEU=0.000 ROUGE-L=0.333
-
-beam_rule      F1=0.643 BLEU=0.000 ROUGE-L=0.553
-
-beam_t5        F1=0.552 BLEU=0.000 ROUGE-L=0.553
-
-beam_bedrock   F1=0.728 BLEU=0.156 ROUGE-L=0.660
+Treat these as **illustrative**; re-run on your data and environment.

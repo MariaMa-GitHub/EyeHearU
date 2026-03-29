@@ -164,3 +164,27 @@ async def test_predict_sentence_uses_gloss_lm_when_state_none():
                 files=[("files", ("a.mp4", b"\x00\x00\x00\x1cftyp", "video/mp4"))],
             )
     assert r.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_predict_sentence_400_when_beam_gets_empty_clip_topk():
+    fake = torch.randn(1, 3, 64, 224, 224)
+    clip_hyps = [
+        [{"sign": "hello", "confidence": 0.9}],
+        [],
+    ]
+    with (
+        patch("app.services.preprocessing.preprocess_video", return_value=fake),
+        patch("app.services.model_service.predict_batch", return_value=clip_hyps),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            r = await client.post(
+                "/api/v1/predict/sentence",
+                files=[
+                    ("files", ("a.mp4", b"\x00\x00\x00\x1cftyp", "video/mp4")),
+                    ("files", ("b.mp4", b"\x00\x00\x00\x1cftyp", "video/mp4")),
+                ],
+            )
+    assert r.status_code == 400
+    assert "Empty top-k" in r.json()["detail"]

@@ -11,7 +11,7 @@ Eye Hear U turns **recorded ASL video** into **English-like gloss labels** (the 
 | **Single sign** | One short clip per translation | One **gloss** (top prediction), confidence, optional alternate signs |
 | **Multi-sign** | Several clips **in order** (one sign per clip), then **Translate** | A **sequence** of glosses chosen jointly (beam search + language model), shown as one line of text |
 
-**Multi-sign** does **not** produce guaranteed full grammatical English sentences — it combines the model’s gloss picks into one line with simple formatting (capital letter, period, etc.). Think of it as an ordered **gloss phrase**, useful together with the classifier, not a certified translation.
+**Multi-sign** usually produces an ordered **gloss phrase** (beam search + language model, then simple formatting). Your server may also be configured to run an optional rewriter (**FLAN-T5** or **AWS Bedrock**) for the main result line only; alternate beam rows may stay gloss-style. It is still **not** a certified translation.
 
 See [ASL translation pipeline](ASL_TRANSLATION_PIPELINE.md) for technical detail.
 

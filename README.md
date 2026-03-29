@@ -125,7 +125,7 @@ The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fin
 │   ├── i3d_label_map_mvp-sft-full-v1.json  # 856-class label map (v4)
 │   ├── modal_train_i3d.py    # Modal GPU wrapper for cloud training
 │   ├── profiling/            # cProfile analysis of 5 key functions
-│   ├── tests/                # 190+ unit tests, 100% coverage
+│   ├── tests/                # unit tests; 100% line on i3d_msft + modal_train_i3d (see TESTING.md)
 │   └── requirements.txt
 │
 ├── data/                     # Data pipeline
@@ -197,7 +197,7 @@ The backend serves the I3D model. On first startup it downloads the checkpoint f
 cd backend
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env if needed (MODEL_DEVICE, LABEL_MAP_PATH, etc.)
+# Edit .env if needed (MODEL_DEVICE, LABEL_MAP_PATH, GLOSS_ENGLISH_MODE, optional BEDROCK_*)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

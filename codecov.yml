@@ -1,3 +1,9 @@
+# Three CI jobs upload coverage (flags: backend, ml, mobile). Wait for all before
+# notifying so the dashboard and PR comment include every component.
+codecov:
+  notify:
+    after_n_builds: 3
+
 coverage:
   status:
     project:
@@ -22,3 +28,13 @@ flags:
     paths:
       - ml/
     carryforward: true
+  mobile:
+    paths:
+      - mobile/app/
+      - mobile/services/
+    carryforward: true
+
+# Jest writes SF: paths relative to mobile/ (e.g. app/camera.tsx). Map them under mobile/.
+fixes:
+  - "^app/::mobile/app/"
+  - "^services/::mobile/services/"

@@ -1,0 +1,15 @@
+[run]
+source = i3d_msft,modal_train_i3d
+
+[report]
+exclude_lines =
+    # Standard pragmas
+    pragma: no cover
+    # Don't require tests for script entry points
+    if __name__ == .__main__.
+    # Don't require tests for CUDA-only branches (no GPU in CI)
+    torch.cuda.manual_seed_all
+    torch.cuda.synchronize
+    # Fallback import paths (for running from repo root vs ml/)
+    from ml\.i3d_msft\.
+    except ImportError:

@@ -76,9 +76,8 @@ jobs:
       - name: Run tests with coverage
         run: |
           python -m pytest tests/ -v \
-            --cov=models --cov=config \
-            --cov=i3d_msft --cov=training --cov=evaluation \
-            --cov-report=xml --cov-report=term-missing
+            --cov --cov-report=xml --cov-report=term-missing \
+            --cov-fail-under=100
 
       - name: Upload coverage report (Codecov)
         if: always()
@@ -117,6 +116,17 @@ jobs:
 
       - name: Run tests with coverage
         run: npx jest --coverage --ci
+
+      - name: Upload coverage report (Codecov)
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          # Jest writes lcov here; Codecov runs from the workspace root, so this path is from repo root
+          files: mobile/coverage/lcov.info
+          flags: mobile
+          name: mobile
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Test summary (job summary)
         if: always()

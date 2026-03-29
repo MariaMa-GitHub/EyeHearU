@@ -1,11 +1,11 @@
 output "s3_bucket_name" {
   description = "Name of the data lake S3 bucket"
-  value       = module.s3.bucket_name
+  value       = local.data_lake_bucket_name
 }
 
 output "s3_bucket_arn" {
   description = "ARN of the data lake S3 bucket"
-  value       = module.s3.bucket_arn
+  value       = local.data_lake_bucket_arn
 }
 
 output "ecr_pipeline_repo_url" {

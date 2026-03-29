@@ -273,11 +273,10 @@ export default function CameraScreen() {
   };
 
   const openVideoInBrowser = async () => {
-    /* istanbul ignore next — modal always open when actions are reachable */
+    /* istanbul ignore next -- defensive guard; button only renders inside modal */
     if (!videoModal) return;
-    closeVideoModal();
     const slug = signToSlug(videoModal.sign);
-    await WebBrowser.openBrowserAsync(`https://signasl.org/sign/${slug}`);
+    await WebBrowser.openBrowserAsync(`https://www.signasl.org/sign/${slug}`);
   };
 
   const speakPrediction = () => {

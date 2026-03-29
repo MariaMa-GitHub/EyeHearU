@@ -833,7 +833,7 @@ describe("CameraScreen", () => {
         });
 
         expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(
-          "https://signasl.org/sign/book"
+          "https://www.signasl.org/sign/book"
         );
       });
 
@@ -868,7 +868,7 @@ describe("CameraScreen", () => {
         });
 
         expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(
-          "https://signasl.org/sign/book"
+          "https://www.signasl.org/sign/book"
         );
       });
 

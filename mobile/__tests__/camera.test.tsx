@@ -1086,6 +1086,43 @@ describe("CameraScreen", () => {
       });
     });
 
+    it("shows New sentence button after translation and clears state when pressed", async () => {
+      (predictSentence as jest.Mock).mockResolvedValueOnce({
+        clips: [],
+        beam: [{ glosses: ["hello"], score: 1, english: "Hello." }],
+        best_glosses: ["hello"],
+        english: "Hello.",
+      });
+
+      render(<CameraScreen />);
+      fireEvent.press(screen.getByText("Multi-sign"));
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Add sign"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Translate")).toBeTruthy();
+      });
+
+      await act(async () => {
+        fireEvent.press(screen.getByText("Translate"));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Hello.")).toBeTruthy();
+      });
+
+      expect(screen.getByText("New sentence")).toBeTruthy();
+
+      fireEvent.press(screen.getByText("New sentence"));
+
+      await waitFor(() => {
+        expect(screen.queryByText("Hello.")).toBeNull();
+        expect(screen.queryByText("New sentence")).toBeNull();
+      });
+    });
+
     it("shows a string message when predictSentence rejects with a non-Error", async () => {
       (predictSentence as jest.Mock).mockRejectedValueOnce("sentence unavailable");
       render(<CameraScreen />);

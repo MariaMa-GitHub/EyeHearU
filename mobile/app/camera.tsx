@@ -551,6 +551,15 @@ export default function CameraScreen() {
                 {"\u{1F50A}"} Speak Again
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setSentenceUris([]);
+                setSentenceResult(null);
+              }}
+              style={styles.clearSegmentsBtn}
+            >
+              <Text style={styles.clearSegmentsText}>New sentence</Text>
+            </TouchableOpacity>
           </>
         ) : translateMode === "sentence" && sentenceUris.length > 0 ? (
           <View style={styles.segmentHint}>

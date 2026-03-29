@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -40,6 +40,14 @@ const BRAND = {
 
 type TranslateMode = "single" | "sentence";
 
+function signToSlug(sign: string): string {
+  return sign
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [translateMode, setTranslateMode] = useState<TranslateMode>("single");
@@ -64,6 +72,26 @@ export default function CameraScreen() {
     p.play();
   });
 
+  const tryNextVideoSource = useCallback(() => {
+    setVideoModal((prev) => {
+      /* istanbul ignore next — defensive if the player fires after the modal was cleared */
+      if (!prev || prev.urls.length === 0) return prev;
+      const next = prev.index + 1;
+      if (next < prev.urls.length) return { ...prev, index: next };
+      queueMicrotask(() => {
+        setVideoError(true);
+        setVideoLoading(false);
+      });
+      return prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentVideoUrl) return;
+    setVideoLoading(true);
+    setVideoError(false);
+  }, [currentVideoUrl]);
+
   useEffect(() => {
     if (!currentVideoUrl || !player) return;
     const statusSub = player.addListener("statusChange", (payload) => {
@@ -71,7 +99,7 @@ export default function CameraScreen() {
       if (payload.status === "error") tryNextVideoSource();
     });
     return () => statusSub.remove();
-  }, [currentVideoUrl, player]);
+  }, [currentVideoUrl, player, tryNextVideoSource]);
 
   const cameraRef = useRef<CameraView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -207,6 +235,7 @@ export default function CameraScreen() {
   };
 
   const translateSentence = async () => {
+    /* istanbul ignore next — Translate is disabled unless there are clips and the user is not busy */
     if (busy || sentenceUris.length === 0) return;
     setErrorMessage(null);
     setSentenceResult(null);
@@ -307,6 +336,7 @@ export default function CameraScreen() {
 
   const speakPrediction = () => {
     const text = sentenceResult?.english ?? prediction;
+    /* istanbul ignore next — buttons that call this are only shown when there is text to speak */
     if (text) {
       Speech.speak(text, { language: "en-US", rate: 0.9 });
     }
@@ -319,6 +349,66 @@ export default function CameraScreen() {
     setPrediction(null);
     setTopK([]);
     setErrorMessage(null);
+  };
+
+  const closeVideoModal = () => {
+    setVideoModal(null);
+    setVideoLoading(true);
+    setVideoError(false);
+  };
+
+  const openVideoInBrowser = async () => {
+    /* istanbul ignore next — modal buttons only render while videoModal is set */
+    if (!videoModal) return;
+    const slug = signToSlug(videoModal.sign);
+    if (!slug) return;
+    await WebBrowser.openBrowserAsync(
+      `https://www.signasl.org/sign/${encodeURIComponent(slug)}`
+    );
+  };
+
+  const openSignVideo = async (sign: string) => {
+    /* istanbul ignore next — UI always passes a non-empty gloss label */
+    if (!sign) return;
+    setVideoLoading(true);
+    setVideoError(false);
+    const slug = signToSlug(sign);
+    if (!slug) {
+      setVideoModal({ sign, urls: [], index: 0 });
+      setVideoError(true);
+      setVideoLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `https://www.signasl.org/sign/${encodeURIComponent(slug)}`
+      );
+      if (!res.ok) throw new Error("Sign page not found");
+      const html = await res.text();
+      const seen = new Set<string>();
+      const urls: string[] = [];
+      const re = /https?:\/\/[^"'\\\s<>]+\.mp4/gi;
+      let m: RegExpExecArray | null = re.exec(html);
+      while (m !== null) {
+        const u = m[0];
+        if (!seen.has(u)) {
+          seen.add(u);
+          urls.push(u);
+        }
+        m = re.exec(html);
+      }
+      if (urls.length === 0) {
+        setVideoModal({ sign, urls: [], index: 0 });
+        setVideoError(true);
+        setVideoLoading(false);
+        return;
+      }
+      setVideoModal({ sign, urls, index: 0 });
+    } catch {
+      setVideoModal({ sign, urls: [], index: 0 });
+      setVideoError(true);
+      setVideoLoading(false);
+    }
   };
 
   return (
@@ -355,7 +445,13 @@ export default function CameraScreen() {
       )}
 
       {/* Camera toggle + upload + mode */}
-      <View style={styles.topControls}>
+      <View
+        testID="camera-top-controls"
+        style={[
+          styles.topControls,
+          { top: Platform.OS === "ios" ? 16 : 12 },
+        ]}
+      >
         <TouchableOpacity
           style={styles.topButton}
           onPress={toggleCamera}
@@ -371,7 +467,13 @@ export default function CameraScreen() {
           <Ionicons name="cloud-upload-outline" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
-      <View style={styles.modeRow}>
+      <View
+        testID="camera-mode-row"
+        style={[
+          styles.modeRow,
+          { top: Platform.OS === "ios" ? 64 : 58 },
+        ]}
+      >
         <TouchableOpacity
           style={[
             styles.modeChip,
@@ -706,7 +808,6 @@ const styles = StyleSheet.create({
   },
   modeRow: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 64 : 58,
     left: 16,
     right: 16,
     flexDirection: "row",

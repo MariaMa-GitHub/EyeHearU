@@ -111,7 +111,7 @@ Success signal:
 
 Yes, dataset-related changes are already in this repo, mainly in:
 
-- `docs/i3d_s3_repro_guide.md`
+- `docs/I3D_TRAINING_S3_REPRODUCTION.md`
 - `data/scripts/prepare_i3d_from_s3.py`
 - `data/scripts/plan_i3d_splits.py`
 - `ml/i3d_msft/dataset.py`

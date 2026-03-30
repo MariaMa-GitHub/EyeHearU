@@ -111,7 +111,7 @@ done
 
 ## 3. Training the I3D Model
 
-Training is done via Modal cloud GPU. See [I3D S3 Repro Guide](i3d_s3_repro_guide.md) and [Ops Migration Tutorial](ops_migration_modal_sft_tutorial.md) for full details.
+Training is done via Modal cloud GPU. See [I3D training — S3 reproduction](I3D_TRAINING_S3_REPRODUCTION.md) and [Modal & AWS SFT migration](MODAL_AWS_SFT_MIGRATION.md) for full details.
 
 ```bash
 pip install modal

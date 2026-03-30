@@ -169,6 +169,8 @@ If your team maintains I3D training in a **separate branch or repo**, keep **inf
 
 - `ml/i3d_msft/pytorch_i3d.py` — I3D definition shipped with this API
 - Training-side preprocessing must match `backend/app/services/preprocessing.py` — see `docs/PREPROCESSING.md`
+- End-to-end S3 splits and training reproduction: [I3D training — S3 reproduction](I3D_TRAINING_S3_REPRODUCTION.md)
+- New AWS account, Modal GPU, and SFT warm-start: [Modal & AWS SFT migration](MODAL_AWS_SFT_MIGRATION.md)
 
 ## Git workflow
 

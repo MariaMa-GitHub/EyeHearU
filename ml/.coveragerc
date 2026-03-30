@@ -1,4 +1,9 @@
-# Used with: pytest --cov=i3d_msft --cov=modal_train_i3d (excludes profiling/ and other untested helpers).
+# Used with: pytest --cov=i3d_msft --cov=modal_train_i3d (lines + branches, 100% both).
+[run]
+branch = true
+omit =
+    tests/*
+
 [report]
 fail_under = 100
 precision = 1

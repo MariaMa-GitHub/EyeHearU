@@ -1,0 +1,5 @@
+{
+  "name": "eye-hear-u",
+  "private": true,
+  "description": "Monorepo root — install, run, and test from backend/, mobile/, and ml/ (see README.md)."
+}

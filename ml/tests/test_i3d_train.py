@@ -225,6 +225,17 @@ def test_select_filenames_limit_zero(tmp_path):
     assert result == []
 
 
+def test_select_filenames_fallback_no_train_budget_skips_inner_replace(tmp_path):
+    """When train_budget is 0, selected_train is empty and inner fallback body is skipped."""
+    train = tmp_path / "train.csv"
+    val = tmp_path / "val.csv"
+    _write_csv(train, [{"user": "a", "filename": "t1.mp4", "gloss": "shared"}])
+    _write_csv(val, [{"user": "b", "filename": "v1.mp4", "gloss": "shared"}])
+    # limit=1 → val_budget=1, train_budget=0 → selected_train=[], val_candidates=[]
+    result = _select_filenames_with_val_coverage(train, val, limit=1)
+    assert result == []
+
+
 def test_select_filenames_no_overlap_fallback(tmp_path):
     """When train budget misses val glosses, fallback seeds from val[0] gloss."""
     train = tmp_path / "train.csv"

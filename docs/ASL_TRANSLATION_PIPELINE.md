@@ -41,7 +41,7 @@ If **any** clip has an **empty** top‑k list (no classifier candidates), `beam_
 
 - **Classifier accuracy** depends on video quality, signer variation, and the **856-class** gloss model (see README / evaluation docs).
 - **Sequence quality** (multi-clip) additionally depends on **per-clip** errors, **beam / LM** weights, and how well `gloss_lm.json` reflects real multi-sign statistics (see rebuilding LM below).
-- **Fluent English prose** in **`rule`** mode is **out of scope**; **`t5`** / **`bedrock`** add optional rewriting for the **best** path only.
+- **Fluent, idiomatic English** is **not guaranteed**: in **`rule`** mode the line is **gloss-oriented** formatting only; **`t5`** / **`bedrock`** can produce **more natural prose** for the **best** path when enabled, subject to model quality, latency, and fallbacks.
 
 The pipeline is **implemented, tested in CI (backend + ML + mobile)**, and **error-handled** (validation, 4xx/5xx, empty inputs). It does **not** by itself satisfy a strict reading of “always accurate ASL→English translation” if that means **human-quality sentences** in all modes.
 

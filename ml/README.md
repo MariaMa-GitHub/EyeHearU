@@ -38,7 +38,7 @@ modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 1 -
 modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 20
 ```
 
-See **`docs/i3d_s3_repro_guide.md`** for the full reproducible workflow and **`docs/ops_migration_modal_sft_tutorial.md`** for the AWS/Modal migration playbook.
+See **`docs/I3D_TRAINING_S3_REPRODUCTION.md`** for the full reproducible workflow and **`docs/MODAL_AWS_SFT_MIGRATION.md`** for the AWS / Modal / SFT migration playbook.
 
 ---
 
@@ -59,16 +59,6 @@ python -m evaluation.evaluate --checkpoint checkpoints/best_model.pt
 
 ---
 
-### Profiling
-
-5 key functions profiled with `cProfile`. See **`docs/PROFILING.md`** for full analysis.
-
-```bash
-cd ml && python -m profiling.profile_functions
-```
-
----
-
 ### Label maps
 
 `i3d_msft/export_label_map.py` produces JSON maps compatible with the backend. `i3d_msft/build_label_map_artifacts.py` rebuilds the exact label map from a training run's filtered splits. The MVP map file is checked in at `ml/i3d_label_map_mvp-sft-full-v1.json`.
@@ -77,10 +67,13 @@ cd ml && python -m profiling.profile_functions
 
 ### Testing
 
-300+ tests with 100% line coverage:
+~194 tests with **100%** line and branch coverage on `i3d_msft/` and `modal_train_i3d.py` (same gate as CI):
 
 ```bash
-cd ml && python -m pytest tests/ -v --cov --cov-fail-under=100
+cd ml && python3 -m pytest tests/ -v \
+  --cov=i3d_msft --cov=modal_train_i3d \
+  --cov-config=.coveragerc \
+  --cov-fail-under=100
 ```
 
 After any change to **`i3d_msft/`** or training preprocessing, mirror updates in **`backend/app/services/preprocessing.py`** and run backend tests with **`--cov-fail-under=100`**.

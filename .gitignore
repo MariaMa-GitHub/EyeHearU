@@ -1,3 +1,7 @@
+# CI / local coverage JSON (pytest `--cov-report=json:coverage-ci.json`)
+backend/coverage-ci.json
+ml/coverage-ci.json
+
 # Python
 __pycache__/
 *.py[cod]

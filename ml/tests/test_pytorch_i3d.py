@@ -225,6 +225,15 @@ class TestInceptionI3d:
         assert out.shape[0] == 1
         assert out.shape[1] == 10
 
+    def test_forward_pretrained_skips_logits_in_freeze_list(self):
+        """VALID_ENDPOINTS includes Logits/Predictions keys not present in end_points."""
+        model = InceptionI3d(num_classes=10)
+        x = torch.randn(1, 3, 64, 224, 224)
+        model.eval()
+        with torch.no_grad():
+            out = model(x, pretrained=True, n_tune_layers=1)
+        assert out.shape[0] == 1 and out.shape[1] == 10
+
     def test_forward_no_spatial_squeeze(self):
         """spatial_squeeze=False keeps extra dimensions."""
         model = InceptionI3d(num_classes=10, spatial_squeeze=False)

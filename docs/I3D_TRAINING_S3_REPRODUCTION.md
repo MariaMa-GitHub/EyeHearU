@@ -1,4 +1,4 @@
-# I3D on S3 Repro Guide
+# I3D training reproduction (S3)
 
 This guide documents an end-to-end, reproducible workflow for:
 

@@ -298,7 +298,7 @@ Classifier benchmarks and metrics: [Benchmarking](docs/BENCHMARKING.md), [Evalua
 
 ## Continuous integration (CI)
 
-On each push to **`main`** or pull request, GitHub Actions runs **backend**, **ML**, and **mobile** tests with **100% coverage thresholds** on the scoped packages. A follow-up job can refresh the table below and open a PR comment; see [Testing](docs/TESTING.md).
+On each push to **`main`** or pull request, GitHub Actions runs **backend**, **ML**, and **mobile** tests with **100% coverage thresholds** on the scoped packages. A follow-up job posts a **PR comment** on pull requests and may open a **separate PR** to refresh the table below after pushes to **`main`** when protected branches disallow direct bot pushes. See [Testing](docs/TESTING.md).
 
 <!-- COVERAGE_TABLE_START -->
 ![Backend coverage](https://img.shields.io/badge/coverage%3A%20Backend-100%25-brightgreen) ![ML coverage](https://img.shields.io/badge/coverage%3A%20ML-100%25-brightgreen) ![Mobile coverage](https://img.shields.io/badge/coverage%3A%20Mobile-100%25-brightgreen)

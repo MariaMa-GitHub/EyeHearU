@@ -182,7 +182,7 @@ On every **push** and **pull_request** to `main` or `master`, three test jobs ru
 
 - Downloads the three JSON artifacts and runs **`.github/scripts/merge_coverage_report.py`**.
 - **Pull requests (same repository only):** posts or updates a **sticky comment** (header `coverage`) via [`marocchino/sticky-pull-request-comment`](https://github.com/marocchino/sticky-pull-request-comment). Fork PRs do not receive a comment because the default `GITHUB_TOKEN` cannot comment on behalf of forks.
-- **Push to `main` / `master`:** replaces only the README fragment between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** (in the **CI and coverage** section of the root `README.md`), then commits and pushes as **`github-actions[bot]`** with **`[skip ci]`** in the message so the follow-up commit does not re-trigger CI.
+- **Push to `main` / `master`:** replaces only the README fragment between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** (in the **Continuous integration** section of the root `README.md`), then opens a **pull request** from a branch like `chore/ci-readme-coverage-<run_id>` (direct push to a protected default branch is not used). Merge the PR to refresh the table on `main`. The commit message includes **`[skip ci]`** so the bot branch push does not need a separate workflow on that branch (default-branch pushes still run CI after you merge).
 
 Badges and table rows are generated from the JSON artifacts:
 

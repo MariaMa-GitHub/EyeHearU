@@ -190,10 +190,12 @@ jobs:
           path: coverage-comment.md
           skip_unchanged: true
 
-      - name: Update README on default branch
+      # Branch protection often blocks direct pushes to main; open a PR instead.
+      - name: Open PR to update README coverage (default branch)
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           python3 .github/scripts/merge_coverage_report.py \
             --backend-json "${{ steps.cov.outputs.backend }}" \
@@ -207,6 +209,13 @@ jobs:
           if git diff --staged --quiet; then
             echo "README coverage section unchanged."
           else
+            BRANCH="chore/ci-readme-coverage-${{ github.run_id }}"
+            git checkout -b "$BRANCH"
             git commit -m "chore: update CI coverage table in README [skip ci]"
-            git push origin "${{ github.ref_name }}"
+            git push origin "$BRANCH"
+            gh pr create \
+              --base "${{ github.ref_name }}" \
+              --head "$BRANCH" \
+              --title "chore: update CI coverage table in README" \
+              --body "Automated refresh of the coverage block in \`README.md\` (between the HTML markers). [Workflow run]($RUN_URL). Please merge when convenient."
           fi

@@ -61,13 +61,13 @@ pytest tests/ --cov=app --cov-report=xml
 | Lifespan / startup            | `test_main_lifespan.py` — model load OK, `FileNotFoundError`, generic `Exception`, T5 preload when `GLOSS_ENGLISH_MODE=t5`                                                                                                                                                                                                                                                    |
 | Health                        | `test_health.py` — `/health`, `/ready`                                                                                                                                                                                                                                                                                                                                        |
 | Predict API                   | `test_predict.py`, `test_predict_extra.py` — empty file, non-video, 503, success, `ValueError`, inference errors, empty `top_k`                                                                                                                                                                                                                                               |
-| Predict sentence              | `test_predict_sentence.py` — `POST /predict/sentence` multi-clip, beam + LM, limits, 503, errors, **400** if any clip has empty top-k                                                                                                                                                                                                                                      |
+| Predict sentence              | `test_predict_sentence.py` — `POST /predict/sentence` multi-clip, beam + LM, limits, 503, errors, **400** if any clip has empty top-k                                                                                                                                                                                                                                         |
 | Sentence `GLOSS_ENGLISH_MODE` | `test_predict_sentence_modes.py` — `rule` / `t5` / `bedrock` (T5/Bedrock failures log WARNING and fall back to rule for the best line)                                                                                                                                                                                                                                        |
 | Beam + gloss LM               | `test_beam_search.py`, `test_gloss_lm.py` — beam decode, **ValueError** if any clip has empty candidates, `GlossBeamLM` trigram/backoff, uniform fallback                                                                                                                                                                                                                     |
 | Gloss → display line          | `test_gloss_to_english.py` — join + polish for `english` field                                                                                                                                                                                                                                                                                                                |
 | T5 / Bedrock rewriters        | `test_gloss_to_english_t5.py`, `test_gloss_to_english_bedrock.py` — mocked inference                                                                                                                                                                                                                                                                                          |
 | LM JSON builder               | `test_lm_builder.py` — label map load, sequence parsing, `build_lm_dict`                                                                                                                                                                                                                                                                                                      |
-| Preprocessing                 | `test_preprocessing.py`, `test_preprocessing_coverage.py` — pad/crop helpers, cv2 branches, `preprocess_video`, ImportError path                                                                                                                                                                                                                                            |
+| Preprocessing                 | `test_preprocessing.py`, `test_preprocessing_coverage.py` — pad/crop helpers, cv2 branches, `preprocess_video`, ImportError path                                                                                                                                                                                                                                              |
 | Preprocessing (depth)         | `test_preprocessing_depth.py` — 16 edge-case tests (10 positive, 6 negative): portrait 9:16 spatial preservation, 4K downscale, single-frame padding, [-1,1] normalization, frameskip adaptation, square aspect, center-crop geometry, interpolation selection, zero-frame error, all-reads-fail, undersized crop, missing opencv, temp file cleanup, codec crash propagation |
 | Model service                 | `test_model_service.py`, `test_model_service_coverage.py` — label map formats, S3 download mock, `load_model`, `predict`, `predict_batch`, `sys.path` insert                                                                                                                                                                                                                  |
 | Firebase                      | `test_firebase_service.py` — mocked `firebase_admin`                                                                                                                                                                                                                                                                                                                          |
@@ -141,7 +141,7 @@ Mobile tests live in **`mobile/__tests__/`**. Jest is configured in `mobile/pack
 
 - **`collectCoverageFrom`** — `app/**/*.{ts,tsx}` and `services/**/*.ts` (excluding `__tests__`).
 - **`coverageThreshold.global`** — **100%** on **statements**, **branches**, **lines**, and **functions**; CI fails if any metric drops.
-- **`coverageReporters`** — `text`, `lcov`, and **`json-summary`** (the latter feeds the CI README / PR coverage job).
+- **`coverageReporters`** — `text`, `lcov`, and **`json-summary`** (optional input for **`.github/scripts/merge_coverage_report.py`** if you refresh README badges locally).
 
 ### Run tests locally
 
@@ -155,12 +155,12 @@ npx jest --coverage --ci
 
 ### What is tested
 
-| Area           | Tests                                                                                                                                                                                                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API service    | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, `predictSentence`, `checkHealth`, `resolveApiBaseUrl` (including `loca.lt` tunnel header)                                                                                                  |
-| Home + layout  | `index.test.tsx`, `_layout.test.tsx` — home screen, navigation to camera/history, root stack                                                                                                                                                                          |
-| Camera screen  | `camera.test.tsx` — see **Camera tests** below |
-| History screen | `history.test.tsx` — empty state, history rendering, `timeAgo` formatting, clear history flow, AsyncStorage errors                                                                                                                                                      |
+| Area           | Tests                                                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API service    | `api.test.ts` — `isTunnelUnavailable`, `explainApiFailure`, `predictSign`, `predictSentence`, `checkHealth`, `resolveApiBaseUrl` (including `loca.lt` tunnel header) |
+| Home + layout  | `index.test.tsx`, `_layout.test.tsx` — home screen, navigation to camera/history, root stack                                                                         |
+| Camera screen  | `camera.test.tsx` — see **Camera tests** below                                                                                                                       |
+| History screen | `history.test.tsx` — empty state, history rendering, `timeAgo` formatting, clear history flow, AsyncStorage errors                                                   |
 
 **Camera tests (`camera.test.tsx`)** cover permissions; single-sign and gallery upload; **multi-sign** (`predictSentence`, clear clips, errors); recording overlay, countdown, and pulse animation; camera facing toggle; TTS; **SignASL in-app video** (HTML fetch → `.mp4` URL list, `expo-video` `useVideoPlayer` / `VideoView` mocks, source fallback on player error, `expo-web-browser`); **platform layout** (`camera-top-controls`, `camera-mode-row`, recording overlay top insets on iOS vs Android); and edge cases (empty predicted gloss, recording with no URI, confidence threshold for auto-TTS, AsyncStorage failures, empty sentence `english`, `predictSentence` rejecting a non-`Error`, missing beam `score`, ellipsis while translating).
 
@@ -168,30 +168,26 @@ npx jest --coverage --ci
 
 ## Continuous Integration (GitHub Actions)
 
-Workflow: **`.github/workflows/ci.yml`**
+Workflow: **`.github/workflows/ci.yml`** (workflow display name **CI**).
 
-On every **push** and **pull_request** to `main` or `master`, three test jobs run in parallel (**backend**, **ml**, **mobile**), then a fourth job **`coverage-report`** aggregates results.
+On every **push** and **pull_request** to `main` or `master`, three jobs run in parallel:
 
-### Test jobs
+1. **Backend** — Python **3.11**, `pip install -r backend/requirements.txt`, `pytest` with **`--cov-fail-under=100`** (lines + branches on `app/`). Prints coverage to the log and adds a **coverage summary** to the GitHub Actions job summary.
+2. **ML** — Python **3.11**, `ml/requirements.txt` + pytest-cov, scoped **`--cov=i3d_msft --cov=modal_train_i3d`** at **100%** lines + branches; **term-missing** report and job summary.
+3. **Mobile** — Node **20**, `npm ci --legacy-peer-deps`, `npx jest --coverage --ci`. Job summary plus Jest’s usual **`mobile/coverage/`** output in the workspace (not published as an artifact).
 
-1. **Backend** — Python **3.11**, `pip install -r backend/requirements.txt`, `pytest` with **`--cov-fail-under=100`** (lines + branches on `app/`). Writes **`coverage-ci.json`** and uploads it as an artifact.
-2. **ML** — Python **3.11**, `ml/requirements.txt` + pytest-cov, scoped **`--cov=i3d_msft --cov=modal_train_i3d`** with **lines + branches** at **100%**, **`coverage-ci.json`** artifact.
-3. **Mobile** — Node **20**, `npm ci --legacy-peer-deps`, `npx jest --coverage --ci`. Jest writes **`coverage/coverage-summary.json`**, uploaded as an artifact.
+There is **no** follow-up job: the workflow does **not** post PR comments, push commits to `main`, or use third-party coverage hosts.
 
-### Coverage report job (`coverage-report`)
+### Optional: refresh README coverage badges locally
 
-- Downloads the three JSON artifacts and runs **`.github/scripts/merge_coverage_report.py`**.
-- **Pull requests (same repository only):** posts or updates a **sticky comment** (header `coverage`) via [`marocchino/sticky-pull-request-comment`](https://github.com/marocchino/sticky-pull-request-comment). Fork PRs do not receive a comment because the default `GITHUB_TOKEN` cannot comment on behalf of forks.
-- **Push to `main` / `master`:** replaces only the README fragment between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** (in the **CI and coverage** section of the root `README.md`), then commits and pushes as **`github-actions[bot]`** with **`[skip ci]`** in the message so the follow-up commit does not re-trigger CI.
+**`.github/scripts/merge_coverage_report.py`** can rebuild the Shields badges and table between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** in the root **`README.md`** when you pass paths to **`coverage-ci.json`** (backend + ML) and Jest **`coverage-summary.json`** (mobile). Example:
 
-Badges and table rows are generated from the JSON artifacts:
+```bash
+python3 .github/scripts/merge_coverage_report.py \
+  --backend-json backend/coverage-ci.json \
+  --ml-json ml/coverage-ci.json \
+  --jest-json mobile/coverage/coverage-summary.json \
+  --readme README.md
+```
 
-- **Backend** and **ML** Shields badges use the **lower** of line % and branch % (both are collected for these components).
-- **Mobile** badge uses the **minimum** of lines, branches, statements, and functions so any Jest metric regression is visible; the table shows **lines** and **branches** only.
-
-No third-party coverage hosting is required.
-
-### PR comment + README maintenance
-
-- Do not edit the auto-generated fragment between the two HTML comment markers by hand; CI overwrites it on the next **`main`** run. You **may** edit the headings and paragraphs **outside** those markers (for example the **CI and coverage** intro in **`README.md`**).
-- To change badges, colors, or table layout, edit **`.github/scripts/merge_coverage_report.py`** (keep **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** in **`README.md`**).
+Badge math (lower of line vs branch for Python components; minimum of Jest metrics for mobile) is implemented in that script. Edit the script to change badge colors or table layout; keep the two HTML comment markers in **`README.md`**.

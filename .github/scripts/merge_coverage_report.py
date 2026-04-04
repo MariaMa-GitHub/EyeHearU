@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Build README coverage section and/or PR comment body from CI coverage artifacts."""
+"""Build README coverage section (and optional PR comment body) from coverage JSON files.
+
+Used locally or in custom automation — the default GitHub Actions workflow does not run this script.
+"""
 
 from __future__ import annotations
 

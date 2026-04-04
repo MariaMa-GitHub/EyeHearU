@@ -1,6 +1,6 @@
 # Benchmarking and Evaluation
 
-This document describes how to reproduce the evaluation benchmarks for Eye Hear U's ASL sign classifier, including accuracy metrics, per-class analysis, and inference latency.
+This document is a **compact** guide to reproducing Eye Hear U’s ASL classifier benchmarks (accuracy-style metrics, per-class views, inference latency). For a longer, step-by-step walkthrough (data prep, training hooks, API evaluation), see **[Evaluation](EVALUATION.md)**.
 
 ## Evaluation Metrics
 

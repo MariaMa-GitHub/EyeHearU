@@ -2,6 +2,8 @@
 
 This document describes the **end-to-end translation path** implemented in Eye Hear U: what is wired together, what the outputs mean, and how that relates to “accurate translation.”
 
+**Related:** [Preprocessing](PREPROCESSING.md) (video → tensor), [Developer guide](DEVELOPER_GUIDE.md) (endpoints and code map).
+
 ## What the product actually does
 
 | Layer | Single clip (`/predict`, app **Single sign**) | Multi-clip (`/predict/sentence`, app **Multi-sign**) |

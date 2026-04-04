@@ -1,6 +1,6 @@
 # Backend, ML, and mobile tests + coverage.
 # Posts a sticky PR comment and updates README coverage (main) — no third-party coverage host.
-name: CI
+name: Coverage
 
 on:
   push:

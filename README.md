@@ -1,19 +1,304 @@
-## Eye Hear U
+# Eye Hear U
 
-[![CI](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
+[![Coverage](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
 
-**ASL on camera → text and speech on iPhone** — one sign at a time, or a short phrase from several clips in order.
-
-**Eye Hear U** is an **iOS** app (Expo) with a **backend API**. You record **American Sign Language**; the app shows a **written result** and can **read it aloud**. It is built as an **assistive aid**—useful for practice or quick help—not a replacement for a **certified interpreter**.
-
-Each clip is scored by a **video model** (trained on many signing examples) against a fixed **vocabulary of glosses**—short, English-like labels for signs. **Single-sign** mode focuses on the **best-matching label** (and a few alternates). **Multi-sign** mode also chooses a **sensible sequence** across clips before turning labels into the line you see. By default that line is a **joined, lightly cleaned phrase**; the API can be configured so a **separate language model** (running **locally** or via **AWS**) **rephrases** the main multi-sign result into **smoother, more conversational English** when you want that trade-off. Quality still depends on video, lighting, and the model—see **[ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md)** for behavior, limits, and `.env` options such as **`GLOSS_ENGLISH_MODE`**.
-
-Infrastructure is provisioned on **AWS** (S3, ECS, etc.) via **Terraform**.
+**Record American Sign Language (ASL) on your phone → get English text on screen and optional spoken output.**  
+Monorepo: Expo (React Native) mobile app, FastAPI inference API, PyTorch I3D model code, plus optional data pipeline, cloud training (Modal), and AWS (Terraform).
 
 ---
 
-<details open>
-<summary><strong>CI test coverage</strong> (auto-updated on <code>main</code>)</summary>
+## About this project
+
+**Eye Hear U** is a **monorepo** built around an **Expo** mobile client and a **FastAPI** backend: you record short **ASL video clips**, send them to the API, and get **gloss labels** (short English-like words the model was trained on) plus a **readable line of text** and optional **text-to-speech** on the device. It targets **practice and quick communication support**, not certified interpreting.
+
+| If you are… | Start here |
+|-------------|------------|
+| New to the repo | [Getting started](#getting-started) |
+| Using the app | [User guide](docs/USER_GUIDE.md) |
+| Developing or debugging | [Developer guide](docs/DEVELOPER_GUIDE.md) |
+| Changing how translation works | [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md) |
+
+**Modes:** **Single sign** — one clip, one prediction (plus alternates). **Multi-sign** — several clips in order; the server runs **batched I3D**, **beam search**, and a **gloss n-gram language model**, then formats an **English** line.
+
+---
+
+## Features
+
+- Mobile: camera and gallery upload, single/multi-sign flows, TTS, SignASL-style reference playback, **on-device history** (`AsyncStorage`).
+- API: `POST /api/v1/predict`, `POST /api/v1/predict/sentence`, health endpoints; loads **I3D** + **`gloss_lm.json`** at startup; can pull **weights from S3** if not cached locally.
+- ML: **Inception I3D** training/eval in `ml/i3d_msft/`, **Modal** wrapper for GPU training, label map JSON in repo.
+- Ops: **Docker** / **docker-compose**, **Terraform** modules, **Kubernetes** manifests under `infrastructure/k8s/`.
+
+**Not wired end-to-end:** `backend/app/services/firebase_service.py` is an **optional** Firestore helper; the shipped app does **not** call it from startup, and the mobile client does **not** sync history to the cloud.
+
+---
+
+## Getting started
+
+You will run **two processes**: the **API** (Python) and the **mobile app** (Node/Expo). A **phone on the same Wi‑Fi** needs your computer’s **LAN IP**, not `localhost`.
+
+### Prerequisites
+
+| Tool | Notes |
+|------|--------|
+| **Python 3.11+** | Matches CI; use `python3` if `python` is missing |
+| **Node.js 20+** | Matches CI; use `npm ci --legacy-peer-deps` in `mobile/` |
+| **Git** | Clone this repository |
+
+Optional: **AWS credentials** if the API should download weights from S3 automatically; otherwise place `best_model.pt` under `backend/model_cache/` (see [Developer guide](docs/DEVELOPER_GUIDE.md)).
+
+### Run the API
+
+From the **repository root**, `PYTHONPATH` must include the root so `import ml` works.
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env               # adjust MODEL_DEVICE, paths, optional Bedrock/T5
+export PYTHONPATH=..               # parent directory = repo root (required)
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Check: `curl http://localhost:8000/health`
+
+### Run the mobile app
+
+In a **second terminal**:
+
+```bash
+cd mobile
+npm install --legacy-peer-deps     # or: npm ci --legacy-peer-deps
+cp .env.example .env
+```
+
+Edit **`mobile/.env`** so the device can reach the API:
+
+```bash
+# Replace with your machine's LAN IP when using a physical phone
+EXPO_PUBLIC_API_URL=http://192.168.1.50:8000
+```
+
+Start Expo (LAN is usually easiest when phone and PC share Wi‑Fi):
+
+```bash
+npm run start:lan
+# or: npx expo start
+```
+
+Scan the QR code with **Expo Go**, or press `i` for the iOS Simulator. For the simulator on the same Mac, `http://127.0.0.1:8000` is often enough.
+
+**Common pitfall:** Metro’s URL (port **8081**) is **not** the API URL (port **8000**). See [Developer guide](docs/DEVELOPER_GUIDE.md) for tunnels and iOS Local Network permission.
+
+### Try the API with curl (optional)
+
+```bash
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/api/v1/predict -F "file=@/path/to/clip.mp4"
+curl -X POST "http://localhost:8000/api/v1/predict/sentence?beam_size=8&lm_weight=1" \
+  -F "files=@/path/to/a.mp4" -F "files=@/path/to/b.mp4"
+```
+
+---
+
+## Repository structure
+
+```
+.
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI app, CORS, lifespan (model + LM)
+│   │   ├── config.py            # Pydantic settings / env
+│   │   ├── routers/             # health, predict
+│   │   ├── schemas/             # prediction.py
+│   │   └── services/            # model, preprocessing, beam, LM, gloss→English, …
+│   ├── data/gloss_lm.json
+│   ├── scripts/build_gloss_lm.py
+│   ├── tests/
+│   └── requirements.txt
+├── mobile/
+│   ├── app/                     # Expo Router screens
+│   ├── services/api.ts
+│   ├── __tests__/
+│   └── package.json
+├── ml/
+│   ├── i3d_msft/                # I3D code, train, evaluate, dataset, S3 helpers
+│   ├── i3d_label_map_mvp-sft-full-v1.json
+│   ├── modal_train_i3d.py
+│   ├── tests/
+│   └── requirements.txt
+├── data/
+│   ├── Dockerfile
+│   ├── scripts/                 # pipeline_config, ingest*, preprocess*, validate, …
+│   ├── raw/                     # gitignored
+│   └── processed/               # gitignored
+├── benchmark/                   # sentence_quality, sign_speak (see docs)
+├── infrastructure/              # Terraform + k8s/
+├── docs/                        # guides (index: docs/README.md)
+├── .github/workflows/ci.yml
+├── .github/scripts/merge_coverage_report.py
+├── Dockerfile
+├── docker-compose.yml
+└── package.json                 # monorepo root metadata only
+```
+
+---
+
+## Architecture
+
+Typical **runtime** path (local demo or deployed API):
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Mobile (Expo)                                                           │
+│  • Screens: app/index.tsx, camera.tsx, history.tsx                       │
+│  • API client: services/api.ts → EXPO_PUBLIC_API_URL or app.json extra   │
+│  • History: AsyncStorage on device only                                  │
+└────────────────────────────────┬─────────────────────────────────────────┘
+                                 │  HTTPS, multipart (mp4/mov)
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  FastAPI (backend/app/main.py)                                           │
+│  • GET  /health — liveness                                               │
+│  • GET  /ready — readiness + model_loaded                                │
+│  • POST /api/v1/predict — field `file` → PredictionResponse              │
+│  • POST /api/v1/predict/sentence — repeated `files` (order, ≤12)         │
+└───────────────┬────────────────────────────────────────┬─────────────────┘
+                │                                        │
+                │  per clip                              │  multi-clip only
+                ▼                                        ▼
+┌─────────────────────────────────┐    ┌──────────────────────────────────────┐
+│  preprocessing.py               │    │  beam_search.py + gloss_lm.py        │
+│  video bytes → (1,3,64,224,224) │    │  GlossBeamLM from data/gloss_lm.json │
+│  [-1,1] normalization           │    │  beam_size, lm_weight (query params) │
+└───────────────┬─────────────────┘    └──────────────────┬───────────────────┘
+                │                                         │
+                └────────────────┬────────────────────────┘
+                                 ▼
+                ┌─────────────────────────────┐
+                │  model_service.py           │
+                │  ml.i3d_msft.pytorch_i3d    │
+                │  Inception I3D, 856 glosses │
+                │  predict / predict_batch    │
+                └──────────────┬──────────────┘
+                               │
+                               │  optional: GLOSS_ENGLISH_MODE
+                               ▼
+                ┌────────────────────────────┐
+                │  gloss_to_english.py       │
+                │  (+ t5 / Bedrock modules)  │
+                └────────────────────────────┘
+
+  Model weights: local model_cache/ or download from S3 (see app/config.py defaults)
+  Label map: ml/i3d_label_map_mvp-sft-full-v1.json
+```
+
+**Same repository, separate workflows:** `data/scripts/` (ingest & preprocess), `ml/modal_train_i3d.py` (cloud training), `infrastructure/` (Terraform), `benchmark/` (offline evaluation helpers). They are not required to run the app against an existing API.
+
+---
+
+## Deployed model
+
+| Item | Detail |
+|------|--------|
+| Architecture | Inception I3D — `ml/i3d_msft/pytorch_i3d.py` |
+| Input tensor | `(1, 3, 64, 224, 224)`, RGB, normalized to **[-1, 1]** |
+| Classes | **856** glosses — `ml/i3d_label_map_mvp-sft-full-v1.json` |
+| Inference preprocessing | `backend/app/services/preprocessing.py` (must match training) |
+| Default weights | S3 path from `Settings` / `.env` — downloaded on first start if missing |
+
+---
+
+## Training datasets
+
+These corpora feed the **data pipeline** (`data/scripts/`) and **I3D training** in `ml/`. The **deployed classifier** uses a **fixed 856-gloss** label map (see [Deployed model](#deployed-model)); training may merge or filter classes from the sources below.
+
+| Dataset | Role here | What it is | Approx. scale |
+|---------|-----------|------------|---------------|
+| **ASL Citizen** | **Primary** — main supervised signal and signer-aware splits | Crowdsourced **isolated-sign** RGB videos (dictionary-style clips) from many contributors; varied backgrounds and capture conditions; intended for isolated sign recognition and retrieval research | ~**2.7k** glosses · ~**83k** videos · **52** signers |
+| **WLASL** | **Supplementary** training | **Word-level** isolated ASL benchmark: short clips per English gloss/lemma, mix of studio and in-the-wild footage; widely used for word-level SLR baselines | ~**2k** glosses · ~**21k** videos · **100+** signers |
+| **MS-ASL** | **Supplementary** training | Microsoft **large-vocabulary** isolated-sign dataset in **unconstrained** real-world settings (RGB only); emphasizes scale and signer-independent test conditions | ~**1k** gloss classes · ~**25k** videos · **200+** signers |
+
+Counts are **order-of-magnitude** from the respective papers/projects; see each dataset’s documentation for exact numbers, splits, and download rules.
+
+### References (data sources)
+
+Eye Hear U builds on publicly released corpora. Cite the original publications (and respect each dataset’s license and terms) if you use this codebase in research or redistribute derived data.
+
+| Dataset | Reference | Links |
+|---------|-----------|--------|
+| **ASL Citizen** | Desai, A., *et al.* “ASL Citizen: A Community-Sourced Dataset for Advancing Isolated Sign Language Recognition.” *NeurIPS 2023* Datasets and Benchmarks Track. | [Paper (arXiv:2304.05934)](https://arxiv.org/abs/2304.05934) · [Project](https://www.microsoft.com/en-us/research/project/asl-citizen/) |
+| **WLASL** | Li, D., Rodriguez, C., Yu, X., & Li, H. “Word-level Deep Sign Language Recognition from Video: A New Large-scale Dataset and Methods Comparison.” *WACV*, 2020. | [Paper (arXiv:1910.11006)](https://arxiv.org/abs/1910.11006) · [Project](https://dxli94.github.io/WLASL/) |
+| **MS-ASL** | Vaezi Joze, H., & Koller, O. “MS-ASL: A Large-Scale Data Set and a Benchmark for Understanding American Sign Language.” *BMVC*, 2019. | [Paper (arXiv:1812.01053)](https://arxiv.org/abs/1812.01053) · [Microsoft Research](https://www.microsoft.com/en-us/research/project/ms-asl/) |
+
+---
+
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [docs/README.md](docs/README.md) | Index of all guides |
+| [User guide](docs/USER_GUIDE.md) | How to use the mobile app |
+| [Developer guide](docs/DEVELOPER_GUIDE.md) | Day-to-day development, URLs, code map |
+| [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md) | Single vs multi-clip, beam, LM, English modes |
+| [Testing](docs/TESTING.md) | pytest/Jest, coverage, CI behavior |
+| [Production](docs/PRODUCTION.md) | AWS, containers, security checklist |
+| [Preprocessing](docs/PREPROCESSING.md) | I3D input pipeline rationale |
+| [Evaluation](docs/EVALUATION.md) | Metrics and evaluation workflows |
+| [Benchmarking](docs/BENCHMARKING.md) | Reproducing benchmark numbers |
+| [I3D training (S3)](docs/I3D_TRAINING_S3_REPRODUCTION.md) | Splits, S3, training reproduction |
+| [Modal / AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md) | Account migration, Modal, warm-start |
+
+---
+
+## Development workflows
+
+Optional paths after [Getting started](#getting-started): **automated tests** (parity with CI), **dataset ingest**, **I3D training on Modal**, **cloud / container deployment**, and **offline evaluation**. Install dependencies per component as in Getting started before running commands below.
+
+### Tests
+
+CI enforces **100% coverage** on scoped packages; run the same suites locally. Details, configs, and artifact layout: [Testing](docs/TESTING.md).
+
+```bash
+cd backend && export PYTHONPATH=.. && pytest tests/ -v --cov=app --cov-fail-under=100
+cd ml && python3 -m pytest tests/ -v --cov=i3d_msft --cov=modal_train_i3d --cov-config=.coveragerc --cov-fail-under=100
+cd mobile && npx jest --coverage --ci
+```
+
+### Data pipeline
+
+Scripts in **`data/scripts/`** ingest **ASL Citizen**, **WLASL**, and **MS-ASL**, preprocess clips, validate, and plan I3D splits. Outputs live under **`data/raw/`** and **`data/processed/`** (gitignored). Overview of paths: [Repository structure](#repository-structure); day-to-day notes: [Developer guide](docs/DEVELOPER_GUIDE.md).
+
+### ML training (I3D on Modal)
+
+GPU training is driven by **`ml/modal_train_i3d.py`** (Modal). For S3 split plans, bucket layout, and reproduction: [I3D training (S3)](docs/I3D_TRAINING_S3_REPRODUCTION.md). For AWS migration, warm-start checkpoints, and Modal setup: [Modal / AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md).
+
+```bash
+modal run ml/modal_train_i3d.py --help
+```
+
+### Infrastructure and containers
+
+| Goal | Command |
+|------|---------|
+| **AWS (Terraform)** | `cd infrastructure && terraform init && terraform apply -var-file=environments/dev.tfvars` |
+| **Kubernetes** | `kubectl apply -k infrastructure/k8s/` |
+| **Docker Compose** (API image) | `docker compose up --build` (repo root) |
+
+Checklists, TLS, secrets, and ops notes: [Production](docs/PRODUCTION.md).
+
+### Benchmarks and evaluation
+
+Classifier benchmarks and metrics: [Benchmarking](docs/BENCHMARKING.md), [Evaluation](docs/EVALUATION.md). Why inference preprocessing must match training: [Preprocessing](docs/PREPROCESSING.md).
+
+**All documentation:** [docs/README.md](docs/README.md).
+
+---
+
+## Continuous integration (CI)
+
+On each push to **`main`** or pull request, GitHub Actions runs **backend**, **ML**, and **mobile** tests with **100% coverage thresholds** on the scoped packages. A follow-up job can refresh the table below and open a PR comment; see [Testing](docs/TESTING.md).
 
 <!-- COVERAGE_TABLE_START -->
 ![Backend coverage](https://img.shields.io/badge/coverage%3A%20Backend-100%25-brightgreen) ![ML coverage](https://img.shields.io/badge/coverage%3A%20ML-100%25-brightgreen) ![Mobile coverage](https://img.shields.io/badge/coverage%3A%20Mobile-100%25-brightgreen)
@@ -24,370 +309,13 @@ Infrastructure is provisioned on **AWS** (S3, ECS, etc.) via **Terraform**.
 | ML | **100%** | **100%** |
 | Mobile | **100%** | **100%** |
 
-<sub>Last CI update: (overwritten on each push to <code>main</code>)</sub>
+<sub>Last CI update: (overwritten on each push to `main`)</sub>
 <!-- COVERAGE_TABLE_END -->
 
-</details>
+**Do not edit the table or badges between the HTML comments by hand** — automation replaces that block. You may edit the surrounding section text.
 
 ---
 
-## Table of contents
+## Disclaimer
 
-| Area | Links |
-|:-----|:------|
-| **Docs** | [Documentation](#documentation) |
-| **System** | [Architecture overview](#architecture-overview) → [Model](#model) · [Datasets](#datasets) · [Project structure](#project-structure) |
-| **Runbook** | [How to run this repository](#how-to-run-this-repository) — [Prerequisites](#prerequisites) · [Minimal path (inference + app)](#minimal-path-inference--app) |
-| **Components** | [Quick start](#quick-start) — [Backend](#backend-inference-api) · [Mobile app](#mobile-app) · [Data pipeline](#data-pipeline) · [I3D training (Modal GPU)](#i3d-training-modal-gpu) · [Infrastructure (Terraform)](#infrastructure-terraform) · [Kubernetes deployment](#kubernetes-deployment-alternative-to-ecs) · [Docker](#docker) |
-| **Quality** | [Testing](#testing) |
-
----
-
-## Documentation
-
-| Audience                                       | Document                                                               |
-| ---------------------------------------------- | ---------------------------------------------------------------------- |
-| End users                                      | [User guide](docs/USER_GUIDE.md)                                       |
-| Developers                                     | [Developer guide](docs/DEVELOPER_GUIDE.md)                             |
-| Single vs multi-clip pipeline & accuracy scope | [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md)           |
-| Testing & coverage                             | [Testing](docs/TESTING.md)                                             |
-| Production deployment                          | [Production](docs/PRODUCTION.md)                                       |
-| Inference preprocessing                        | [Preprocessing (I3D)](docs/PREPROCESSING.md)                           |
-| Evaluation metrics guide                       | [Evaluation](docs/EVALUATION.md)                                       |
-| Benchmarking & evaluation                      | [Benchmarking](docs/BENCHMARKING.md)                                   |
-| I3D training (S3 reproduction)                 | [I3D training — S3 reproduction](docs/I3D_TRAINING_S3_REPRODUCTION.md) |
-| Modal / AWS / SFT migration                    | [Modal & AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md)           |
-
-**Coverage scope:** CI enforces **100%** lines and branches on backend `app/` and ML (`i3d_msft` + `modal_train_i3d`), and **100%** statements, branches, lines, and functions on mobile `app/` + `services/`. The **CI test coverage** panel is refreshed on **`main`** by `github-actions[bot]` (`[skip ci]`). See [Testing](docs/TESTING.md).
-
----
-
-## Architecture overview
-
-```
-┌──────────────────────┐        ┌──────────────────────────────────────┐
-│   Mobile App         │  HTTP  │   Inference API                      │
-│   (React Native /    │───────▶│   (FastAPI on ECS Fargate behind ALB)│
-│    Expo)             │        │                                      │
-│                      │        │   POST /api/v1/predict               │
-│  - Camera + library  │        │   → one clip → top gloss + top_k     │
-│  - Single / multi-   │◀───────│                                      │
-│    sign modes        │  JSON  │   POST /api/v1/predict/sentence      │
-│  - TTS, local history│        │   → N clips → beam + gloss LM →     │
-│  - SignASL previews  │        │      best_glosses + english line*    │
-│                      │        │   Loads I3D + gloss_lm.json @ startup│
-└──────────────────────┘        └─────────────────┬────────────────────┘
-                                                  │
-                                       ┌──────────▼──────────┐
-                                       │   ML Model          │
-                                       │   (PyTorch)         │
-                                       │                     │
-                                       │   Inception I3D     │
-                                       │   (spatiotemporal   │
-                                       │    3D CNN)          │
-                                       │        ↓            │
-                                       │   Classification    │
-                                       │   (856 glosses)     │
-                                       └─────────────────────┘
-
-  ┌─────────────────────┐   ┌────────────────────┐   ┌──────────────────┐
-  │   Amazon S3         │   │   Firebase         │   │   CloudWatch     │
-  │   (Data Lake)       │   │   (Firestore)      │   │   (Logs/Alerts)  │
-  │                     │   │                    │   │                  │
-  │   raw/ → processed/ │   │   - Translation    │   │   - Pipeline     │
-  │   → models/         │   │     history        │   │     metrics      │
-  │                     │   │   - User feedback  │   │   - API latency  │
-  └─────────────────────┘   └────────────────────┘   └──────────────────┘
-```
-
-\* **`english`** on `/predict/sentence`: formatted gloss line under **`GLOSS_ENGLISH_MODE=rule`**, or an optional **FLAN-T5** / **Bedrock** rewrite when configured (see [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md)).
-
-### Model
-
-The deployed model is **Microsoft's Inception I3D** (spatiotemporal 3D CNN), fine-tuned on 856 ASL gloss classes from the ASL Citizen dataset. Key specifications:
-
-| Property      | Value                                                                                |
-| ------------- | ------------------------------------------------------------------------------------ |
-| Architecture  | Inception I3D (`ml/i3d_msft/pytorch_i3d.py`)                                         |
-| Input         | `(1, 3, 64, 224, 224)` — 64 RGB frames at 224x224                                    |
-| Normalization | `[-1, 1]` pixel range                                                                |
-| Output        | 856-class logits, temporally max-pooled                                              |
-| Label map     | `ml/i3d_label_map_mvp-sft-full-v1.json`                                              |
-| Weights       | S3: `s3://eye-hear-u-public-data-ca1/models/i3d/...` (auto-downloaded by backend)    |
-| Preprocessing | Short-side-256 resize, center-crop 224x224 (`backend/app/services/preprocessing.py`) |
-
-## Datasets
-
-| Dataset         | Role                         | Size                                   |
-| --------------- | ---------------------------- | -------------------------------------- |
-| **ASL Citizen** | Primary (train / val / test) | 2,731 glosses, ~83K videos, 52 signers |
-| **WLASL**       | Supplementary training        | 2,000 glosses, ~21K videos             |
-| **MS-ASL**      | Supplementary training       | 1,000 glosses, ~25K videos             |
-
-## Project structure
-
-```
-.
-├── backend/                  # FastAPI inference API
-│   ├── app/
-│   │   ├── main.py           # App entrypoint, lifespan loads I3D + gloss LM
-│   │   ├── config.py         # S3 bucket, model path, label map, gloss_lm_path
-│   │   ├── routers/          # health.py, predict.py (/predict, /predict/sentence)
-│   │   ├── schemas/          # Pydantic models
-│   │   └── services/         # model_service, preprocessing, gloss_lm, beam_search,
-│   │                         # gloss_to_english (+ optional T5 / Bedrock), lm_builder, firebase
-│   ├── data/
-│   │   └── gloss_lm.json     # Gloss n-gram stats (rebuild: scripts/build_gloss_lm.py)
-│   ├── scripts/
-│   │   └── build_gloss_lm.py # Offline LM builder from label map + optional gloss lines
-│   ├── tests/                # ~156 tests, 100% line+branch on app/
-│   └── requirements.txt
-│
-├── mobile/                   # React Native (Expo) mobile app
-│   ├── app/                  # home, camera (single + multi-sign, TTS, SignASL previews), history
-│   ├── __tests__/            # Jest — 100% coverage on collected paths (package.json)
-│   ├── services/api.ts     # predictSign (/predict), predictSentence (/predict/sentence)
-│   └── package.json
-│
-├── ml/                       # Machine learning code
-│   ├── i3d_msft/             # Inception I3D — the deployed model
-│   │   ├── pytorch_i3d.py    # InceptionI3d architecture (from Microsoft)
-│   │   ├── videotransforms.py
-│   │   ├── export_label_map.py
-│   │   ├── train.py          # I3D training with S3 data + Modal GPU
-│   │   ├── evaluate.py       # I3D evaluation (top-k, MRR, DCG, confusion)
-│   │   ├── dataset.py        # ASLCitizenI3DDataset (64-frame, [-1,1] norm)
-│   │   ├── s3_data.py        # S3 sync helpers (splits, clips)
-│   │   └── build_label_map_artifacts.py  # Rebuild label map from training
-│   ├── i3d_label_map_mvp-sft-full-v1.json  # 856-class label map (v4)
-│   ├── modal_train_i3d.py    # Modal GPU wrapper for cloud training
-│   ├── tests/                # ~194 tests; 100% line+branch on i3d_msft + modal_train_i3d (see TESTING.md)
-│   └── requirements.txt
-│
-├── data/                     # Data pipeline
-│   ├── Dockerfile            # Pipeline container image
-│   ├── scripts/
-│   │   ├── pipeline_config.py          # Shared config (local + S3)
-│   │   ├── ingest_asl_citizen.py
-│   │   ├── ingest_wlasl.py
-│   │   ├── ingest_msasl.py
-│   │   ├── preprocess_clips.py
-│   │   ├── build_unified_dataset.py
-│   │   ├── validate.py
-│   │   ├── plan_i3d_splits.py          # Versioned S3 split plans
-│   │   ├── prepare_i3d_from_s3.py      # Download & prepare I3D data
-│   │   └── requirements.txt
-│   ├── raw/                  # Raw video files (gitignored)
-│   └── processed/            # Processed clips + metadata (gitignored)
-│
-├── benchmark/                # Offline benchmarks (sentence quality, sign_speak; see BENCHMARKING.md)
-│   ├── sentence_quality/
-│   └── sign_speak/
-│
-├── infrastructure/           # Infrastructure as Code
-│   ├── main.tf               # Root module, provider config
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── environments/
-│   │   ├── dev.tfvars
-│   │   ├── staging.tfvars
-│   │   └── prod.tfvars
-│   ├── modules/              # Terraform modules
-│   │   ├── s3/               # Data lake bucket
-│   │   ├── ecr/              # Container registries
-│   │   ├── batch/            # Pipeline job compute
-│   │   ├── ecs/              # API cluster + ALB
-│   │   ├── iam/              # Roles and policies
-│   │   ├── networking/       # VPC, subnets, NAT
-│   │   └── monitoring/       # CloudWatch, SNS alerts
-│   └── k8s/                  # Kubernetes manifests
-│       ├── namespace.yaml
-│       ├── deployment.yaml   # API Deployment (2 replicas)
-│       ├── service.yaml      # ClusterIP Service
-│       ├── ingress.yaml      # ALB Ingress
-│       ├── configmap.yaml    # Environment configuration
-│       └── hpa.yaml          # Horizontal Pod Autoscaler
-│
-├── docs/
-│   ├── USER_GUIDE.md         # End-user guide
-│   ├── DEVELOPER_GUIDE.md    # Setup and day-to-day development
-│   ├── ASL_TRANSLATION_PIPELINE.md  # Single vs multi-clip, beam+LM, output semantics
-│   ├── TESTING.md            # Tests, coverage, CI
-│   ├── PRODUCTION.md         # Production deployment
-│   ├── PREPROCESSING.md      # I3D inference preprocessing
-│   ├── EVALUATION.md         # How to generate evaluation metrics
-│   ├── BENCHMARKING.md       # Evaluation metrics and reproduction
-│   ├── I3D_TRAINING_S3_REPRODUCTION.md  # I3D training reproduction with S3
-│   └── MODAL_AWS_SFT_MIGRATION.md       # AWS / Modal / SFT migration playbook
-│
-├── .github/workflows/ci.yml  # GitHub Actions CI (backend, ML, mobile)
-├── Dockerfile
-├── docker-compose.yml
-└── .gitignore
-```
-
-## How to run this repository
-
-Use this order for a full local loop: **backend API** (inference) → **mobile app** (Expo). Training, data ingest, Terraform, and benchmarks are optional paths below.
-
-### Prerequisites
-
-| Requirement      | Notes                                                                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| **Python 3.11+** | CI uses 3.11. On macOS, use `python3` if `python` is not on your `PATH`.                               |
-| **Node.js 20+**  | Matches CI; use `npm ci --legacy-peer-deps` in `mobile/` for a clean install.                          |
-| **pip / venv**   | Recommended per component (`backend/`, `ml/`, `data/scripts/` each have their own `requirements.txt`). |
-
-### Minimal path (inference + app)
-
-1. **Start the API** (from `backend/`, with repo root on `PYTHONPATH` so `ml` resolves):
-
-   ```bash
-   cd backend
-   python3 -m venv .venv && source .venv/bin/activate   # optional but recommended
-   pip install -r requirements.txt
-   cp .env.example .env
-   export PYTHONPATH=..    # parent directory = repo root
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-2. **In another terminal, start the mobile client:**
-
-   ```bash
-   cd mobile
-   npm install --legacy-peer-deps
-   cp .env.example .env   # if present; set EXPO_PUBLIC_API_URL to your machine’s LAN IP :8000
-   npx expo start
-   ```
-
-3. **Sanity-check the API** (optional):
-
-   ```bash
-   curl http://localhost:8000/health
-   ```
-
-4. **Run automated tests** (optional, same gates as CI):
-
-   ```bash
-   # Backend (repo root on PYTHONPATH)
-   cd backend && export PYTHONPATH=.. && pytest tests/ -v --cov=app --cov-fail-under=100
-
-   # ML
-   cd ml && python3 -m pytest tests/ -v --cov=i3d_msft --cov=modal_train_i3d --cov-config=.coveragerc --cov-fail-under=100
-
-   # Mobile
-   cd mobile && npx jest --coverage --ci
-   ```
-
-See [Developer guide](docs/DEVELOPER_GUIDE.md) for LAN vs tunnel, simulators, and `.env` details.
-
----
-
-## Quick start
-
-### Backend (Inference API)
-
-The backend serves the I3D model. On first startup it downloads the checkpoint from S3 automatically.
-
-```bash
-cd backend
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env if needed (MODEL_DEVICE, LABEL_MAP_PATH, GLOSS_ENGLISH_MODE, optional BEDROCK_*)
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Test the API:
-
-```bash
-curl http://localhost:8000/health
-curl -X POST http://localhost:8000/api/v1/predict -F "file=@sample.mp4"
-# Multi-clip sentence (beam search + gloss LM): same field name `files` repeated
-curl -X POST "http://localhost:8000/api/v1/predict/sentence?beam_size=8&lm_weight=1" \
-  -F "files=@clip1.mp4" -F "files=@clip2.mp4"
-```
-
-### Mobile app
-
-```bash
-cd mobile
-npm install --legacy-peer-deps
-npx expo start
-```
-
-Set `EXPO_PUBLIC_API_URL` in `mobile/.env` to point to the backend (e.g., `http://192.168.x.x:8000`). See [Developer guide](docs/DEVELOPER_GUIDE.md) for LAN / tunnel setup.
-
-### Data pipeline
-
-```bash
-cd data/scripts
-pip install -r requirements.txt
-
-export PIPELINE_ENV=local
-python ingest_asl_citizen.py
-python ingest_wlasl.py
-python ingest_msasl.py
-python preprocess_clips.py
-python build_unified_dataset.py
-python validate.py
-```
-
-### I3D training (Modal GPU)
-
-```bash
-pip install modal
-modal setup  # one-time auth
-# Smoke test (1 epoch, 200 clips)
-modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 1 --clip-limit 200
-# Full training
-modal run ml/modal_train_i3d.py --bucket eye-hear-u-public-data-ca1 --epochs 20
-```
-
-See [I3D training — S3 reproduction](docs/I3D_TRAINING_S3_REPRODUCTION.md) and [Modal & AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md) for details.
-
-### Infrastructure (Terraform)
-
-```bash
-cd infrastructure
-terraform init
-terraform apply -var-file=environments/dev.tfvars
-```
-
-### Kubernetes deployment (alternative to ECS)
-
-```bash
-kubectl apply -k infrastructure/k8s/
-```
-
-### Docker
-
-```bash
-docker compose up --build
-```
-
-## Testing
-
-CI runs **three** test jobs in parallel, then a **`coverage-report`** job that posts a **sticky PR comment** (same-repo PRs) and refreshes the **README** coverage block on pushes to **`main`** / **`master`** (see [Testing](docs/TESTING.md)).
-
-| Job     | Tests (approx.) | Coverage                                                      | Enforced                                          |
-| ------- | --------------- | ------------------------------------------------------------- | ------------------------------------------------- |
-| Backend | ~156 pytest     | 100% line + branch on `app/`                                  | `--cov-fail-under=100`                            |
-| ML      | ~194 pytest     | 100% line + branch on `i3d_msft` + `modal_train_i3d`         | `--cov-fail-under=100`                            |
-| Mobile  | ~104 Jest       | 100% statements, branches, lines, functions (collected paths) | Jest `coverageThreshold` in `mobile/package.json` |
-
-Run locally:
-
-```bash
-# Backend (PYTHONPATH must include repo root)
-cd backend && export PYTHONPATH=.. && pytest tests/ -v --cov=app --cov-fail-under=100
-
-# ML (scoped coverage — see docs/TESTING.md)
-cd ml && python3 -m pytest tests/ -v \
-  --cov=i3d_msft --cov=modal_train_i3d \
-  --cov-config=.coveragerc --cov-fail-under=100
-
-# Mobile
-cd mobile && npx jest --coverage --ci
-```
-
-See [Testing](docs/TESTING.md) for full details and [Evaluation](docs/EVALUATION.md) for generating metrics for reports.
+Use responsibly. Output quality depends on lighting, framing, and model limits; this software is **not** a substitute for a qualified human interpreter where one is required.

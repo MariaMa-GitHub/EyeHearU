@@ -1,6 +1,8 @@
-# EyeHearU Migration and Training Playbook (New AWS Account + Modal + SFT)
+# Eye Hear U — Migration and training playbook (AWS + Modal + SFT)
 
-This document summarizes what we completed and provides a reproducible, command-first tutorial.
+Command-first notes for a **new AWS account**, **Modal** GPU training, and **SFT warm-start**. For S3 split plans and training reproduction, see **[I3D training (S3)](I3D_TRAINING_S3_REPRODUCTION.md)**. **[Documentation index](README.md)** lists all guides.
+
+This document summarizes what we completed and provides a reproducible tutorial.
 
 Goals:
 

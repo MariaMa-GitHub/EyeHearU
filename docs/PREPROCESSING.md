@@ -1,6 +1,6 @@
-# Inference preprocessing (I3D) -- design and rationale
+# Eye Hear U — Inference preprocessing (I3D)
 
-This document describes **`backend/app/services/preprocessing.py`** and how it aligns with the **I3D training dataloader** on the training branch (same frame sampling, normalization, and compatible spatial resize).
+This document describes **`backend/app/services/preprocessing.py`** and how it aligns with the **I3D training dataloader** (same frame sampling, normalization, and compatible spatial resize).
 
 ## Goal
 

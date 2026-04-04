@@ -1,6 +1,6 @@
 # Eye Hear U — Production Deployment
 
-Moving from **local or tunnel demos** to a **stable production** setup.
+Moving from **local or tunnel demos** to a **stable production** setup. For local development, see the [Developer guide](DEVELOPER_GUIDE.md) and root [README](../README.md).
 
 ## Target architecture (AWS — matches Terraform)
 

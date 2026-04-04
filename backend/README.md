@@ -11,9 +11,9 @@ FastAPI service for Eye Hear U: **health/readiness**, **video upload**, and **I3
 | `app/main.py` | App factory, CORS, router registration, **lifespan** loads the model at startup |
 | `app/config.py` | Pydantic settings from `.env` (`MODEL_PATH`, `LABEL_MAP_PATH`, `MODEL_DEVICE`, AWS S3, optional Firebase) |
 | `app/routers/health.py` | `GET /health`, `GET /ready` |
-| `app/routers/predict.py` | `POST /api/v1/predict` — multipart field `file` (**mp4/mov** video) |
+| `app/routers/predict.py` | `POST /api/v1/predict` — field `file` (**mp4/mov**). `POST /api/v1/predict/sentence` — repeated field `files` (ordered clips, max **12**); query `beam_size`, `lm_weight`, `top_k` |
 | `app/services/preprocessing.py` | Video bytes → tensor `(1, 3, 64, 224, 224)` — must match training (see `docs/PREPROCESSING.md`) |
-| `app/services/model_service.py` | Load I3D checkpoint + label map, optional S3 download, `predict()` |
+| `app/services/model_service.py` | Load I3D checkpoint + label map, optional S3 download, `predict()` / `predict_batch()` |
 | `app/services/firebase_service.py` | Optional Firestore helpers |
 | `tests/` | Pytest suite; **100%** line/branch coverage on `app/` (see `docs/TESTING.md`) |
 
@@ -50,5 +50,5 @@ See **`docs/DEVELOPER_GUIDE.md`** for the full download command and environment 
 
 ### Integration
 
-- **Mobile:** `POST /api/v1/predict` with a **video** file; optional `/health` / `/ready` for status UI.
+- **Mobile:** `POST /api/v1/predict` (single clip) or `POST /api/v1/predict/sentence` (multi-clip, same field name `files` repeated in order); optional `/health` / `/ready` for status UI.
 - **ML:** Checkpoint and label map must match the **I3D** architecture in `ml/i3d_msft/`.

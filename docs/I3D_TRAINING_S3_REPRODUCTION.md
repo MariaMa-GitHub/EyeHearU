@@ -1,5 +1,7 @@
 # I3D training reproduction (S3)
 
+**See also:** [Documentation index](README.md) · [Modal / AWS SFT migration](MODAL_AWS_SFT_MIGRATION.md)
+
 This guide documents an end-to-end, reproducible workflow for:
 
 - building I3D-compatible split files from S3 data,

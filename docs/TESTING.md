@@ -182,7 +182,7 @@ On every **push** and **pull_request** to `main` or `master`, three test jobs ru
 
 - Downloads the three JSON artifacts and runs **`.github/scripts/merge_coverage_report.py`**.
 - **Pull requests (same repository only):** posts or updates a **sticky comment** (header `coverage`) via [`marocchino/sticky-pull-request-comment`](https://github.com/marocchino/sticky-pull-request-comment). Fork PRs do not receive a comment because the default `GITHUB_TOKEN` cannot comment on behalf of forks.
-- **Push to `main` / `master`:** replaces only the README fragment between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** (inside the open **`<details>`** “CI test coverage” panel, **above** the table of contents), then commits and pushes as **`github-actions[bot]`** with **`[skip ci]`** in the message so the follow-up commit does not re-trigger CI.
+- **Push to `main` / `master`:** replaces only the README fragment between **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** (in the **CI and coverage** section of the root `README.md`), then commits and pushes as **`github-actions[bot]`** with **`[skip ci]`** in the message so the follow-up commit does not re-trigger CI.
 
 Badges and table rows are generated from the JSON artifacts:
 
@@ -193,5 +193,5 @@ No third-party coverage hosting is required.
 
 ### PR comment + README maintenance
 
-- Do not edit the auto-generated fragment between the two HTML comment markers by hand; CI will overwrite it on the next **`main`** run. You may edit the surrounding **`<details>`** summary and explanatory paragraph in **`README.md`**.
-- To change badges, colors, or table layout, edit **`.github/scripts/merge_coverage_report.py`** (keep the two HTML comment markers in **`README.md`**).
+- Do not edit the auto-generated fragment between the two HTML comment markers by hand; CI overwrites it on the next **`main`** run. You **may** edit the headings and paragraphs **outside** those markers (for example the **CI and coverage** intro in **`README.md`**).
+- To change badges, colors, or table layout, edit **`.github/scripts/merge_coverage_report.py`** (keep **`<!-- COVERAGE_TABLE_START -->`** and **`<!-- COVERAGE_TABLE_END -->`** in **`README.md`**).

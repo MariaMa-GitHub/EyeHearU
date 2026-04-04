@@ -12,7 +12,7 @@ Repository layout, how to run each component, and where to change behavior.
 | `ml/i3d_label_map_mvp-sft-full-v1.json` | Class index ↔ gloss (856 signs, v4) |
 | `infrastructure/` | Terraform (S3, ECS, Batch, etc.) |
 | `data/scripts/` | Data pipeline scripts |
-| `docs/` | Documentation (this file, testing, production, preprocessing) |
+| `docs/` | Documentation — start at [docs/README.md](README.md) |
 
 ## Prerequisites
 
@@ -35,13 +35,17 @@ pip install -r requirements.txt
 ### Model files
 
 - **Label map:** `../ml/i3d_label_map_mvp-sft-full-v1.json` (default in `Settings`)
-- **Weights:** `backend/model_cache/best_model.pt`  
-  Download once:
-  ```bash
-  mkdir -p model_cache
-  aws s3 cp s3://eye-hear-u-public-data-ca1/models/i3d/modal/candidate-ac-eval-v2/mvp-sft-full-v1/best_model.pt model_cache/
-  ```
-  If the file is missing, the server attempts S3 download (requires AWS credentials).
+- **Weights:** `backend/model_cache/best_model.pt`
+
+If that file is missing at startup, the API downloads it from S3 using **`AWS_S3_BUCKET`**, **`AWS_S3_MODEL_KEY`**, and **`AWS_S3_REGION`** (see defaults in `app/config.py` and overrides in `.env`). You need **AWS credentials** (or an IAM role on the host) for that path.
+
+Manual download example (bucket/key match the current `Settings` defaults unless you changed them):
+
+```bash
+cd backend
+mkdir -p model_cache
+aws s3 cp s3://eye-hear-u-public-data-ca1/models/i3d/modal/candidate-ac-eval-v4/20260325T001403Z/best_model.pt model_cache/best_model.pt
+```
 
 ### Environment
 
@@ -155,13 +159,13 @@ docker compose up --build
 
 Ensure `ml/i3d_msft` is included in the image (see root `Dockerfile`). Model cache uses a volume under `model_cache`.
 
-## Firebase (optional)
+## Firebase (optional, not wired in the default app)
 
-`backend/app/services/firebase_service.py` is wired for Firestore history. Not required for the default app (history is local on device). To enable:
+`backend/app/services/firebase_service.py` contains **Firestore helpers** for a possible future “cloud history” feature. The **shipped FastAPI app does not call `init_firebase()`** in `main.py`, and the **mobile app** only persists history with **AsyncStorage**. To experiment with Firestore:
 
-1. Create a Firebase project; download a service account JSON.
-2. Place credentials and set `FIREBASE_*` in `.env`.
-3. Call `init_firebase()` from startup if new routes depend on it.
+1. Create a Firebase project; download a service account JSON (do not commit it).
+2. Place credentials and set `FIREBASE_*` in `.env` (see `app/config.py`).
+3. Call `init_firebase()` from application startup and add routes that use it.
 
 ## Syncing with training code
 

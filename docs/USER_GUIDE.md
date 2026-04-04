@@ -41,7 +41,7 @@ See [ASL translation pipeline](ASL_TRANSLATION_PIPELINE.md) for technical detail
    - **Multi:** a **Sentence** line (gloss sequence), and the beam’s chosen gloss list summary
 10. The app may **read the text aloud** when confidence / content allows.
 11. Tap **Speak Again** to repeat the audio.
-12. Use **View History** for **past translations** on the device (local storage by default; cloud only if configured in the project).
+12. Use **View History** for **past translations** on the device (**local storage only** in the current app).
 
 You can also use the **upload** control (cloud icon) to pick a video from the library instead of recording, in either mode.
 
@@ -53,9 +53,9 @@ You can also use the **upload** control (cloud icon) to pick a video from the li
 - If the result is wrong, **record again** with a slower, clearer sign; **Multi-sign** errors in one clip affect the whole sequence.
 
 ## Privacy
-  
-- Video is sent to the **configured backend** for inference (not arbitrary third-party inference services unless the deployment is changed).
-- History is stored **on the device** by default (AsyncStorage).
+
+- Video is sent to the **configured backend** for inference (whoever hosts that URL controls the data).
+- Translation history is stored **on the device** only (AsyncStorage). There is **no cloud sync** in the shipped mobile client.
 
 ## Troubleshooting
 
@@ -68,4 +68,4 @@ You can also use the **upload** control (cloud icon) to pick a video from the li
 | No sound | Check volume and silent switch; TTS uses system speech. |
 | **Translate** disabled (Multi-sign) | Add at least one clip with **Add sign** or upload before translating. |
 
-For technical setup, see the [Developer guide](DEVELOPER_GUIDE.md).
+For technical setup, see the [Developer guide](DEVELOPER_GUIDE.md). All documentation is listed in [docs/README.md](README.md).

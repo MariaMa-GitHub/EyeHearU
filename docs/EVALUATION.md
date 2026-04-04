@@ -2,6 +2,8 @@
 
 How to generate accuracy, precision/recall/F1, confusion matrices, and inference latency numbers for your report.
 
+For a shorter summary focused on reproducing benchmark outputs from `evaluate.py`, see **[Benchmarking](BENCHMARKING.md)**.
+
 ---
 
 ## The Deployed Model

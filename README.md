@@ -1,6 +1,6 @@
 # Eye Hear U
 
-[![Coverage](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
+[![CI](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MariaMa-GitHub/EyeHearU/actions/workflows/ci.yml)
 
 **Record American Sign Language (ASL) on your phone → get English text on screen and optional spoken output.**  
 Monorepo: Expo (React Native) mobile app, FastAPI inference API, PyTorch I3D model code, plus optional data pipeline, cloud training (Modal), and AWS (Terraform).
@@ -11,11 +11,11 @@ Monorepo: Expo (React Native) mobile app, FastAPI inference API, PyTorch I3D mod
 
 **Eye Hear U** is a **monorepo** built around an **Expo** mobile client and a **FastAPI** backend: you record short **ASL video clips**, send them to the API, and get **gloss labels** (short English-like words the model was trained on) plus a **readable line of text** and optional **text-to-speech** on the device. It targets **practice and quick communication support**, not certified interpreting.
 
-| If you are… | Start here |
-|-------------|------------|
-| New to the repo | [Getting started](#getting-started) |
-| Using the app | [User guide](docs/USER_GUIDE.md) |
-| Developing or debugging | [Developer guide](docs/DEVELOPER_GUIDE.md) |
+| If you are…                    | Start here                                                   |
+| ------------------------------ | ------------------------------------------------------------ |
+| New to the repo                | [Getting started](#getting-started)                          |
+| Using the app                  | [User guide](docs/USER_GUIDE.md)                             |
+| Developing or debugging        | [Developer guide](docs/DEVELOPER_GUIDE.md)                   |
 | Changing how translation works | [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md) |
 
 **Modes:** **Single sign** — one clip, one prediction (plus alternates). **Multi-sign** — several clips in order; the server runs **batched I3D**, **beam search**, and a **gloss n-gram language model**, then formats an **English** line.
@@ -39,11 +39,11 @@ You will run **two processes**: the **API** (Python) and the **mobile app** (Nod
 
 ### Prerequisites
 
-| Tool | Notes |
-|------|--------|
-| **Python 3.11+** | Matches CI; use `python3` if `python` is missing |
-| **Node.js 20+** | Matches CI; use `npm ci --legacy-peer-deps` in `mobile/` |
-| **Git** | Clone this repository |
+| Tool             | Notes                                                    |
+| ---------------- | -------------------------------------------------------- |
+| **Python 3.11+** | Matches CI; use `python3` if `python` is missing         |
+| **Node.js 20+**  | Matches CI; use `npm ci --legacy-peer-deps` in `mobile/` |
+| **Git**          | Clone this repository                                    |
 
 Optional: **AWS credentials** if the API should download weights from S3 automatically; otherwise place `best_model.pt` under `backend/model_cache/` (see [Developer guide](docs/DEVELOPER_GUIDE.md)).
 
@@ -200,13 +200,13 @@ Typical **runtime** path (local demo or deployed API):
 
 ## Deployed model
 
-| Item | Detail |
-|------|--------|
-| Architecture | Inception I3D — `ml/i3d_msft/pytorch_i3d.py` |
-| Input tensor | `(1, 3, 64, 224, 224)`, RGB, normalized to **[-1, 1]** |
-| Classes | **856** glosses — `ml/i3d_label_map_mvp-sft-full-v1.json` |
-| Inference preprocessing | `backend/app/services/preprocessing.py` (must match training) |
-| Default weights | S3 path from `Settings` / `.env` — downloaded on first start if missing |
+| Item                    | Detail                                                                  |
+| ----------------------- | ----------------------------------------------------------------------- |
+| Architecture            | Inception I3D — `ml/i3d_msft/pytorch_i3d.py`                            |
+| Input tensor            | `(1, 3, 64, 224, 224)`, RGB, normalized to **[-1, 1]**                  |
+| Classes                 | **856** glosses — `ml/i3d_label_map_mvp-sft-full-v1.json`               |
+| Inference preprocessing | `backend/app/services/preprocessing.py` (must match training)           |
+| Default weights         | S3 path from `Settings` / `.env` — downloaded on first start if missing |
 
 ---
 
@@ -214,11 +214,11 @@ Typical **runtime** path (local demo or deployed API):
 
 These corpora feed the **data pipeline** (`data/scripts/`) and **I3D training** in `ml/`. The **deployed classifier** uses a **fixed 856-gloss** label map (see [Deployed model](#deployed-model)); training may merge or filter classes from the sources below.
 
-| Dataset | Role here | What it is | Approx. scale |
-|---------|-----------|------------|---------------|
-| **ASL Citizen** | **Primary** — main supervised signal and signer-aware splits | Crowdsourced **isolated-sign** RGB videos (dictionary-style clips) from many contributors; varied backgrounds and capture conditions; intended for isolated sign recognition and retrieval research | ~**2.7k** glosses · ~**83k** videos · **52** signers |
-| **WLASL** | **Supplementary** training | **Word-level** isolated ASL benchmark: short clips per English gloss/lemma, mix of studio and in-the-wild footage; widely used for word-level SLR baselines | ~**2k** glosses · ~**21k** videos · **100+** signers |
-| **MS-ASL** | **Supplementary** training | Microsoft **large-vocabulary** isolated-sign dataset in **unconstrained** real-world settings (RGB only); emphasizes scale and signer-independent test conditions | ~**1k** gloss classes · ~**25k** videos · **200+** signers |
+| Dataset         | Role here                                                    | What it is                                                                                                                                                                                          | Approx. scale                                              |
+| --------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **ASL Citizen** | **Primary** — main supervised signal and signer-aware splits | Crowdsourced **isolated-sign** RGB videos (dictionary-style clips) from many contributors; varied backgrounds and capture conditions; intended for isolated sign recognition and retrieval research | ~**2.7k** glosses · ~**83k** videos · **52** signers       |
+| **WLASL**       | **Supplementary** training                                   | **Word-level** isolated ASL benchmark: short clips per English gloss/lemma, mix of studio and in-the-wild footage; widely used for word-level SLR baselines                                         | ~**2k** glosses · ~**21k** videos · **100+** signers       |
+| **MS-ASL**      | **Supplementary** training                                   | Microsoft **large-vocabulary** isolated-sign dataset in **unconstrained** real-world settings (RGB only); emphasizes scale and signer-independent test conditions                                   | ~**1k** gloss classes · ~**25k** videos · **200+** signers |
 
 Counts are **order-of-magnitude** from the respective papers/projects; see each dataset’s documentation for exact numbers, splits, and download rules.
 
@@ -226,29 +226,29 @@ Counts are **order-of-magnitude** from the respective papers/projects; see each 
 
 Eye Hear U builds on publicly released corpora. Cite the original publications (and respect each dataset’s license and terms) if you use this codebase in research or redistribute derived data.
 
-| Dataset | Reference | Links |
-|---------|-----------|--------|
-| **ASL Citizen** | Desai, A., *et al.* “ASL Citizen: A Community-Sourced Dataset for Advancing Isolated Sign Language Recognition.” *NeurIPS 2023* Datasets and Benchmarks Track. | [Paper (arXiv:2304.05934)](https://arxiv.org/abs/2304.05934) · [Project](https://www.microsoft.com/en-us/research/project/asl-citizen/) |
-| **WLASL** | Li, D., Rodriguez, C., Yu, X., & Li, H. “Word-level Deep Sign Language Recognition from Video: A New Large-scale Dataset and Methods Comparison.” *WACV*, 2020. | [Paper (arXiv:1910.11006)](https://arxiv.org/abs/1910.11006) · [Project](https://dxli94.github.io/WLASL/) |
-| **MS-ASL** | Vaezi Joze, H., & Koller, O. “MS-ASL: A Large-Scale Data Set and a Benchmark for Understanding American Sign Language.” *BMVC*, 2019. | [Paper (arXiv:1812.01053)](https://arxiv.org/abs/1812.01053) · [Microsoft Research](https://www.microsoft.com/en-us/research/project/ms-asl/) |
+| Dataset         | Reference                                                                                                                                                       | Links                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ASL Citizen** | Desai, A., _et al._ “ASL Citizen: A Community-Sourced Dataset for Advancing Isolated Sign Language Recognition.” _NeurIPS 2023_ Datasets and Benchmarks Track.  | [Paper (arXiv:2304.05934)](https://arxiv.org/abs/2304.05934) · [Project](https://www.microsoft.com/en-us/research/project/asl-citizen/)       |
+| **WLASL**       | Li, D., Rodriguez, C., Yu, X., & Li, H. “Word-level Deep Sign Language Recognition from Video: A New Large-scale Dataset and Methods Comparison.” _WACV_, 2020. | [Paper (arXiv:1910.11006)](https://arxiv.org/abs/1910.11006) · [Project](https://dxli94.github.io/WLASL/)                                     |
+| **MS-ASL**      | Vaezi Joze, H., & Koller, O. “MS-ASL: A Large-Scale Data Set and a Benchmark for Understanding American Sign Language.” _BMVC_, 2019.                           | [Paper (arXiv:1812.01053)](https://arxiv.org/abs/1812.01053) · [Microsoft Research](https://www.microsoft.com/en-us/research/project/ms-asl/) |
 
 ---
 
 ## Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [docs/README.md](docs/README.md) | Index of all guides |
-| [User guide](docs/USER_GUIDE.md) | How to use the mobile app |
-| [Developer guide](docs/DEVELOPER_GUIDE.md) | Day-to-day development, URLs, code map |
+| Document                                                     | Purpose                                       |
+| ------------------------------------------------------------ | --------------------------------------------- |
+| [docs/README.md](docs/README.md)                             | Index of all guides                           |
+| [User guide](docs/USER_GUIDE.md)                             | How to use the mobile app                     |
+| [Developer guide](docs/DEVELOPER_GUIDE.md)                   | Day-to-day development, URLs, code map        |
 | [ASL translation pipeline](docs/ASL_TRANSLATION_PIPELINE.md) | Single vs multi-clip, beam, LM, English modes |
-| [Testing](docs/TESTING.md) | pytest/Jest, coverage, CI behavior |
-| [Production](docs/PRODUCTION.md) | AWS, containers, security checklist |
-| [Preprocessing](docs/PREPROCESSING.md) | I3D input pipeline rationale |
-| [Evaluation](docs/EVALUATION.md) | Metrics and evaluation workflows |
-| [Benchmarking](docs/BENCHMARKING.md) | Reproducing benchmark numbers |
-| [I3D training (S3)](docs/I3D_TRAINING_S3_REPRODUCTION.md) | Splits, S3, training reproduction |
-| [Modal / AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md) | Account migration, Modal, warm-start |
+| [Testing](docs/TESTING.md)                                   | pytest/Jest, coverage, CI behavior            |
+| [Production](docs/PRODUCTION.md)                             | AWS, containers, security checklist           |
+| [Preprocessing](docs/PREPROCESSING.md)                       | I3D input pipeline rationale                  |
+| [Evaluation](docs/EVALUATION.md)                             | Metrics and evaluation workflows              |
+| [Benchmarking](docs/BENCHMARKING.md)                         | Reproducing benchmark numbers                 |
+| [I3D training (S3)](docs/I3D_TRAINING_S3_REPRODUCTION.md)    | Splits, S3, training reproduction             |
+| [Modal / AWS SFT migration](docs/MODAL_AWS_SFT_MIGRATION.md) | Account migration, Modal, warm-start          |
 
 ---
 
@@ -280,11 +280,11 @@ modal run ml/modal_train_i3d.py --help
 
 ### Infrastructure and containers
 
-| Goal | Command |
-|------|---------|
-| **AWS (Terraform)** | `cd infrastructure && terraform init && terraform apply -var-file=environments/dev.tfvars` |
-| **Kubernetes** | `kubectl apply -k infrastructure/k8s/` |
-| **Docker Compose** (API image) | `docker compose up --build` (repo root) |
+| Goal                           | Command                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| **AWS (Terraform)**            | `cd infrastructure && terraform init && terraform apply -var-file=environments/dev.tfvars` |
+| **Kubernetes**                 | `kubectl apply -k infrastructure/k8s/`                                                     |
+| **Docker Compose** (API image) | `docker compose up --build` (repo root)                                                    |
 
 Checklists, TLS, secrets, and ops notes: [Production](docs/PRODUCTION.md).
 
@@ -298,21 +298,20 @@ Classifier benchmarks and metrics: [Benchmarking](docs/BENCHMARKING.md), [Evalua
 
 ## Continuous integration (CI)
 
-On each push to **`main`** or pull request, GitHub Actions runs **backend**, **ML**, and **mobile** tests with **100% coverage thresholds** on the scoped packages. A follow-up job can refresh the table below and open a PR comment; see [Testing](docs/TESTING.md).
+On each push to **`main`** or pull request, GitHub Actions runs **backend**, **ML**, and **mobile** jobs in parallel with **100% coverage thresholds** on the scoped packages. See [Testing](docs/TESTING.md) for commands and configuration.
+
+The summary below matches those gates (not auto-synced from CI). To regenerate badges from local `coverage-ci.json` / Jest `coverage-summary.json` files, run **`.github/scripts/merge_coverage_report.py --readme README.md`** (markers in this section must stay for that script).
 
 <!-- COVERAGE_TABLE_START -->
 ![Backend coverage](https://img.shields.io/badge/coverage%3A%20Backend-100%25-brightgreen) ![ML coverage](https://img.shields.io/badge/coverage%3A%20ML-100%25-brightgreen) ![Mobile coverage](https://img.shields.io/badge/coverage%3A%20Mobile-100%25-brightgreen)
 
-| Component | Lines | Branches |
-|-----------|-------|----------|
-| Backend | **100%** | **100%** |
-| ML | **100%** | **100%** |
-| Mobile | **100%** | **100%** |
+| Component | Lines    | Branches |
+| --------- | -------- | -------- |
+| Backend   | **100%** | **100%** |
+| ML        | **100%** | **100%** |
+| Mobile    | **100%** | **100%** |
 
-<sub>Last CI update: (overwritten on each push to `main`)</sub>
 <!-- COVERAGE_TABLE_END -->
-
-**Do not edit the table or badges between the HTML comments by hand** — automation replaces that block. You may edit the surrounding section text.
 
 ---
 

@@ -1,6 +1,5 @@
-# Backend, ML, and mobile tests + coverage.
-# Posts a sticky PR comment and updates README coverage (main) — no third-party coverage host.
-name: Coverage
+# Backend, ML, and mobile tests with 100% coverage thresholds on scoped packages.
+name: CI
 
 on:
   push:
@@ -40,7 +39,6 @@ jobs:
           pytest tests/ -v \
             --cov=app \
             --cov-report=term \
-            --cov-report=json:coverage-ci.json \
             --cov-fail-under=100
 
       - name: Coverage summary (job summary)
@@ -49,13 +47,6 @@ jobs:
         run: |
           echo "## Backend coverage" >> "$GITHUB_STEP_SUMMARY"
           python -m coverage report --precision=2 >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage JSON for report job
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-backend-json
-          path: backend/coverage-ci.json
-          if-no-files-found: error
 
   ml:
     runs-on: ubuntu-latest
@@ -84,20 +75,12 @@ jobs:
             --cov=i3d_msft --cov=modal_train_i3d \
             --cov-config=.coveragerc \
             --cov-report=term-missing \
-            --cov-report=json:coverage-ci.json \
             --cov-fail-under=100
 
       - name: Coverage summary (job summary)
         run: |
           echo "## ML coverage" >> "$GITHUB_STEP_SUMMARY"
           python -m coverage report --precision=2 >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage JSON for report job
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-ml-json
-          path: ml/coverage-ci.json
-          if-no-files-found: error
 
   mobile:
     runs-on: ubuntu-latest
@@ -127,86 +110,3 @@ jobs:
         run: |
           echo "## Mobile test results" >> "$GITHUB_STEP_SUMMARY"
           echo "See job log for detailed Jest output." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload Jest coverage summary for report job
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-mobile-json
-          path: mobile/coverage/coverage-summary.json
-          if-no-files-found: error
-
-  coverage-report:
-    name: Coverage (PR comment & README)
-    needs: [backend, ml, mobile]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: coverage-*-json
-          merge-multiple: false
-
-      - name: Layout artifact paths
-        id: cov
-        run: |
-          echo "backend=artifacts/coverage-backend-json/coverage-ci.json" >> "$GITHUB_OUTPUT"
-          echo "ml=artifacts/coverage-ml-json/coverage-ci.json" >> "$GITHUB_OUTPUT"
-          echo "mobile=artifacts/coverage-mobile-json/coverage-summary.json" >> "$GITHUB_OUTPUT"
-          ls -R artifacts
-
-      - name: Verify artifact paths
-        run: |
-          test -f "${{ steps.cov.outputs.backend }}"
-          test -f "${{ steps.cov.outputs.ml }}"
-          test -f "${{ steps.cov.outputs.mobile }}"
-
-      - name: Write PR coverage comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          python3 .github/scripts/merge_coverage_report.py \
-            --backend-json "${{ steps.cov.outputs.backend }}" \
-            --ml-json "${{ steps.cov.outputs.ml }}" \
-            --jest-json "${{ steps.cov.outputs.mobile }}" \
-            --run-url "$RUN_URL" \
-            --for-pr \
-            --pr-comment coverage-comment.md
-
-      - name: Post sticky PR comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: coverage
-          path: coverage-comment.md
-          skip_unchanged: true
-
-      - name: Update README on default branch
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          python3 .github/scripts/merge_coverage_report.py \
-            --backend-json "${{ steps.cov.outputs.backend }}" \
-            --ml-json "${{ steps.cov.outputs.ml }}" \
-            --jest-json "${{ steps.cov.outputs.mobile }}" \
-            --run-url "$RUN_URL" \
-            --readme README.md
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if git diff --staged --quiet; then
-            echo "README coverage section unchanged."
-          else
-            git commit -m "chore: update CI coverage table in README [skip ci]"
-            git push origin "${{ github.ref_name }}"
-          fi
